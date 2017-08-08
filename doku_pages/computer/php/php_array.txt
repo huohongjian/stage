@@ -1,0 +1,125 @@
+====== PHP数组 ======
+
+===== 创建数组 =====
+  $array[key] = value;
+  $array = array(0=>'001', 1=>'name');
+  $array = array(key=>value);
+  $city = array(
+      "湖北省" => array(0 => '武汉', 1 => '黄石'),
+      "江苏省" => array(0 => '南京', 1 => '苏州')
+      );
+
+
+===== 添加元素 =====
+向一个空数组添加元素
+  $words = array();
+  $words[] = 1;
+  $words[] = 2;
+
+===== 删除元素 =====
+  - unset($words[1]); 可删除任意一个元素，但不重建下标。
+  - array array_unique( $array ); 删除重复元素，返回的新重组键名不变。
+
+===== 遍历元素 =====
+
+==== for遍历 ====
+
+  for ($i=0; $i < count($array); $i++) {
+      echo "<br>下标为 $i 的数组元素值为: $array[$i]";
+  }
+
+==== foreach遍历 ====
+
+方法一：
+  foreach (array_expression as $value) {
+  
+  }
+方法二：
+  foreach (array_expression as $key => $value) {
+  
+  }
+
+==== list() each() while遍历 ====
+
+list()仅用于数字索引的数组且数字索引从0开始，list以赋值的方式，将数组中的每个元素值对应地赋给list函数中的第个参数。
+  list(mixed varname, mixed...) = array_expression;
+each()以一个数组为参数，返回数组当前元素的键/值对，并向后移动数组指针，键/值对被返回为带有4个元素的关联和索引混合数组，键名分别为0,1,key,value，其中0和吸对应的值一样，是元素的键名，1和value是元素的值。如果内部指针超过了数组的末端，则返回false。
+结合上述方法，可用while遍历数组：
+  while( list($key, $value) = each(array_expression) ) {
+  
+  }
+
+===== 数组函数 =====
+
+==== 数组判断函数 ====
+
+1.搜索元素是否在数组中
+  bool in_array( mixed $needle, array $haystack[, bool $strict] )
+  needle:   指定搜索的数据。
+  haystack: 指定要进行搜索的数据。
+  strict:   默认值为false,如为true，则判断搜索数据与数组值的类型是否相同。
+2.搜索键名是否在数组中
+  bool array_key_exits( mixed $key, array $search );
+
+==== 数组排序函数 ====
+
+1.简单的数组排序函数
+  bool  sort( array &$array[, $sort_flags] )
+  bool rsort( array &$array[, $sort_flags] )
+  $sort_flags:
+  SORT_REGULAR: 是默认值，将自动识别数组元素的类型进行排序。
+  SORT_NUMERIC: 用于数字元素的排序。
+  SORT_STRING:  用于字符串元素的排序。
+  SORT_LOCALE_STRING: 根据当前的locale设置来把元素当做字符串比较。
+
+2.根据键名对数组排序
+  bool  ksort( array &$array[, $sort_flags] )
+  bool krsort( array &$array[, $sort_flags] )
+
+3.数组随机排序
+  bool shuffle( array &$haystack )
+使用该函数后，数组中的所有键名，都用从0开始的连续整数替换。只有需要得到多个随机元素而无需重复特殊元素的情况下才使用该函数，否则使用rand()函数产生随机数的效率更高。
+
+4.多维数组排序
+  bool array_multisort( array &$array1[, mixed arg[, mixed...[, array...]]] );
+参数中的数组被当成一个表的列并以行来进行排序，数组中的行值相同时就按照下一个输入数组中相应值的大小来排序，以此类推，其中第一个数组是要排序的主要数组。该函数如果成功则返回true,否则返回false.
+
+==== 数组拆分与合并 ====
+1.array_merge()
+array array_merge( array $array1 [, array $array2 [, array $...]] );
+  
+2.array_slice()
+  array array_slice( array $array, int $offset [, int $length [, bool $preserve_keys]] );
+$offset: 指定取出元素的开始位置，如果是正数，则从前往后开始取，如果是负值，则从后向前取offset绝对值数目的元素。
+$length: 指定返回数组长度，如果是负值则从后向前选取该值绝对值数目的元素，如果未设置，则返回所有元素。
+$preserve: 如果为true则所返回的数组将保留键名，如为false(默认值)，将重新设置索引键。如果数组有字符串键，则所返回的数组将保留键名。
+
+3.array_splice()
+  array array_splice( array $input, int $offset [, int $length [, array $replacement]] );
+array_splice()不返回选定数据，而是删除他们并用其他值代替。被删除的元素由此数据中的元素替代。如果没有先锋队任何值，则此数组中的元素将插入指定位置。
+
+4.array_chunk()
+  array array_chunk( array $input, int $size [, bool $preserve_keys] );
+array_chunk()将一个数据分割成多个数组。$size指定结果数组中的元素个数。$preserve_keys值为true时，表示数组元素的键名保持不变；false(默认值)表示数组元素的键名会丢失。
+
+==== 计算数据元素个数 ====
+
+  int count( mixed $var [, int $mode] );
+$mode规定函数的模式是否递归地计算多维数组中的数组的元素个数。$mode可能的取值是0和1，0为默认值，不检测多维数组，1检测多维数组。
+
+==== 获取元素键名函数 ====
+
+1.array_search()
+  mixed array_search( mixed $needle, array $haystack [, bool $strict] );
+array_search()函数用于在数组中搜索给定的值，找到后返回键名，否则返回false。$needle指定在数组中搜索的值，$strict为true时，则还要在$haystack中检查$needle的类型。
+
+2.array_keys()
+  array array_keys( array $input [, mixed $search_value [, bool $strict]] );
+使用array_search()时，如果查询的元素在数组中不止一次出现，那么只返回第一个匹配的键名。而array_keys()返回所有的键名。
+
+
+
+
+
+
+

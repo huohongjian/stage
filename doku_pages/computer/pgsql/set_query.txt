@@ -1,0 +1,79 @@
+====== 集合查询 ======
+
+===== 表集合运算 =====
+
+  UNION     (并)
+  INTERSECT (交)
+  EXCEPT    (差)
+
+===== 字段集合运算 =====
+
+  IN
+  NOT IN
+  ANY      col operator ANY(...)
+  ALL      col operator ALL(...)
+  EXISTS   EXISTS(...) 如果集合中存在一个或多个记录，运算结果为真，否则为假。
+
+===== 表集合查询 =====
+
+==== UNION [ALL] ====
+查询选修了'操作系统'和'数据库'课程的学生
+  SELECT s.sname AS 姓名
+      FROM s, sc, c
+      WHERE s.sno = sc.sno AND sc.cno=c.cno AND c.cname='操作系统'
+  UNION
+  SELECT s.sname AS 姓名
+      FROM s, sc, c
+      WHERE s.sno = sc.sno AND sc.cno = c.cno AND c.cname='数据库';
+ALL用于控制同时出现在两个SELECT 结果集合中的记录。
+
+==== INTERSECT ====
+查询同时选修了'操作系统'和'数据库'课程的学生：
+  SELECT s.sname AS 姓名
+      FROM s, sc, c
+      WHERE s.sno = sc.sno AND sc.cno=c.cno AND c.cname='操作系统'
+  INTERSECT
+  SELECT s.sname AS 姓名
+      FROM s, sc, c
+      WHERE s.sno = sc.sno AND sc.cno = c.cno AND c.cname='数据库';
+
+
+==== EXCEPT ====
+查询所有成绩在80分以上的学生：
+  SELECT s.sname AS 姓名
+      FROM s
+  EXCEPT
+  SELECT s.sname AS 姓名
+      FROM s, sc
+      WHERE s.sno = sc.sno AND sc.grade<80;
+
+===== 字段集合查询 =====
+
+==== ANY ====
+
+查询没有选修操作系统调和的学生姓名
+  SELECT sname FROM s 
+  WHERE NOT sno = ANY (
+      SELECT DISTINCT sno FROM sc, c
+      WHERE sc.cno = c.cno AND cname='操作系统'
+  );
+
+==== ALL ====
+
+查询所有成绩都在80分以上的学生
+  SELECT sname, dept FROM s
+    WHERE sno <> ALL (
+      SELECT DISTINCT sno FROM sc
+      WHERE grade<80
+  );
+
+==== EXISTS ====
+
+查询所有没有选修'操作系统'课程的学生：
+  SELECT sname
+    FROM s
+    WHERE NOT EXISTS (
+      SELECT '-'
+      FROM sc, c
+      WHERE sc.cno = c.cno AND c.cname='操作系统' AND s.sno = sc.sno
+  );

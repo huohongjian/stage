@@ -1,0 +1,410 @@
+
+====== 系统安装 ======
+
+[[https://wiki.archlinux.org/index.php/Installation_guide_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29|详见安装向导]]
+
+===== 从 ISO 文件创建一个支持 UEFI 的启动盘 =====
+
+  # mkdir -p /mnt/{usb,iso}
+  # mount -o loop,ro archlinux-2012.12.01-dual.iso /mnt/iso
+  # awk -F"archisolabel=" 'NF>1{sub(/ .*/,"",$2);print $2}' /mnt/iso/loader/entries/archiso-x86_64.conf | xargs mkfs.vfat /dev/sdb1 -n
+  
+  # mount /dev/sdb1 /mnt/usb
+  # cp -r /mnt/iso/* /mnt/usb
+  # umount /mnt/{usb,iso}
+  # sync
+
+[[https://wiki.archlinux.org/index.php/Unified_Extensible_Firmware_Interface_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29||详细内容参见UEFI]]
+===== 将MBR转化为GPT =====
+
+  gdisk [/dev/sda]
+  w
+
+===== 分区操作 =====
+
+  cfdisk [/dev/sda]     创建分区，并Bootable启动分区
+  mkfs.ext4 /dev/sda1    格式化分区
+  mount /dev/sda1 /mnt  挂载分区
+
+FOR　EFI:
+  cfdisk [/dev/sda]     创建两个分区，一个是EFI系统分区（100M），一个为Linux分区
+  mkfs.fat -F32 /dev/sda1
+  mkfs.ext4 /dev/sda2    格式化分区
+  mount /dev/sda2 /mnt  挂载分区
+===== 网络链接 =====
+  #iwconfig   这个命令会显示当前的网卡，找到w开头的那个就是无线网卡了，我的是wlp3s0。
+  # wifi-menu wlp3s0
+
+  * [[https://wiki.archlinux.org/index.php/Network_Configuration_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29|Network Configuration]]
+  * [[https://wiki.archlinux.org/index.php/Wireless_network_configuration_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29|详见Wireless network configuration]]
+  * [[https://wiki.archlinux.org/index.php/Netctl_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29|详见netctl]]
+
+===== 选择中国镜像站点 =====
+
+  vi /etc/pacman.d/mirrorlist
+  http://mirrors.bjtu.edu.cn
+  http://mirrors.ustc.edu.cn
+
+===== 连接网络 =====
+
+连接有线网络：
+  ip link
+  ifconfig enp0s25 192.168.137.9/24
+  route add default gw 192.168.137.1
+  vi /etc/resolv.conf  添加：
+  nameserver 222.222.222.222
+
+连接无线网络：
+  wifi-menu
+===== 安装基本系统 =====
+
+  pacstrap /mnt base base-devel
+  pacstrap /mnt iw wireless_tools wpa_supplicant wpa_actiond dialog net-tools
+  
+  mount /dev/sda2 /home
+  mount /dev/$esp /mnt/boot/efi  挂载esp分区
+  genfstab -U -p /mnt >> /mnt/etc/fstab  自动检测已挂载的分区
+  打开/mnt/etc/fstab瞧瞧对不对，建议把EFI的那行最后的数字改成0，不让每次都磁盘检查。
+
+===== 初步配置 =====
+
+  arch-chroot /mnt                     切换到/mnt下新安装的系统
+  echo ARCH >> /etc/hostname           设置计算机名称
+  ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime  设置时区
+  hwclock --localtime  设置系统时间是当地时间，Linux默认是UTC时间，Windows默认是当地时间，改成一致。
+  vi /etc/locale.gen                  启用zh_CN.UTF-8  运行locale-gen
+  在/etc/locale.conf                  里设置locale偏好；
+  在/etc/vconsole.conf                中加入控制台键盘映射和字体偏好；
+  passwd     设置root密码
+
+必要时配置/etc/mkinitcpio.conf并运行mkinitcpio -p linux  [[https://wiki.archlinux.org/index.php/Mkinitcpio_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29|详见mkinitcpio]]
+
+
+===== 安装GRUB =====
+
+  pacman -S grub
+  grub-install /dev/sda
+  grub-mkconfig -o /boot/grub/grub.cfg
+
+FOR UEFI:
+  pacman -S grub dosfstools efibootmgr (grub-efi-x86_64)
+  mkdir -p /boot/efi
+  mount /dev/$esp  /boot/efi     #$esp为EFI System Partion
+  grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=grub --recheck --debug
+  #cp /usr/share/locale/en@quot/LC_MESSAGES/grub.mo /boot/grub/locale/en.mo  复制语言文件
+  
+  mkdir $esp/EFI/boot
+  cp $esp/EFI/grub/grubx64.efi $esp/EFI/boot/bootx64.efi
+
+  pacman -S os-prober     #自动在grub菜单中加载其他操作系统选项
+  grub-mkconfig -o /boot/grub/grub.cfg
+
+如果GRUB自动生成的Windows启动项不无法启动，则打开/boot/grub/grub.cfg,找到Windows8的那一项，把{}中间的内容改成：
+  {
+    insmod part_gpt
+    insmod chain
+    set root='(hd0,gpt2)'
+    chainloader /efi/Microsoft/Boot/bootm***.efi
+  }
+  set root='(hd0,gpt2)'你的可能和我的不一样，不过预装的应该都是这个。
+
+
+===== 缷载分区并重启 =====
+
+  exit
+  umount -R /mnt
+  reboot
+
+
+
+====== 系统配置 ======
+
+
+===== 设置时间 =====
+  
+  $ sudo ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime   设置时区
+  $ sudo pacman -S openntpd  
+  $ sudo systemctl start openntpd  开启对时服务
+  
+  $ sudo hwclock -w 或 $ sudo hwclock --systohc
+
+
+===== 添加用户 =====
+
+  useradd -m hhj
+  passwd hhj
+  gpasswd -a hhj wheel
+  chsh -s /bin/csh hhj
+
+
+===== 屏幕亮度设置 =====
+
+  vi /sys/class/backlight/nv_backlight/brightness    #nvidia  最大值为100
+  或
+  vi /sys/class/backlight/intel_backlight/brightness #intel   最大值为1000
+  设置具体的数值即可
+
+
+===== 安装字体 =====
+
+  # pacman -S wqy-zenhei wqy-microhei wqy-bitmapfont
+  # cp -r ms/ TTF/ /usr/share/fonts/  直接复制micosoft ttf字体
+
+
+手动安装字体。要安装不在源中的字体，推荐的方法请参考#创建字体包。这样使得 pacman 在以后能够更新或者移除它们。当然字体也可以通过手工方式安装。要在系统范围内（对所有用户有效）安装字体，请将文件夹移动到 /usr/share/fonts/ 目录。要为单个用户安装字体，请使用 ~/.fonts/。要让 Xserver 能直接载入字体（而不使用某些字体服务），就需要将新增字体的目录加入到 FontPath 中。它位于您的Xorg 设置目录中（例如 /etc/X11/xorg.conf 或 /etc/xorg.conf) 中。然后更新 fontconfig 的字体缓存：
+  $ fc-cache -vf
+
+
+
+[[https://wiki.archlinux.org/index.php/Fonts_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29|详见archlinux wifi fonts]]
+
+
+===== 激活无线网络 =====
+
+显示所有配置，用wifi-menu成功上网的话应该有一个自动生成的。另，这些配置在/etc/netctl目录下，可以自己打开修改。
+  #netctl list
+激活<profile>配置文件，下次启动自动以这个配置联网。
+  #netctl enable <profile> 
+
+===== 关闭PC小喇叭 =====
+
+  # vim /etc/modprobe.d/nopcspkr.conf
+  blacklist pcspkr
+
+
+===== 在tty1上显示启动信息 =====
+
+1.修改配置文件。
+  sudo vi /etc/systemd/system/getty.target.wants/getty@tty1.service
+  [Service]
+  TTYVTDisallocate=no
+
+2.修改grub配置文件。
+  sudo vi /etc/default/grub
+  在首行加#  //可使用文件显色
+  GRUB_CMDLINE_LINUX_DEFAULT="" 或
+  GRUB_CMDLINE_LINUX_DEFAULT="acpi_backlight=vendor elevator=noop"  //控制台暗  固态硬盘
+  GRUB_BACKGROUND="desktop.jpg"  //grub背景图片
+
+3.设置windows启动项。
+  sudo vi /etc/grub.d/40_custom
+  menuentry 'Microsoft Windows 7' {
+    set root=(hd0,msdos1)
+    chainloader +1
+  }
+
+4.自动生成grub配置文件。
+  grub-mkconfig -o /boot/grub/grub.cfg
+
+
+
+===== Xterm终端中文乱码解决办法 =====
+
+首先，编辑~/.Xresources文件，添加一下三句
+  ## 英文字体
+  xterm*faceName:DejaVu Sans Mono:antialias=True:pixelsize=14
+  ## 中文字体
+  xterm*faceNameDoublesize:WenQuanYi Micro Hei:antialias=True:pixelsize=14
+  Xterm*locale:zh_CN.UTF-8
+
+其中的DejaVu Sans Mono和WenQuanYi Micro Hei是我的字体文件，查看本机上安装的字体使用fc-list命令查看，将第二行WenQuanYi Micro Hei改为你安装的中文字体，修改完成之后在终端下输入命令：
+  xrdb  ~/.Xresources
+重新加载你的终端配置文件，好了，大功告成。终端可以显示中文了
+
+
+===== 64位archl运行32位程序 =====
+
+archlinux纯64位版是没有办法直接运行32位程序的。因为缺少最主要的glibc的32位版本的支持。
+
+要想使archlinux64支持32位程序，只需要将32位的源添加进来就可以。/etc/pacman.conf中增加
+  [multilib]  
+  Include = /etc/pacman.d/mirrorlist  
+
+如果是chakra需要将repo的名称修改为lib32和lib32-test
+  [lib32]  
+  Include = /etc/pacman.d/mirrorlist  
+
+这样通过pacman安装lib32-glibc库就能提供基本的32位支持了，如果需要32位桌面环境库，安装lib32-gtk或者lib-kde就可以了。看出规律来了吧，这些库的前缀都是lib32-。下一步就可以自由的使用了。
+
+
+===== Linux下调节屏幕亮度(Intel核显) =====
+
+先说一下，我装的是深度的Linux，跟Ubuntu应该是一样的，我的电脑是清华同方的K41H，I5核显。系统调节亮度调用的是/sys/class/backlight/acpi_video0下的brightness文件。而实际上，亮度由/sys/class/backlight/intel_backlight/brightness决定。我一开始的想法是把acpi_video0指向intel_backlight，没成功，可能是我对Linux不太熟。所以直接用FN快捷键来调节亮度我是实现不了了。退而求其次，我写了两个脚本来增加/降低亮度。
+
+降低亮度：
+<file php brightness_down.sh>
+    if [ ! -w /sys/class/backlight/intel_backlight/brightness ];then 
+        echo "password" | sudo -S chmod 777 /sys/class/backlight/intel_backlight/brightness 
+    fi 
+     
+    read bright < '/sys/class/backlight/intel_backlight/brightness' 
+     
+    v=600 
+    v=$(($bright - 4882 / 9 )) 
+     
+    echo $v | tee /sys/class/backlight/intel_backlight/brightness 
+</file>
+
+
+增加亮度：
+<file php brightness_up.sh>
+    if [ ! -w /sys/class/backlight/intel_backlight/brightness ];then 
+        echo "password" | sudo -S chmod 777 /sys/class/backlight/intel_backlight/brightness 
+    fi 
+     
+    read bright < '/sys/class/backlight/intel_backlight/brightness' 
+     
+    v=600 
+    v=$((4882 / 9 + $bright)) 
+     
+    echo $v | tee /sys/class/backlight/intel_backlight/brightness 
+</file>
+因为brightness文件默认是没有写权限的，可以要先把它的权限改成可写。最后在任务栏上创建两个启动器，可以用鼠标很方便的调节亮度了～
+
+
+
+===== 设置终端字体 =====
+
+虚拟终端使用核心常驻字体，默认显示 ASCII 字符，这两种设置都可以轻易改变。终端字体限定为 256 或 512 个字符。可供使用的字体存放在 /usr/share/kbd/consolefonts/ 目录。键盘映射 (Keymap) 是按键和计算机使用字符的对应关系表，可以在 /usr/share/kbd/keymaps/ 的子目录下找到。
+
+==== 预览和测试 ====
+
+以表格形式显示可用字与字符
+  $ showconsolefont  
+
+暂时改变字体，只要指定字体名称即可 (这些字体位于 /usr/share/kbd/consolefonts/)：
+  $ setfont Lat2-Terminus16
+
+用 -m 选项指定使用的字符集：
+  $ setfont Lat2-Terminus16 -m 8859-2
+
+撤消至默认字体 (就算终端显示乱码，这个指令依然可以执行 —— 将指令「盲打」进去即可)：
+  $ setfont
+
+注意: setfont 只作用于当前正在使用的终端。其它终端无论活跃与否都不受影响。
+
+
+===== 更改默认字体 =====
+
+/etc/vconsole.conf 的 FONT 和 FONT_MAP 变量可以用来改变默认字体。若要显示 Č, ž, đ, š 或 Ł, ę, ą, ś 之类的字符，请使用 lat2-16.psfu.gz 这个字体：
+
+  FONT=lat2-16
+
+这代表使用 ISO/IEC 8859 字符的第二部分，尺寸设置为 16。您可以使用其它值更改字体尺寸 (如 lat2-08)。您可以在维基百科的这张表查询 8859 规范定义的本地。如果您经常在没有 X 服务器的终端上工作，推荐可以使用一种 Terminus 字体。比如说 ter-216b，代表包含 latin-2 部分，尺寸 16，黑体字。ter-216n 是正常磅数的版本。Terminus 字体尺寸最大可以到 32。现在设置适当的字体映射，若使用 lat2-16 则会是：
+
+  FONT_MAP=8859-2
+
+
+===== 安装设置字体 =====
+
+  pacman -S terminus-font
+  vi /etc/vconsole.conf
+    FONT=ter-v28b
+    FONT_MAP=8859-2
+==== KMS 早启动 ====
+
+要在启动时尽早启用 KMS，将启动模块加入/etc/mkinitcpio.conf的 MODULES 行。
+  vi /etc/mkinitcpio.conf
+  MODULES="i915"
+  或
+  MODULES="radeon"
+  或
+  MODULES="nouveau"
+
+重新生成内核镜像
+  # mkinitcpio -p linux
+
+
+====== 基本操作 ======
+
+
+
+===== 无线网络 =====
+
+
+==== 不需要密码无线网络设置 ====
+
+  ifconfig wlan0 up  # 开启无线网络
+  iwlist wlan0 scan    #搜索无线网络，也可以iwlist wlan0 scan | grep TP-LINK 查看是否有搜到essid为 TP-LINK的无线网络。
+  iwconfig wlan0 essid "TP-LINK" #连接无线网络名（即essid）为 TP-LINK的无线。    
+  dhcpcd wlan0 #当无线网络不需要密码时直接这行命令即可获得一个动态ip，此时即连接成功。
+
+
+==== 需要密码无线网络设置 ====
+
+  ifconfig wlan0 up  # 开启无线网络
+  iwlist wlan0 scan    #搜索无线网络，也可以iwlist wlan0 scan | grep TP-LINK 查看是否有搜到essid为 TP-LINK的无线网络。
+  iwconfig wlan0 essid "TP-LINK" #连接无线网络名（即essid）为 TP-LINK的无线。
+  mv /etc/wpa_supplicant.conf /etc/wpa_supplicant.conf.original   #备份 /etc/wpa_supplicant.conf
+  wpa_passphrase linksys "pwd" > /etc/wpa_supplicant.conf   #linksys是无线网络essid,而pwd是密码。
+  wpa_supplicant -i wlan0 -c /etc/wpa_supplicant.conf -B  #连接上网络
+  dhcpcd wlan0                                            #使用动态地址分配。
+
+
+===== gnome shortcuts =====
+
+  Super+(pg up)/(pg dn)    # exchange screen
+
+
+
+===== Find the real path of the Command =====
+
+  # type [Command]
+  type firefox
+
+
+
+===== clean pacman cache =====
+
+  pacman -Scc
+  pacman -S -l       # list pacman install packages
+
+
+
+===== Static IP Address =====
+
+  cd /etc/netctl
+  cp examples/ethernet-static my-network
+
+  vim my-network  # Then edit the profile as needed
+  netctl enable my-network
+  netctl start my-network
+
+
+
+
+===== 其他 =====
+
+locate和updatedb命令支持，我喜欢的查找文件工具
+  #pacman -S mlocate
+
+其它
+设置一下支持小红点的滚动功能，建立/etc/X11/xorg.conf.d/10-trackpoint.conf文件，在里面输入
+  Section "InputClass"
+    Identifier      "Trackpoint Wheel Emulation"
+    MatchProduct    "TPPS/2 IBM TrackPoint|DualPoint Stick|Synaptics Inc. Composite TouchPad /TrackPoint|ThinkPad  USB Keyboard with TrackPoint|USB Trackpoint pointing device"
+    MatchDevicePath "/dev/input/event*"
+    Option          "EmulateWheel"          "true"
+    Option          "EmulateWheelButton"    "2"
+    Option          "Emulate3Buttons"       "false"
+    Option          "XAxisMapping"          "6 7"
+    Option          "YAxisMapping"          "4 5"
+  EndSection
+
+
+===== 打印机设置 =====
+
+  sudo pacman -S cups  ghostscript gsfonts
+  http://localhost:631
+
+
+===== 系统时间 =====
+
+  sudo timedatectl set-timezone Asia/Shanghai
+  sudo pacman -S ntp
+  sudo ntpd -qg
+  sudo hwclock -w
+
+https://wiki.archlinux.org/index.php/Network_Time_Protocol_daemon_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29
+
+

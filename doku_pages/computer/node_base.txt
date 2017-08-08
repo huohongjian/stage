@@ -1,0 +1,34 @@
+====== Node基础 ======
+
+安装：
+  cd /usr/ports/www/node
+  sudo make install clean
+
+
+
+====== express入门 ======
+
+Express是最流行的Node开发框架之一，它这现了一些通用的Node程序开发任务。
+
+===== 安装 =====
+
+  sudo npm install -g express
+  sudo npm install -g express-generator
+
+===== 创建express程序 =====
+
+使用express创建一个工程:
+  express helloworld         // express --css less 支持CSS预处理器LESS
+创建好project之后还需要用npm进行添加依赖和启动:
+  cd helloworld
+  npm install
+  npm start
+
+
+
+
+
+
+
+
+

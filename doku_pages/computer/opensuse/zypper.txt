@@ -1,0 +1,84 @@
+====== Opensuse zypper ======
+
+zypper 是 opensuse 下的命令行包管理工具，类似 arch 下的 pacman 或 debian 下的 apt-get 。opensuse 下图形化的 Yast 也十分强大（也许是我见过最好用的图形化管理工具），建议两者配合使用。
+
+  zypper              列出可用的全局选项和命令
+  zypper help search  列出 search 命令的帮助
+
+  zypper up           更新所有软件包到可用的新版本
+  zypper lu           獲取可用的更新列表
+  zypper lp           列出需要的补丁更新
+  zypper patch        安装所需的补丁
+  zypper pchk         檢查是否有可用的重要的補丁，並反饋補丁數
+  zypper patch-info Firefox    显示 Firefox 补丁的信息
+
+  zypper se sqlite                  搜索 sqlite 软件
+  zypper se -s virtualbox-ose       查看匹配軟體套件包的全部可選版本
+  zypper se -dC --match-words RSI   搜寻包括摘要和描述中的匹配 RSI 缩写的项
+  zypper se 'yast*'                 搜寻所有含 yast 字符的软件包（注意 shell 的表达，不确定就加引号）
+  zypper se -r packman              列出所有 packman 供应源的软件包
+  zypper se -i sqlite               列出所有已安装的其名字包含 sqlite 的软件包
+  zypper se -t pattern -r repo-oss  列出所有 repo-oss 供应源的模式 (pattern)
+  zypper se -t product              列出所有可选的成品 (product)
+
+  zypper ve                            验证检查依赖关系
+  zypper wp firefox                    列出所有指定軟體的供應方
+  zypper info amarok                   顯示名為 amarok 的軟體套件包的具體信息
+  zypper info -t pattern lamp_server   显示 lamp server 模式的信息
+  zypper info -t product openSUSE-FTP  显示特定成品的信息            
+
+  zypper rm sqlite2        删除 sqlite2 软件
+  zypper in sqlite3        安装 sqlite3 软件
+  zypper in yast*          安装所有符合 yast* 名称的软件
+  zypper in vim -emacs     安装 vim 并移除 emacs
+  zypper in -f subversion  强制重新安装 subversion
+  zypper in bitchx-1.1-81.x86_64.rpm    安装当前目录的 bitchx RPM 软件包
+  zypper inr               查找並安裝已安裝的軟體套件包的推薦的新添加的軟體套件包
+  zypper ps                顯示使用被最近的更新或移除操作所刪除的文件的進程
+
+  zypper si -D zypper      只安装源码包
+  zypper si -d zypper      只安装构建依赖
+
+  zypper al 'yast2*'       鎖定所有以 yast2 開首的軟體套件包
+  zypper al -r repo-oss virtualbox* 限制 repo-oss 供应源（允许安装其他供应源的软件包）
+  zypper ll                         列出當前有效的鎖定
+  zypper rl yast2-packager          移除鎖定，可对应序号锁定
+軟體套件包鎖定可以防止軟體套件包的變更。應用了有效的鎖定的軟體套件包無法變更其安裝狀態，即已安裝的軟體套件包無法移除或升級，未安裝的軟體套件包無法安裝。
+
+  zypper lr        列出設定的供應套件庫
+  zypper lr -u     列出供应源 URI
+  zypper lr -d     列出供应源的其他数项属性
+  zypper lr -P     列出供应源优先级并依此排序
+  zypper lr -e my  导出全部的供应源设定信息至文件 my.repo
+
+  zypper ar http://download.videolan.org/pub/vlc/SuSE/11.1 vlc        添加供應套件庫
+  zypper ar http://download.opensuse.org/repositories/X11:/XGL/openSUSE_11.1/X11:XGL.repo 通过 .repo 文件
+  zypper ar -c ftp://some.download.site myalias    添加之前试探供应源
+  zypper ar my/dir/with/rpms local                 添加含 RPM 文件的本地目录为供应源
+
+  zypper rr vlc 1 23 foo   移除供應套件庫
+  zypper mr -d 6           禁用序號為 6 的供應套件庫
+  zypper mr -rk -p 70      packman    啟用 packman 供應套件庫的自動刷新並緩存 RPM 文件，再設置其優先順序為 70
+  zypper mr -Ka            禁用所有供應套件庫的 RPM 文件緩存
+  zypper mr -ka            啟用所有供應套件庫的 RPM 文件緩存
+  zypper nr 3 upd          重命名供應套件庫
+
+  zypper refresh           刷新供應套件庫
+  zckman main              只指定特定的供应源刷新
+  zypper ref -f upd        强制 upd 供应源刷新
+
+導出導入供應套件庫
+
+  $ zypper lr --export backups/repos/foo.repo
+  $ zypper ar backups/repos/foo.repo
+
+發行版升級
+
+  $ zypper dup        
+此命令使用發行版升級演算法，處理軟體套件包分裂 (package splits)、無維護軟體套件包以及類似的其他軟體套件包建議在發行版升級過程中僅啟用您所欲安裝的發行版的主要的供應套件庫和一些您所用的重要的供應套件庫（若其版本對應於主要的供應套件庫則更佳）。也可以先禁用舊的供應套件庫 zypper mr -da，添加新的供應套件庫 zypper ar，再 zypper dup 升級。您可以用 --repo 選項指定所使用的供應套件庫 zypper dup -r repo1 -r repo2
+
+
+文／mudan（简书作者）
+原文链接：http://www.jianshu.com/p/cbb0344a27ba
+著作权归作者所有，转载请联系作者获得授权，并标注“简书作者”。
+

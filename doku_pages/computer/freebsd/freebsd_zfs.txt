@@ -1,0 +1,195 @@
+用FreeBSD10搭建基于ZFS的iSCSI服务2014-06-04      0 个评论     来源：用FreeBSD10搭建基于ZFS的iSCSI服务   收藏    我要投稿 
+概述
+
+对于ZFS我是一直在强烈推荐的，因为实在太好用了。但是直到现在，它还是只能运行于Oracle的Solaris和FreeBSD两个系统上，为了将它分享给别的系统只能通过NAS或SAN的方式。
+
+NAS的方式很简单，我一直在用Samba实现，当然NFS也是可以的，SAN的话之前还没试过。使用上当然是SAN更好一些，而且现在网速也够快。虽然对于存储来说，NAS和SAN都是外部存储，但对于客户机来说，它知道NAS是网络设备，而SAN则会被视同本地设备，这是二者的主要区别。之所以会这样，是因为NAS走的是网络层的协议，SAN走的是更底层的块设备协议。
+
+传统上SAN都是比较高大上的，因为都是走光纤通道（FC），直到后来有了iSCSI这个大救星——使用iSCSI的SAN又被称为IP-SAN。而且有了iSCSI以后，NAS和SAN的区别已经不那么明显了，因为现在有一些NAS设备也提供iSCSI支持。
+
+不过要注意一点：正因为NAS是走网络协议，所以对客户机来说，是以通用的网络文件系统方式访问，不需要关注服务端是用什么具体的文件系统，这也就意味着在不同系统中可以共享NAS中的文件。比如我现在就是在服务端用ZFS格式存放文件，通过SAMBA共享给Linux、Mac和Windows，在四个完全不同的系统中访问共享文件都没有问题。但是SAN是走底层块设备协议，所以是客户机独用的，Linux用的target不能与Windows共用（格式化后的文件系统不同），同样在服务端也无法直接看到相应target里的具体内容（可以通过服务端的本地Initiator连接后mount为指定文件系统操作，但也仅限于服务端本身支持的文件系统格式）。
+
+之前版本的FreeBSD虽然也支持iSCSI，但是是一个用户级的应用，个人感觉不好，所以没试过。在最新的FreeBSD 10中，iSCSI被集成到系统中去了，这真是个喜大普奔的好消息，最近试了一下感觉还不错。
+
+关于iSCSI的基本原理大致是这样：iSCSI本身是一个协议，是一个在IP网络上的虚拟SCSI实现。客户端能过iSCSI Initiator模拟一个本地的块设备（可以理解为一个虚拟的SCSI硬盘），然后由iSCSI Initiator把收到的SCSI指令通过IP网络传递到服务端，服务端的再将相应的指令转为对实际硬盘的操作。
+
+在服务端（即存储端）有一些物理或逻辑硬盘，被组织成所谓的LUN（逻辑单元号），可以理解为一种逻辑卷，比如一块硬盘，一个分区，一组RAID，或是一个ZFS。当这个存储端把这些LUN通过iSCSI对外提供存储服务的时候，我们叫它iSCSI target。同时，在存储端上可以通过多种途径对外提供服务，比如通过不同的IP，不同的网卡，不同的身份认证方式等，每一种途径叫做一个portal group。portal group和target可以自由组合，以满足客户端的各种存储需求。
+
+在客户端，则是通过前面所说的iSCSI Initiator实现，它在本地表现为一个虚拟硬盘（在/dev下有设备名，但没有实际的物理设备），对它的所有操作都会被通过iSCSI传递到对应的iSCSI target上去。
+
+iSCSI target
+
+首先在服务端创建一个ZFS供target之用：
+zfs create -s -V 4G -b 4k tank/testtarget
+
+注意需要-V参数才能在/dev/zvol下创建相应的块设备供iSCSI之用。-V表示创建ZFS卷，-s表示不在创建时分配空间，不加此参数则会创建一个实际占用指定容量的卷。-b指定块大小（即传统意义上的扇区大小，一般用4096或512）。
+
+然后在 /etc/rc.conf 里加入以下一行启用ctld（iSCSI服务）：
+ctld_enable="YES"
+
+接着是配置ctld，创建 /etc/ctl.conf 文件，内容为：
+portal-group san {
+        discovery-auth-group no-authentication
+        listen 192.168.x.x
+}
+
+target iqn.2014-05.com.example:target0 {
+        auth-group no-authentication
+        portal-group san
+        lun 0 {
+                path /dev/zvol/tank/testtarget
+                blocksize 4096
+                size 4G
+        }
+}
+
+
+这是最简单的配置，只有一个target和一个portal group。没有使用用户认证。作为测试已经足够了。
+
+然后就可以启动这个target了：
+chmod 600 /etc/ctl.conf
+service ctld start
+
+注意那个chmod的步骤是必须的，否则服务无法启动，因为一个全局可读的配置文件是不安全的。
+
+启动完可以看一下日志，以确定没有出错。
+tail /var/log/messages
+
+iSCSI initiator
+
+一般不拿FreeBSD做客户端，只是有时会需要在服务端测试一下target的配置，所以可能还是会用到FreeBSD下的Initiator的，所以记录了一下配置方法附后供参考。本节以实际的桌面环境配置为例。
+
+我的桌面是Linux Mint 16，以下供参考。不过不同的Linux发行版应该都差不多。Mac貌似需要商业软件支持，没法介绍。微软有为Windows免费提供相关的Initiator软件（高版本Windows已内置），配置方法附后。
+
+首先需要安装软件：
+sudo apt-get install open-iscsi open-iscsi-utils
+
+然后启动服务：
+sudo service open-iscsi start
+
+然后搜索一下target :
+sudo iscsiadm -m discovery -t sendtargets -p 192.168.x.x
+
+在结果中可以看到之前配置好的target。
+
+登录连接target：
+sudo iscsiadm -m node -T iqn.2014-05.com.example:target0 -p 192.168.x.x -l
+
+现在打开系统首选项-磁盘（或你的发行版上的相关工具，或者你习惯用命令行也行），即可看到一个新增的磁盘（在我的电脑上，它的设备名叫/dev/sdc），磁盘名叫做FREEBSD CTLDISK，处于未格式化状态。用EXT4格式化，再mount即可像本地盘一样直接使用了。
+
+至此一个基本的基于ZFS的iSCSI服务就算搭建完成。
+
+更复杂的应用
+
+前面说的target配置是全开放的，整个网段内所有客户端都可以自由连接，为了安全起见，需要加入用户认证。
+
+最简单的方法就是在target配置里加入用户名密码：
+target iqn.2014-05.com.example:target0 {
+        portal-group san
+        chap user password1234
+        lun 0 {
+                path /dev/zvol/tank/testtarget
+                blocksize 4096
+                size 4G
+        }
+}
+
+注意，其中密码默认需要不少于12位。但是如果有多个用户需要使用的话，这样就不方便了，这时就需要使用auth-group：
+auth-group ag0 {
+        chap user1 password1234
+        chap user2 password1234
+}
+
+target iqn.2014-05.com.example:target0 {
+        auth-group ag0
+        portal-group san
+        lun 0 {
+                path /dev/zvol/tank/testtarget
+                blocksize 4096
+                size 4G
+        }
+}
+
+现在在initiator端同样需要指定用户名密码才能连接了。但是用户名密码并不是在命令行里输入，而是需要配置给open-iscsi服务。修改/etc/iscsi/iscsid.conf，加入：
+node.startup = automatic
+node.session.auth.authmethod = CHAP
+node.session.auth.username = user
+node.session.auth.password = password1234
+
+
+其中node.startup设置为automatic是为了让initiator自动连接。这项并不是必须的，它的默认值是manual，即需要手动连接target，设置为automatic即可在系统重启后自动连接target，而不需要再手工运行iscsiadm去连接。
+
+node.session.auth的username和password就是前面配置的target的用户名和密码。同理，如果配置了portal group的用户认证，也可以在这里配置discovery的用户名和密码。
+
+然后重启open-iscsi服务：
+sudo service open-iscsi restart
+
+现在再执行：
+sudo iscsiadm -m node -T iqn.2014-05.com.example:target0 -p 192.168.x.x -l
+
+即可登录连接target。连接后即可mount使用。
+
+如果像前面那样把node.startup配置为automatic，则启动后会自动连接，只需要直接mount或如下配置成自动mount：
+
+先取得UUID：
+sudo blkid /dev/sdc
+
+或者用/dev/disk/py-path/方式的路径，然后把它配置到fstab里（以by-path路径为例，以UUID方式参见fstab中的默认配置）：
+/dev/disk/by-path/ip-192.168.x.x:3260-iscsi-iqn.2014-05.com.example:target0-lun-0 /mnt/iscsi      ext4    _netdev,errors=remount-ro 0       1
+
+注意，选项里必须有_netdev一项否则在启动时会等待很长时间后mount失败。
+
+试试ZFS
+
+可以注意到，前面有一个步骤是客户端需要对target进行格式化，我是格式化为EXT4格式的，那么服务端的ZFS还有效吗？可以来试试。
+
+首先在mount好的路径里创建一些文件，然后到服务端做个快照：
+zfs snapshot tank/testtarget@test1
+
+然后再回到客户端，把相关的文件删除或修改，然后umount并断开（否则不能对服务端ZFS作修改操作）：
+sudo umount /dev/sdc
+sudo iscsiadm -m node -T iqn.2014-05.com.example:target0 -p 192.168.x.x -u
+
+然后在服务端把iSCSI服务给停了：
+service ctld stop
+
+现在可以试试回滚快照——当然也可以做一个克隆，然后把target指向克隆，这里以简单的回滚操作为例：
+zfs rollbak tank/testtarget@test1
+
+再重启服务：
+service ctld start
+
+客户端重新连接：
+sudo iscsiadm -m node -T iqn.2014-05.com.example:target0 -l
+sudo mount /dev/sdc /mnt/iscsi
+
+现在再看之前修改过或删除掉的文件又恢复原状了。可见ZFS卷同样可以实现ZFS的功能，并不会因为它被格式化为EXT4而失效。
+
+附：FreeBSD下的Initiator配置
+
+首先启动 iscsid 服 务。因为通常情况下只是测试一下，可以直接用iscsid命令启动服务，因为用service命令启动的话还需要配置rc.conf，而且即使是直接启动也可以用service命令停止它。
+
+然后用连接target：
+iscsictl -A -p 192.168.x.x -t iqn.2014-05.com.example:target0
+
+然后用不带参数的iscsictl看一下连接状态和设备名。注意：如果状态显示为Waiting for iscsid(8)，则说明iscsid服务未启动。
+
+没问题的话就：
+
+mount -t fstype /dev/da0 /mnt/iscsi
+
+其中fstype为文件系统名，da0为连接后的设备名。
+
+附：Windows的Initiator配置
+
+因为Mac不能用，郁闷之余看了一下Windows的配置，发现还是挺简单的，连重启都不用。
+
+首先在微软官网下载：Microsoft iSCSI initiator
+
+然后安装之。注意，需要开启MS DTC服务。
+
+安装后运行之，在[Discovery]页的[Target Portals]一栏里点[Add]，输入Portal的IP地址或DNS名称，比如：192.168.x.x。
+
+确定后在[Targets]页里即可看到服务端配置的targets，选择之，然后点[Log On]，其状态会从Inactive变成Connected。注意这时有个选项叫“Automatically restore this connection when the system boots”，选中之可以在系统启动时自动连接。
+
+现在打开系统管理中的磁盘管理，就会弹出提示说系统中多了一块硬盘，选择之并格式化为你想要的文件系统格式，比如FAT32或NTFS，之后就可以像普通硬盘一样使用它了。

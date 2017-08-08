@@ -1,0 +1,41 @@
+====== INDEX ======
+----
+
+　网络文摘：[[wlwz:xinwen:index|新闻]]
+ - [[wlwz:wenxue:index|文学]]
+
+
+　股票投资：[[stock:guge|股歌]]
+ - [[stock:gegu|板块]]
+ - [[stock:tuijian|推荐个股]]
+
+
+　文学欣赏：[[literature:tssc:index|唐诗宋词]]
+ - [[literature:yuanchuang:index|原创文学]]
+
+
+　法律法规：[[law_rule:fdczc:index|房地产政策]]
+
+
+　操作系统：[[computer:linux:index  |Linux]]
+ - [[computer:archlinux:index      |ArchLinux]]
+ - [[computer:freebsd:index        |FreeBSD]]
+ - [[computer:windows:index        |Windows]]
+ - [[computer:raspberry:index      |Raspberry]]
+ - [[computer:openSuse:index       |OpenSuse]]
+
+　编程基础：[[computer:programming:index    |Programming]]
+ - [[computer:python:index         |Python]]
+ - [[computer:pgsql:index          |PgSQL]]
+ - [[computer:php:index            |PHP]]
+ - [[computer:javascript           |Javascript]]
+ - [[computer:node                 |Node]]
+
+
+----
+===== Links =====
+　[[https://www.dokuwiki.org/start?id=zh:dokuwiki|dokuwiki中文]]
+　[[https://www.dokuwiki.org/zh:wiki:syntax?s[]=%E8%AF%AD%E6%B3%95|dokuwiki语法]]
+　[[http://hrr.f3322.org:8012/cmsimple/          |Welcome to my site]]
+　[[http://hrr.f3322.org:8012/codiad/            |Codiad]]
+　[[remark|Remark]]

@@ -1,0 +1,51 @@
+====== 提高效率 ======
+
+===== 索引 =====
+
+  * btree访问模式是Lehman-Yao高并发btree的一种实现。
+  * rtree访问模式是Guttman的二分算法实现了标准的rtree.
+  * hash访问模式是Litwin线性的散列的一个实现。
+所有这些访问模式都是完全动态的，并且不必进行周期性的优化。
+
+值得注意的是，当一个索引了的字段涉及到<、<=、=、>=、>比较操作时，PostgreSQL查询优化器考虑使用btree索引。目前只有btree支持多字段索引。
+
+当一个索引了的字段涉及到<<、&<、&>、>>、@、~=、&&比较操作时，PostgreSQL查询优化器考虑使用rtree索引。
+
+当一个索引了的字段涉及到=比较操作时，PostgreSQL查询优化器考虑使用hash索引。
+
+  CREATE INDEX friend_m_idx On friend (age, city);
+多字段索引的数据以第一个索引字段的名义存放。当经一个索引字段有多个相同的值时，索引的排序工作依据第二个索引字段进行，依次类推。上例中，在查询条件仅包含'city'字段时，不会使用'friend_x_idx'索引。
+  CREATE UNIQUE INDEX uitest_u_id_idx ON uitest(id);
+唯一性索引对空值不作任何限制，允许多个索引键的值为空。唯一性索引的作用是双重的，既有助于保证数据的唯一性，也有利于提高查询效率。
+
+===== 集簇 =====
+
+集簇是一种基于索引的存储管理技术，它根据索引对表的存储结构进行调整，将具有相同索引键值的记录存放在一起。由于相同索引键值的记录存放在同一个磁盘块或相邻的磁盘块中，因此访问它们不需要频繁地移动磁头，所需的缓存空间也要小得多，查询效率也要高的多。
+  CLUSTER friend_age_idx ON friend;
+用CLUSTER命令，将原表按索引重新排列。这个动作在操作大表时可能会很慢，因为每一行都必须从磁盘存储页面中按索引顺序取出。如果存储页面没有排序，整个表随机地存放在各个页面中，那么每行都要进行磁盘页面操作。另一种建设集簇的办法：
+  SELECT columnlist INTO TABLE newtable FROM table ORDER BY colunlist;
+这种用法使用子句ORDER BY来匹配索引，在对排序过的数据进行操作时速度要快得多。然后可以删除旧表，用ALTER TABLE/RENAME将temp改为原来的表名，并且重建所有索引。唯一的问题是OID将不能被保留。
+
+集簇是表态建立的，当表的内容更新后，不会为改变的内容建立集簇，同样也不会对更新的记录重新建立集簇。如果需要的话，可以通过这个命令重新建立集簇。
+
+值得注意的是，一个建立了集簇的表中的内容实际上按索引顺序复制到了一个临时表中，然后重新改为原来的名字。因此，在建立集簇前所有赋予的权限和其他索引都将丢失。
+
+===== 表的清理 =====
+
+在当前事务中，当更新一个数据行时，PostgreSQL会为该行保留一个更新前的副本，并将个副本的状态标记为expired。其他事务可能需要使用这个过时的副本。进行删除操作时，被删除的行没有真正地从表中删除掉，而是被标记为expired.PostgreSQL有一个称为'VACUUM'的专门机制来清理这些过时的数据。
+  VACUUM [VERBOSE] [ANALYZE] [TABLE]
+  VACUUM [VERBOSE] ANALYZE [table [(column[, ...])]]
+例如：
+  VACUUM friend;    清理表friend
+  VACUUM            清理当前数据库的所有表
+VACUUM另外一个用途是为查询优化器搜集统计信息，以便更好地进行查询的优化。使用方法是：
+  VACUUM ANALYZE；
+应该周期性地使用VACUUM命令对表进行清理，以使数据库始终在高效率的状态下运行。
+
+===== 查询分析 =====
+
+  EXPLAIN [VERBOSE] query;
+分析query的查询过程和效率。VERBOSE选项强迫命令输出规划树在系统内部的完整内容，而不仅仅是一个概要，并且还将它发送给postmaster日志文件。通常只在对PostgreSQL进行调试时使用。例如：
+  EXPLAIN SELECT s.sname, c.cname FROM sc, s, c
+    WHERE s.sno = sc.sno AND sc.cno = c.cno;
+EXPLAIN可以用于查询效率的评价，对比哪个查询效率最高。

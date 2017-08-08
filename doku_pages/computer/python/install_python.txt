@@ -1,0 +1,33 @@
+====== windows下面安装Python和pip ======
+
+
+
+Python语言对于windows并不算很友好，因为如果是初学者在windows环境下安装，简直是折磨人，会遇到各种蛋疼的情况。本文希望提供傻瓜式的教程，能够令读者成功安装Python和pip。
+
+第一步，我们先来安装Python，博主选择的版本是最新的3.4.2版本。windows下面的Python安装一般是通过软件安装包安装而不是命令行，所以我们首先要在Python的官方主页上面下载最新的Python安装包。下载地址是：https://www.python.org/downloads/.在下载完成之后，一直点击下一步就OK了。在安装完成之后，打开控制台，输入“Python”，我们能够看到下面的效果：
+
+
+原因很简单，是因为python.exe文件在 Python 目录下，我们还没有设置环境变量。所以我们需要手动添加环境变量：鼠标右键我的电脑  -> 属性 -> 点击高级系统设置 -> 点击环境变量 -> 点击PATH -> 在最后面加上我们的Python安装路径 -> 点击确定。这个过程中需要注意的问题是，添加PATH路径的时候，要在最后面添加一个分号。现在我们再次在浏览器里面输入“Python”，就能直接在控制台出入命令了：
+
+
+
+第二步，我们安装pip。我们同样需要在Python的官网上去下载，下载地址是：https://pypi.python.org/pypi/pip#downloads ：
+
+
+下载完成之后，解压到一个文件夹，用CMD控制台进入解压目录，输入：
+  python setup.py install
+安装好之后，我们直接在命令行输入pip，同样会显示‘pip’不是内部命令，也不是可运行的程序。因为我们还没有添加环境变量。
+
+
+
+按照之前介绍的添加环境变量的方法，我们在PATH最后添加：C:\Python34\Scripts;到现在我们才算完整安装好了pip：
+
+
+
+第三步，安装一些Python的包，比如Tornado这个web框架：
+
+
+
+到这里，整个安装教程就完成了，Enjoy yourself~
+
+如果需要转载本文，请加上转载地址：http://www.cnblogs.com/yuanzm/p/4089856.html，谢谢~

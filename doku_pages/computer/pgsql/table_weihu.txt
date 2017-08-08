@@ -1,0 +1,167 @@
+====== 表的维护 ======
+
+===== 修改表结构 =====
+
+1.增加一个字段
+  ALTER TABLE atest ADD col2 char(10);
+
+2.定义或取消字段默认值
+  ALTER TABLE atest ALTER col1 SET DEFAULT 10;
+  ALTER TABLE atest ALTER col1 DROP DEFAULT;
+
+3.字段更名
+  ALTER TABLE atest RENAME col2 TO chcol;
+
+4.表更名
+  ALTER TABLE atest RENAME TO testalter;
+
+===== 访问权限 =====
+一个表的创建者即是该表的拥有者，只有拥有者才有权访问该表。表的拥有者可以将表的部分或全部访问权限授予其他用户，也可以收回授出的权限。可以授出的权限包括：
+  SELECT  查询表或视力的权限
+  INSERT  插入数据的权限
+  UPDATE  更新数据的权限
+  DELETE  删除数据的权限
+  RULE    在表或视力上定义规则的权限
+  ALL     所有权限
+1.权限授出
+  GRANT SELECT ON student TO user;
+  GRANT ALL ON student TO PUBLIC; --所有权限授予所有用户
+
+2.权限回收
+  REVOKE SELECT ON student FROM user;
+  REVOKE ALL ON student FROM PUBLIC;
+
+3.查询权限
+  \z student;
+
+===== 继承 =====
+
+通过继承，可以利用一个已经存在的表创建一个新表。继承包含有父表的所有字段。
+  CREATE TABLE ifriend
+    (addr char(20))
+    INHERITS (friend);
+查询friend及其子表ifriend.
+  SELECT * FROM friend*;
+除SELECT语句外，UPDATE、DELETE以及ALTER都支持*。在7.1以上的版本中，查询语句自动访问所有子表而不必使用*。如果要阻止对子表的访问，必须使用ONLY保留字。
+
+===== 视图 =====
+
+视图是从一个或多个基本表（或视图）导出的虚表。之所以称视图为虚表，是因为数据字典中只存储视图的定义，而不存放对应的数据，视图的数据是相关基本表中的数据。
+
+视图通常用于为基本表定义一个子集，即从基本表中选择一定数量的字段和满足某种条件的数据行，组成一个新数据对象。视图是数据库系统提供给用户以多角度观察数据库中数据的重要机制，体现了数据库的本质和最重要的特色及功能。视图能够简化用户数据模型，提供数据库的逻辑独立性，实现数据共享和安全保密。
+
+视图在使用之前必须创建。视图一旦创建，就可以像基本表一样被查询，也可以在视力上创建新的视图。
+  CREATE VIEW view AS SELECT query;
+  DROP VIEW view;
+视图是只读的，不允许对视图进行插入、删除或更新。
+
+===== 规则 =====
+
+规则是一组操作的集合，在对数据对象进行查询、更新、插入或删除时，这组操作由规则系统自动执行。也就是说，可以利用规则来修改SELECT、INSERT、UPDATE和DELETE的行为。
+  CREATE RULE name AS ON event
+    TO object [WHERE condition]
+    DO [INSTEAD] [action | NOTHING]
+在一个记录被访问、更新、插入或删除时，系统保存一个旧记录和一个新记录。如果ON子句所指定的事件和WHERE子句所指定的条件对于旧记录都为真，那么动作部分定义的规则就会被自动执行。但是，旧记录的各字段值和新记录将先用current.attribute-name和new.attribute-name取代。action部分的命令和事务标识与激活该规则的用户命令相同。
+  
+==== INSTEAD规则 ====
+
+INSTEAD规则定义的动作完全取代用户命令。
+  CREATE TABLE ruletest (cole integer);
+  CREATE RULE ruletest_insert AS
+    ON INSERT TO ruletest
+      DO INSTEAD
+        NOTHING;
+插入命令对表不起任何作用。按照规则，对表ruletest施加的INSERT操作被重新定义为NOTHING，该规则阻止了任何利用INSERT命令向表插入数据的操作。
+
+==== DO规则 ====
+
+DO规则定义的动作是作为用户命令的附加部分来执行的。假定表service_request记录有当前的客户服务请求，service_request_log跟踪service_request表的变化。
+
+1.创建表service_request
+  CREATE TABLE service_request (
+    customerid integer,
+    description text,
+    cre_user test DEFAULT CURRENT_USER,
+    cre_timestamp timestamp DEFAULT CURRENT_TIMESTAMP
+  );
+
+2.创建表service_request_log
+  CREATE TABLE service_request_log (
+    customerid integer,
+    description text,
+    mod_type char(1),
+    mod_user TEXT DEFAULT CURRENT_USER,
+    mod_timestamp timestamp DEFAULT CURRENT_TIMESTAMP
+  );
+
+3.创建更新规则
+  CREATE RULE service_request_update AS
+    ON UPDATE TO service_request
+      DO
+        INSERT INTO service_request_log (customerid, description, mod_type)
+        VALUES (old.customerid, old.description, 'U');
+
+4.创建删除规则
+  CREATE RULE service_request_delete AS
+    ON DELETE TO service_request
+      DO
+        INSERT INTO service_request_log (customerid, description, mod_type)
+        VALUES (old.customerid, old.dscription, 'D');
+
+==== 视图的更新 ====
+
+目前版本PostgreSQL不支持视图的更新，视图会忽略INSERT、UPDATE和DELETE。但是，可以利用规则系统间接地实现实图的更新。
+1.创建一个测试表
+  CREATE TABLE rvTABLE (col integer);
+
+2.为表创建一个视图
+  CREATE VIEW review AS SELECT * FROM rvTABLE;
+
+3.为视图定义插入规则
+  CREATE RULE rv_insert AS 
+    ON INSERT TO rvVIEW
+    DO INSTEAD
+      INSERT INTO rvTABLE VALUES (new.col);
+
+4.为视图定义更新规则
+  CREATE RULE rv_update AS 
+    ON UPDATE TO rvVIEW
+    DO INSTEAD
+      UPDATE rvTABLE SET col = new.col WHERE col=old.col;
+
+5.为视图定义删除规则
+  CREATE RULE rv_delete AS 
+    ON DELETE TO rvVIEW
+    DO INSTEAD
+      DELETE FROM rvTABLE WHERE col=old.col;
+
+===== 临时表 =====
+
+临时表只在一次数据库会话期间存在，数据库会话结束后，它就会被自动删除，并且临时表只对当前事务可见，主要用于存放事务所产生的一些临时结果。
+  CREATE TEMPORARY TABLE ...
+
+===== 消息交换 =====
+
+PostgreSQL允许不同的数据库会话之间交换消息。例如，当一个用户完成了某个表的更新后，可以将这一事件通知给其他用户。
+  LISTEN name
+  NOTIFY name
+
+===== 数据导入和导出 =====
+
+==== 数据表的导入导出 ====
+
+  导出：COPY table TO   '/tmp/table.out';
+  导入：COPY table FROM '/tmp/table.out';
+
+==== 数据库的导入导出 ====
+
+  导出：pg_dump dbname > dbname.pgdump
+  导入：cat dbname.pgdump | pgsql dbname
+
+使用压缩技术对改出文件进行压缩：
+  导出：pg_dump dbname | gzip > filename.dump.gz
+  导入：gunzip -c filename.dump.gz | pgsql dbname
+
+将导出文件分割成较小的文件：
+  导出：pg_dump dbname | split -b 20m - filename.dump
+  导入：cat filename.dump.* | pgsql dbname

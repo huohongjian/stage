@@ -1,0 +1,970 @@
+
+FreeBSD的一些简单使用技巧
+
+作者：佚名 字体：[增加 减小] 来源：互联网 时间：09-08 18:48:25 我要评论
+
+1、在 unix-like 中档案结构是蛮重要的，那么要如何去看相关档案目录结构的说明呢？ 难道是 cd 到每个目录下吗？其实有更好的方法.. 那就是用好男人 man 来看： # man hier 2、在 console 下操作时，由于屏幕显示有限，有时需看前面显示的资
+
+
+
+
+
+
+
+1、在 unix-like 中档案结构是蛮重要的，那么要如何去看相关档案目录结构的说明呢？
+
+ 难道是 cd 到每个目录下吗？其实有更好的方法..
+
+那就是用好男人 man 来看：
+
+# man hier 
+
+
+
+ 2、在 console 下操作时，由于屏幕显示有限，有时需看前面显示的资料，这时你可：
+
+. 按一下 Pause or Scroll Lock键后，则可利用 PageUp PageDown Up Down
+ Home End 等键来看前后显示的资料
+
+. 再按一下 Pause or Scroll Lock则可回复等待输入画面.
+
+3、 使用 pw 来管理你的帐号
+
+ 在 FreeBSD 下使用 adduser 来新增帐号，有些时会满烦的，可用以下方式：
+
+pw useradd -n -g -m -s /bin/csh
+
+ => -m 代表建立使用者目录
+
+●同时设密码
+
+echo | pw useradd -n -g -m -s /bin/csh -h 0
+
+ ● 删除帐号
+
+pw userdel -n -r
+
+ => -r 代表同时删除其 home 目录等相关资料
+
+● 修改帐号
+
+pw usermod -g -s /bin/csh
+
+ PS：无法修改帐号名称
+
+● lock 及 unlock 使用者帐号 
+
+
+pw lock 
+ pw unlock 
+
+ 4、 激活你的 screensaver
+
+由于 FreeBSD 大多当为主机使用，都是常期不关机的，因此可将屏幕关掉，或使
+ 用 ScreenSaver 功能..
+
+使用 ScreenSaver 请在 /etc/rc.conf 这个档加入以下两行：
+
+blanktime="900"
+
+ => 以秒数为单位，如以上为 15 分钟
+
+saver="logo"
+
+ => logo 是 FreeBSD 的吉祥物(图型接口)，另也可使用 "daemon"，这是文字型式
+
+5、 检查你的某一个 ports 版本及更新
+
+ 如果要更新所有的 port 只需在 /etc/ports/ 下执行以下指令：
+
+# make update
+
+有时我们可能要检查某一个 ports 的版本，在每个 ports 中的 Makefile 都有这一行
+
+PORTVERSION= x.x.x
+
+如此就可看到这个 ports 的版本了，另外也可使用以下方式(用 grep)，比如我
+ 们想看 mod_php4 的版本
+
+# grep PORTVERSION= /usr/ports/www/mod_php4/Makefile
+ PORTVERSION= 　　1.4.1 -> 版本讯息
+
+ 如果版本太旧了，则可利用以下方法来更新单一 ports
+
+ a. 使用 portupgrade 或 portinstall，请用 man 查看用法
+
+b. 到 FreeBSD 网站查询最新的 ports 信息，并抓 ports 回来更新
+
+ 网址：http://www.freebsd.org/cgi/cvsweb.cgi/ports/
+
+抓回来后在相关目录更新，例如我们抓回的是 mod_php4.tar.gz，存在 /usr/tmp/ 目录下，则解压缩的方式如下：
+
+# cd /usr/ports/www/mod_php4
+ # tar xzvf /usr/tmp/mod_php4.tar.gz
+
+如此就 ok 了..
+
+6、 加速你的按键速度..
+
+相信使用 FreeBSD 的人很多都是在 console 下操作吧，有些时，要重复某一按键速度实在很慢..
+
+另一个问题就是 cusror 的位置有些时不太明显..
+
+可用以下方法来改善：
+
+ 在 /etc/rc.conf 中加入以下资料..
+
+keyrate="fast"
+ cursor="blink" 或 "destructive"
+
+ 7、 设定开机画面
+
+ 使用 windows 的人，都知道所谓的开机画面，在 FreeBSD 下是否也有此功能呢？答案是肯定的，而且设定更为简便，请照以下 steps：
+
+ 一. 首先制作一个图型文件，档案格式为 logo.pcx 或 logo.bmp，需注意的是
+.bmp 的档案存盘时不用压缩，分辨率需为 640 X 480 以内(含)，色阶为 256
+色..
+
+二. 将此档案 copy 到 /boot/ 这个目录下
+
+ 三. 设定 /boot/loader.conf，加入以下资料
+
+splash_bmp_load="YES" -> 如果使用 .bmp 格式，此项需设为 YES
+ splash_pcx_load="YES" -> 使用 .pcx，请将此项设为 YES
+ vera_load="YES"
+ bitmap_load="YES"
+ bitmap_name="/boot/logo.pcx" -> 请依你的档案格式更改
+bitmap_type="splash_image_data"
+
+四. 重新激活
+ps: 请检查你的 kernel 中是否有设定以下资料，一般在 4.x 中都是内定值..，至于 3.x 版，没用过..^.^
+
+preudo-device splash
+
+如果没有，则需将此行加入并重新编绎核心.
+
+
+8、 一些 console 下使用的快速键..
+
+相信大多使用 unix-like 的使用者，还是在 console 下执行你的日常维护工作吧，那有那些按键组合可帮我们提高效率呢..
+
+以下按键皆适用于 tcsh 及 bash..
+
+ 1. 快速移动光标
+
+ctrl+a -> 到最前面
+ctrl+e -> 到最后面
+
+2. 编辑方面
+
+ctrl+d -> 删除光标所在字符
+ctrl+w -> 删除光标所在字前面的字符
+ctrl+u -> bash:将光标前所有的字及字符删掉，tcsh:删除所有字
+ctrl+k -> 将光标后所有字符删掉
+ctrl+b -> 下个字符
+ctrl+f -> 前一个字符
+ctrl+m -> 和按下 enter 的结果一样
+ctrl+h -> 和按下 del 或 backspace 键一样
+del 或 backspace -> 删除前一个字符
+
+ 如果对按键有研究兴趣者，不彷参考 /usr/share/syscons/keymaps/ 这个目录，其中 us.iso.kbd 是一般我们使用的按键..
+
+9、 快速切换目录
+
+ 在 FreeBSD 中常常需要切换目录，有时目录名称较长、或是有大小写、或是只记得前面几个字，怎么办..
+
+其实只要输入部份字再加上 * 这个符号就可以了..
+
+如我们要切换到 /usr/local/ 这个目录，只需输入 cd /usr/lo* 就可以了..
+
+如果输入 cd /usr/l* 会如何呢？则会进到 /usr/lib/ 这个目录，这是因为 shell 找到第一个符合的条件便停止了..
+
+10、 有关时间及时区的比较
+
+ 使用 FreeBSD 大多是拿来当做主机使用，那时间及时区的正确与否就非常重要
+ 了，以下介绍如何校整时间及时区 
+
+● 时间校正
+1. 使用 date 指令
+
+ 格式 date [yymmdd]HHMM
+说明:
+yy 年数，如 02 代表 2002 年
+mm 月份 01-12
+ dd 日数 01-31
+ HH 时数 01-59
+ MM 分钟 01-59 
+
+ 2. 使用对时主机
+
+# ntpdate clock.stdtime.gov.tw
+
+这项需能连上网络，其中 clock.stdtime.gov.tw 是一标准时间的主机
+
+● 时区的设定
+
+1. 使用 tzsetup
+
+ 2. 在 /etc/ 下有个档案 localtime，这个就是本机的时区设定档案，因此我们可用个取巧方式(不经由 tzsetup)，如以下:
+
+ # cp /usr/share/zoneinfo/Asia/Taipei /etc/localtime
+
+这样是不是比较快呢..
+
+11、 如何清空档案内容..
+
+有时我们需将一个档案内容清空，但需保留这个档案..
+
+一般常见的用法是用文字编辑器，如 vi 将这个档案叫出来，再将其内容全部删掉，再存盘..
+
+这样是不是有些烦呢？
+
+ 有一个更好的方法，使用 true 指令..
+
+如我们要将 /var/log/httpd-access.log 清空，则下以下指令..
+
+ # cd /var/log/
+ # true > httpd-access.log
+
+ 12、 显示目录及档案 => tree
+
+有时需显示某个目录下所有的目录及档案，虽使用 ls 可达到部份功能，但并不是很方便..
+
+在 dos 中，有个 tree 指令，是不是满好用的..
+
+其实在 FreeBSD 中也有类似的指令 => tree..
+
+以下我们就透过 ports 来安装 tree
+
+ # cd /usr/ports/sysutils ; make install
+
+如此会将 tree 这个指令安装在 /usr/local/bin/ 这个目录下..
+
+使用例子:
+
+1. 显示 /usr/ 下的目录及档案
+
+# tree /usr
+
+ 2. 只显示 /usr 下的目录
+
+# tree -d /usr
+
+详细用法请参考 man tree
+
+ PS:可透过管道 | 及 more 来显示
+
+ 如 tree /usr | more..
+
+ 13、 如何检视档案类型
+
+ 由于 FreeBSD 并没有像 dos 或 windows 般有扩展名的观念，因此要如何检查一个档案的类型呢？
+
+ 用 file 吧..
+
+语法: file 
+
+详细用法请参考 man file
+
+ 14、 重复使用先前使用过的指令
+
+ 你可以使用以下的方法来重复使用先前使用过的指令:
+
+例如，我们先用 history 显示先前输入的指令:
+
+ # history
+ .
+ ..
+ ...
+ 10 clear
+ 11 cd /usr/local
+ 12 ls
+ 13 ls etc
+ 14 cd ~
+ 15 clear 
+
+ 1. 用 up down 可用上下一个指令，或是 ctrl+p ctrl+n 亦然
+
+2. 配合 ! 的用法，例如以下(ps: 在<...>内代表要输入的东东)
+
+ !!
+ # !! => 重复执行上个一个指令
+
+!<编号>
+ # !11 => 执行 cd /usr/local
+
+ !<指令> 可输入部份字，但前面部份需符合
+# !cl
+执行 15 clear 指令
+
+! 输入部份字符，部份吻合
+# !?etc?
+执行 13 ls etc
+
+以上指令在 tcsh 及 bash 下皆可使用，如此是不是可帮你省下许多时间..
+
+
+15、 如何将 man 的档案印出来..
+
+man 是大家学习 FreeBSD 的最佳资料参考来源，但在显示器上看到底不是很方便，有没有方法转成一般的文件档案呢？
+
+ 使用 col 这个指令吧..
+
+例我们要将 ssh2 转成 ssh2.txt，则使用以下语法:
+
+ # man ssh2 | col -b > ssh2.txt
+
+
+ 16、 为何查不到正确的 ports 资料..
+
+在 /usr/ports/ 下有着几千个 ports 的安装资料，有时我们可使用以下方式来查相关的 ports..
+
+以下都是在 /usr/ports/ 这个目录下执行..
+
+1. 先将 ports 资料转换成一个文字文件，如 index.txt
+
+ # make print-index > index.txt
+
+ 2. 使用 make search key="...." 来查
+
+3. 将 ports 内容转换成 README.html
+
+用以上方法，可很容易的查到相关的 ports 资料，但很奇怪的是，为何我更新
+ 一个 ports 的资料后(或 ports tree)，为何会查不到，
+ 查到的仍然是旧的资料.. 
+
+原来，在 /usr/ports/ 中有一个 INDEX文件，以上的查询方式都是在这个
+INDEX 档中查询，当你更新 ports 资料时，这个 INDEX 档并不会随之更新..
+
+所以为了查询方便，我们需以手动的方式来做..
+
+ # make index
+
+做完后，再更新 index.txt 及 README.html..
+
+不过更新 INDEX 档需要一些时间，大约 12-30 分钟..(视计算机等级而定).
+
+
+17、 用 dig 及 host 来取代 nslookup
+
+一般我们用来检查网络是否有问题，大多是用以下三个指令..
+
+nslookup
+ ping
+ traceroute
+
+其中 nsllokup 是用来检查 dns 的相关设定， ping 用来检查自己和对方网络是
+ 否通顺，而 traceroute 则是用来检查从自己的计算机到对方的计算机所经过的
+ 线路状况..
+
+不过以 nslookup 而言，个人觉得不是很实用，有时我们只是想单纯的查一下某
+ 台主机或是 MX 记录，那使用 nslookup 就有点噜嗦了..
+
+在此介绍二个好用的指令 host 及 dig，这二个指令很类似，不过效率较 nslookup 高
+
+# host -a <主机名称> 或 
+
+=> 输入主机名称显示 dns 正向解析的部份，输入 ip 则是显示反向(ptr)
+
+ # dig <主机名称或ip> 
+
+如要显示 MX 记录
+
+# dig 主机名称 mx
+
+个人是觉得比 nslookup 方便多了，你觉得呢.. ^.^
+
+当然功能不只这些，详情请 man dig 或 host.. 
+
+
+ 18、 加快你的开机速度..
+
+严格说起来，FreeBSD 的开机速度算满快的，不过中间会有个 10 秒的延迟时间
+(以便让你进入 boot 的 command prompt mode)，如果你嫌这10秒还是太慢了，
+ 那你可将时间?#123;短一些..
+
+FreeBSD 激活时会先去参考 /boot/defaults/loader.conf 档的设定，然后再参
+ 考 /boot/loader.conf，一般我们都不去?#123;整
+/boot/defaults/loader.conf 这个档，而直接?#123;整 /boot/loader.conf..
+
+只要在 /boot/loader.conf 中加上以下这一行即可
+
+autoboot_delay="秒数" 即可，如
+
+autoboot_delay="7" 代表7秒
+
+ 这样开机是不是更快了..
+
+另外建议，有时间可参考一下 /boot/defaults/loader.conf 这个档案的设定，
+ 其中有许多实用的设定哦
+
+
+19、 忘了 root 密码
+
+ 如果你忘了 root 的密码怎么办，这在 FreeBSD 中满好解决的，请照以下 steps 来处理..
+
+1. 进入单人模式
+
+ 开机后，当出现
+
+Hit [Enter] to boot immediately, or any other key for command prompt.
+ Booting [kernel] in 10 seconds...
+
+按 space(或除了 enter 以外的键) 键则会进入 command prompt mode，同时出现一个 ok ..
+
+这时请输入 boot -s 以进入单人模式 
+
+2. 选择 sh
+
+进入单人模式后，系统会询问你要使用那个 sh，内定是 /bin/sh ，就使用这个吧，直接按 enter 跳过
+
+3. 将所有的硬盘分割架起来
+
+# mount -a
+
+ 4. 更改密码
+
+# passwd
+
+长度要在 6 个以上，输入二次
+
+5. 重新激活
+
+# reboot
+
+
+ 20、 有关 kernel 的激活..
+
+kernel 对 unix-like 系统来说，是非常重要的一环，如果 kernel 损坏或编译出了问题，可能会导致严重的后果..
+
+FreeBSD 一向以安全著称，在这方面有什么防护的措施呢？
+
+FreeBSD 的 kernel 是放在 / 目录下，一般会有二个
+
+kernel
+ kernel.GENERIC
+
+如果你有编译过核心(kernel)的话，则原先的 kernel 会转换成 kernel.old，新
+ 的核心会变成 kernel，也就是在 / 下的 kernel 档案如下:
+
+kernel => 新编译过的核心
+kernel.GENERIC
+ kernel.old => 原先的核心
+
+ 那 kernel.GENERIC 是什么呢，这个是系统安装时所装好的，一般都不会变动，
+ 即使编译过核心亦然，这个档案可说是救命核心，最好不要乱动，理由如下所
+ 言..
+
+FreeBSD 激活时，会使用 kernel 这个核心，如果这个档案不存在，则会抓 kernel.old 这个档案..
+
+如果这二个档案不幸都不在，那怎么办..这时则会进入 command prompt mode，你必需自行输入 kernel 的名称，如
+
+boot 如
+
+boot kernel.GENERIC
+
+了解以上之后，在编译核心无法正常执行时，相信各位知道如何处理了.. 
+
+
+21、 FreeBSD 在那激活程序.. 
+
+一般 FreeBSD 激活后会依序执行以下位置的程序.. 
+
+1. /etc/rc.conf 这个档案内的程序，如 sendmail、sshd .. 都是在此执行，另
+ 外要注意的是，在执行这个档案之前，会先参考 /etc/defaults/rc.conf 的设定
+
+2. /usr/local/etc/rc.d 下的一些 .sh 文件，这些档案的权限都是被设定成 x ，如 apache samba .. 都是在此设定 
+
+3. /etc/rc.local 这里也可设定，如我要把 postfix 设定在此，只需在这个档案内加一行，如下 
+
+/use/local/sbin/postfix start & 
+
+加上 & ，就不会显示出讯息 
+
+4. 由 cron 所控制的一些档案，当时间到了，便会自动执行.. 
+
+那心细的人可能会问， /etc/inetd.conf 内设定的呢？这些在第 1 项就执行了.. 
+
+了解以上并时时注意是否有不明的程序在执行(可能是被人植入木马程序)，也是
+ 日常检视系统的重要工作.. 
+
+22、 加快你的主机名称查询速度.. 
+
+unix-like 系统，初期都是使用 hosts 这个设定文件来做主机的查询，因此有些
+ 程序在查主机名称时，都会参照这个设定档，像 sendmail 就是一个很好的例
+ 子..
+
+系统内定第一个是会查 /etc/hosts 这个档案，因此如果里面设定有问题，则会影响到某些程序的执行.. 
+
+典型的 hosts 档设定如下..以我本身的主机来说 
+
+127.0.0.1 localhost.cmlab.idv.tw localhost 
+ 61.219.230.5 cmlab.idv.tw cmlab 
+ 61.219.230.5 cmlab.idv.tw. 
+
+其中第一及第二行最后一个项目是 aliases 名称(主机别名)，比如我们在主机 
+
+ping cmlab.idv.tw 
+
+和 
+
+ping cmlab 
+
+是同样的结果.. 
+
+你可把一些常用的主机加到这个项目内，如有一台 mail.cmlab.idv.tw ，假设 IP 为 61.219.230.8 
+
+则在这个 hosts 中加入以下 
+
+61.219.230.8 mail.cmlab.idv.tw mail 
+ 61.219.230.8 mail.cmlab.idv.tw. 
+
+这样就行了.. 
+
+另外如果有自行架设 dns server，请注意在 /etc/host.conf 这个档案，典型的档案如下: 
+
+ # $FreeBSD: src/etc/host.conf,v 1.6 1999/08/27 23:23:41 peter Exp $ 
+ # First try the /etc/hosts file 
+ hosts 
+ # Now try the nameserver next. 
+ bind 
+ # If you have YP/NIS configured, uncomment the next line 
+ # nis 
+
+由以上可以看得出来，在查询主机名称时的顺序，是先查 hosts 再查 bind 也就是 dns，你可视你的需要修改其顺序.. 
+
+另外要注意的就是 /etc/resolv.conf 文件，这个是有关 dns 主机 search 的顺序，如以我的设定如下: 
+
+domain cmlab.idv.tw 
+ nameserver 61.219.230.5 
+ nameserver 168.95.1.1 
+ nameserver 168.95.192.1 
+
+其中第一行是设定我的网域名称，第 2-4 行则是 dns 主机的设定，建议至少设二个以上，以免一个挂了，还有个备用的.. 
+
+第2行是我的 dns 主机，3-4 行是 hinet 的 dns 主机.. 
+
+了解以上并有正确的设定，是有助于主机的查询的及速度的提升.. 
+
+23、 我要如何分割硬盘.. 
+
+档案目录对于 FreeBSD (或者是所有 unix-like 系统)，都是相当重要的，如开
+ 始时，分割的不是很恰当，日后就会遇到一些麻烦，如空间不够..等问题..
+
+那么，我们要如何分割比较恰当呢.. 
+
+这就有关于你的用途及 FreeBSD 的目录架构了.. 
+
+一般个人是建议你如此分割: 
+
+1. / 根目录，一般在 250 ~ 500 MB 绝对够用，以我的根目录来说，使用一年多
+ 了，也才用了 66 MB 多。因为这个目录只是一些 kernel modules sbin bin
+ etc .. 等目录
+
+2. swap 档，一般人都不知道如何设较恰档，这也没一个标准，最主要是要看你
+ 的 ram 及硬盘而言，一般设成 1-2.5 倍(相对于你的 ram)。如你的 ram 在
+256 mb 以上(含)，设成一倍；如在 64 - 128 mb，则建议设成 2 倍
+
+ 如要检查你的 swap 使用状况，可用以下指令来看.. 
+
+ # pstat -T 
+ 44/4044 files 
+ 0M/127M swap space 
+
+由以上可看出目前使用的 swap 为 0 ，设定的大小为 128 M 
+
+
+ 3. /var 目录 及 /usr 目录 
+
+ 这二个目录一般都会占比较大的空间，/var 的变动较小，以我个人来说，一年前设为 8 GB ，在目前只使用了不到 2GB。 
+
+ 但要注意的是一般的 mail 软件，都是将信件存在 /var/mail/ 中，如果你的信件很多或很大，这个部份不妨加大一些.. 
+
+而 /usr 这个目录能大就给它大一点的空间，因为所安装的程序，或是 hone 都是在这个目录下(如果你没将 home 目录设成一个分割) .. 
+
+那这两个要如何分配呢，我的建议是 usr 和 var 的比例为 3:1，或是 2:1 
+
+ 4. 有些主机使用者较多，如学校单位。如果你没将 home 设成一个 partition，
+ 则 FreeBSD 会将 home 安装在 /usr 目录下，如果为了管理及安全问题，则不妨
+ 将 home 分割为单一目录..
+
+至于大小，我想应该 3-5 GB 左右，就绝对够用了 
+
+ 我们来举个实际例子，假设你有一颗 40 GB 的硬盘，使用内存为 128 MB RAM，那我建议你的硬盘如此分割.. 
+
+1. / => 250 MB 
+ 2. swap => 取 2 倍，即 256 MB 
+ 3. /home 如要独立出来，给它 3-5 GB 
+ 4. 剩下来的以 3:1 或 2:1 的比例设给 /usr 及 /var 
+
+
+
+
+
+
+
+25、 简单编辑你的文件档.. 
+
+在 unix-like 中，标准的文字编辑器是 vi，不过 vi 对于初学者而言，并不是很容易上手.. 
+
+而在 FreeBSD 中使用的是 ee ，这个文字编辑器，虽功能没 vi 这么强大，但使
+ 用简便..新手不妨初期时使用个编辑器..
+
+其使用方式很简单，只要在 command line 下 ee 即可 
+
+# ee <要编辑的档案> 进入 ee 画面后，最上方是一些按键说明，如要取得相关
+ 的 ee 说明，可先按 ctrl+c 键，再输入 help，则会显示详细说明
+
+ 有时可能只想在一个档案内加入一小部份的资料，那使用文字编辑器来处理，就
+ 显得没效率，其实我们可以利用 cat > [文件名]和 cat >> [文件名] 来做..
+
+那这二个方式有何差异呢.. 
+
+cat > [文件名] 时，如果档案不存在，则会自动产生一个档案；如档案存在则会将档案清空.. 
+
+cat >> [文件名]，档案不存在则自动建立此档，如存在则将所编辑的资料加在档案的最后.. 
+
+举个例子，如我们要编辑 /etc/mail/access 这个是 sendmail 的 relay 设定档.. 
+
+想在这个档案中加入 192.168.88.5 relay 
+
+则可用此方法(假设 access 档案已存在，故使用 cat >> .. 的方法) .. 
+
+ # cat >> /etc/mail/access 
+ 192.168.88.5 RELAY 
+按 ctrl+d 存盘 
+
+ 如此则可将 192.168.88.5 relay 加到 access 的最后一行.. 
+
+不过，建议大家，unix-like 的共通文字编辑器是 vi，有时间不妨好好的学一
+ 下 vi.. 
+
+
+ 26、 FreeBSD 帐号及密码的注意事项 
+
+ 在架完 FreeBSD 后，再来就是新增人员(使用者)的资料了.. 
+
+在设定帐号时，请注意以下事项: 
+
+1.其长度需在 1-16 个字符 
+2.使用英文小写字母、数字及 - _ 符号 
+
+ 在设定密码时，请注意以下事项 
+
+1. 密码可设可不设，但建议你一定要设 2. 长度最好在 6 个字以上，你知道据
+ 安全专家的说法，破解一个长度6及长度4密码，至少要多花 10 倍的时间 3. 请
+ 勿用你的生日、相关证照号码、电话..等资料，而使用大小写英文字母及混合特
+ 殊符号，如 ct!Home-12 就是一个相当不容易破解的密码 4. 长度最长我曾设到
+16 位数(最大长度多少，有兴趣者可自行试试)
+
+27、 有关系统的一些激活问题.. 
+
+有时，会修改 FreeBSD 的一些设定，如一些网络参数、软件的 .conf 设定，或
+ 是 /etc/r.conf 文件，那么如何让设定值生效，是否一定要重新开机呢？
+
+ 这可分为三方面来说.. 
+
+1. 网络相关设定，如网络适配卡、hostname .. 等，只要执行以下指令就可以重新加载你的网络设定.. 
+
+ # sh /etc/netstart 
+
+ netstart 是一个 script 档案，执行时会去参考 /etc/rc.network。因此只要执行这个指令就能够重新激活网络设定.. 
+
+有兴趣者可参考一下 netstart 及 rc.network 这二个档的内容，研究看看到底做了些什么东东.. 
+
+2. 修改了 rc.conf 中其它的设定 
+
+ 可参考以下三个 step 来做.. 
+
+ . 进入单人模式 
+# shutdown now 
+
+ . 选择 sh，造内定值即可，即 /bin/sh 
+
+ . 离开单人模式 
+# exit 
+
+这样就会重新激活系统了.. 
+
+3. 软件的设定，如一些 *.conf 文件，像是修正了 apache sendmail .. 等 
+
+ 通常在 /etc/local/rc.d/ 这个目录中会有相关的 .sh 文件，直接执行就可以了，
+ 注意的是一般要加上参数，一般的参数有以下(视软件而定会有不同)..
+
+start 激活 
+stop 停止 
+reload 或 restart 重新激活 
+
+ 第二种方法就是直接使用 killall，如我们要重新激活 inetd，可用以下方法: 
+
+ # killall -1 inetd 
+
+或是 
+
+# killall -HUP inetd 
+
+这样就可以重新激活这个 daemon 了 
+
+28、 保护你的档案 
+
+ 在系统中，有许多档案或一些设定档是非常重要的，加上
+FreeBSD (或是一般 unix-like)系统都没有类似 ms 的垃圾回收桶的功能，万一
+ 不幸删掉(或修改)某个重要的档案，可能会造成不小的困扰..
+
+虽然，FreeBSD 对于档案的权限设定的非常严密，但有些时候，我们以 root 身份工作，仍会有此风险.. 
+
+那要如何避免这种情形发生或是保护某些重要的档案呢？ 
+
+ 我们可以用 chflags 来达成这个目的，顾名思义， chflags 是由二个字所组成，即 change 和 flags(档案的旗标).. 
+
+例如我们要保护 /etc/inetd.conf 这个档案，以免误删或被修改，则指令如下: 
+
+ # chflags schg /etc/inetd.conf 
+
+这样就可以保护这些档案，如要显示这些档案的旗标(flag)，可用 ls 来看.. 
+
+ # ls -lo /etc/inetd.conf => l 是小写的 L 
+
+ -rw------- 1 root wheel schg 47 Mar 28 21:29 inetd.conf 
+
+要解除旗标设定，可用 unschg，也就是在 schg 前加 un ，如: 
+
+ # chflags unschg /etc/inetd.conf 
+
+大部份我们进入主机都是以 root 身份执行，因此稍不小心，可能就..因此建议
+ 将一些重要的档案及设定档设定为 schg flags，以保护档案..
+
+如 /bin、 /sbin、 /etc/.conf、 /usr/lcaol/etc/*.conf .. 这些档案最好都是定成 schg 旗标.. 
+
+chflags 详细用法请参考 man chflags.. 
+
+ 29、 谈谈软件的安装路径.. 
+
+FreeBSD 对于档案目录的观念非常重，什么样的档案要放在那个目录都有规定，这也是有别于其它 unix-like 系统.. 
+
+一般我们将软件安装分成二个部份，在这里来探讨一下软件到底都安装到那去了.. 
+
+在安装软件时，通常会安装诸如 执行档、设定档、man file、doc 文件.. 
+
+1. 安装系统时所安装的软件 
+
+ 执行档通常装在 /bin、/sbin、/usr/bin、/usr/sbin、/usr/libexec 下 
+ 设定文件通在在 /etc 目录下 
+man file 通常在 /usr/man 或 /usr/share/man 
+ doc 文件通常在 /usr/share/doc 下 
+
+2. 经由 package 或 port 安装的软件 
+
+ 执行档通常装在 /usr/local/bin、/usr/local/sbin、/usr/local/libexec 下 
+ 设定文件通在在 /use/local/etc 目录下 
+man file 通常在 /usr/local/man .. 
+ doc 文件通常在 /usr/share/doc 下 
+
+ 以上并不是绝对的(所以我用通常..^.^)，因为有些特殊情况需视软件而定.. 
+
+如此有时可能会造成些许困扰，因为如 ssh 、 bind .. 大多是在系统安统时就安装的，那如果升级新版时怎么办.. 
+
+由于 FreeBSD 找寻执行档时会依照 $PATH 这个环境变量找寻，因为 /bin、
+/sbin、/usr/bin、/usr/sbin 比 /usr/local/bin 或 /usr/local/sbin 先，所
+ 以会先执行..也就是先抓到旧版的执行档..
+
+因此在更新时要注意这种情况，以免更新了还是执行旧的程序.. 
+
+那么如何看安时程序时的相关档案的安装路径呢？通常有以下方法 
+
+1. 看 port 的 pkg-plist 文件 
+2. 有时用 man [执行档名称] 可看到一些重要档案的位置 
+3. 看说明文件，通常在 /usr/local/share/doc 目录下 
+
+30、 如何在 FreeBSD 同一片网硌卡加一个 ip 地址 
+
+ 有的时候，需要在同一片网络卡上加 ip 以达到一些特殊的要求.. 
+
+在 FreeBSD 这是非常简单的，假设原先网络卡的 ip 是 211.211.211.211，想加
+ 一个 211.211.211.212，使用的是 rl0 这片网络卡，则做法如下..
+
+1. 在 /etc/rc.conf 加上这一行 
+
+ifconfig_rl0_alias0="inet 211.211.211.212 netmask 255.255.255.255" 
+
+其中的 alias0 就是加装的第一个 ip，如要设定多个可在此修正，如 alias1、alias2.. aliasN 
+
+ 2. 重新激活网络卡，执行 /etc/netstart 
+
+ # /etc/netstart 
+
+ 31、 简单的加密你的资料 
+ 在实务上我们常需要将某些敏感的资料加密，一般我们可使用 pgp 或在这里所介绍的 crypt 来达到这个功能.. 
+
+crypt 是透过 | 这个管道转换功能及密码设定来达成加密的功能，也就是说将你所设的密码当做加密产生的种子随机数.. 
+
+先说明一下 crypt 的使用方法: 
+
+crypt [-s] [-k] [password] 
+
+一般 -s 及 -k 参数可不予理会，password 是加密或解密的密码 
+
+ 在这里假设我们先产生一个 test.txt 档，内容为 test，然后用 1234 这个密码加密 
+
+# cat > test.txt 
+ test 
+按 ctrl+d 存盘 
+
+ 先看看 test.txt 内容 
+
+# more test.txt 
+ test 
+
+将 test.txt 这个档案用 1234 这个密码加密，需配合管道 | 及转向符号使用，加密后的文件名称为 test2.txt 
+
+ # cat test.txt | crypt 1234 > test2.txt 
+
+如此则会产生一个加密后的档案 test2.txt，另外密码可先不输入，按 enter 键后会显示 enter key: 让你输入密码 
+
+ 我们来看看加密后的档案内容，原先是 test 结果变成了: 
+
+ # more test2.txt 
+ e&h => 已经不是原来的 test 
+
+接着来将 test2.txt 解开，如下，假设解开后的档名为 test3.txt: 
+
+ # cyrpt 1234 < test2.txt > test3.txt 
+
+以上的意思是 
+
+1234 加密时的密码 
+< test2.txt 将加密的档案转给 crypt 处理 
+> test3.txt 解密后的资料转向到 test3.txt 
+
+再显示 test3.txt 的内容是否和原来一样，即 test 
+
+ # more test3.txt 
+ test 
+
+
+ PS: 
+
+ 1. 加密或解密时档名如和源文件一样，则会将原来的档案取代 
+2. 另有一个指令 enigma 和 crypt 用法完全一样 
+
+ 参考资料 man crypt 
+
+ 32、用 telnet 简测你的服务器(Server)有无在跑 
+
+ 有时你可以用 telnet 测试你的 Server 有无正常的 run 
+例如:我要查看 ftpd 有无在跑 
+ 可下指令:# telnet localhost 21 
+若跑出类似以下的讯息, 表示有在跑 
+-------------------------------- 
+Trying 127.0.0.1... 
+ Connected to localhost.ahkun. 
+ Escape character is '^]'. 
+ 220-=(<*> )=-.:. (( Welcome to PureFTPd 1.0.11 )) .:.-=(<*> )=- 
+ 220-You are user number 1 of 50 allowed 
+ 220-Local time is now 18:52 and the load is 0.06. Server port: 21. 
+ 220 You will be disconnected after 15 minutes of inactivity. 
+
+若跑出以下的讯息, 表示没在跑 
+------------------------------------------------ 
+Trying 127.0.0.1... 
+ telnet: connect to address 127.0.0.1: Connection refused 
+ telnet: Unable to connect to remote host 
+
+同理你也可以用: 
+telnet localhost 25 测 stmpd 
+ telnet localhost 110 测 pop3d 
+
+结论: 
+正确来讲是用 telnet 测 port 啦～ 
+
+33、 如何防止别人登录到你的计算机 
+
+ 有时，我们并不想让别人直接登入到我们的主机或是只想限定某些人可使用，如 telnet、ssh.. 
+
+或者是开放了些服务，如 ftp、smtpd ..等，由于这些都必需在主机端建有帐号，
+ 因此防止不相干的人登入到你的主机是非常重要的，也是一个安全上的考量..
+
+但一般限定的方式都是使用 ip 或是 domain 的方式，那么有无方法可解决这个问题呢？ 
+
+ 答案是可从 /etc/login.access 来着手，这个档案就是限定 login 的.. 
+
+一个典型的设定如下，例如我们想限定只有 root 及 使用者 john 可登入到主机(含local 及 remote): 
+
+ -:ALL EXCEPT root john:ALL 
+
+可分为三个项目，每个项目间以 : 分隔，说明如下: 
+
+1. + 或 - 代表允许或禁止 
+2. 设定的使用者或群组，可用 ALL EXCEPT 来强化限定的范围 
+
+3. 限定的来源，如 ALL 代表全部、61.219.230. 、LOCAL、console、.bad.com ..等 
+
+ 适当的设定，可让你的系统更加的安全.. 
+
+详细用法可 man login.access.. 
+
+
+ 34、 一个 ./ 的技巧 
+
+ 众所周知，在 nix-like 中执行目前目录中的可执行文件时，必需加上 ./ 这二
+ 个符号，很多 unix-like 的初学者都会感觉较不习惯，因为在 dos 或 windows
+的 dos 窗口中并不是如此..
+
+其实在 unix-like 中如此设定是有其安全考量的，在使用指令或执行文件时，一般是建议使用完整的目录，例如要使用 ls，则如下: 
+
+ # /bin/ls 
+
+当然，你直接输入 ls 亦可正确的执行，这是因为你所使用的 shell 中环境变量 $PATH 的因素.. 
+
+你可键入 echo $PATH，来看目前 $PATH 的设定，当我们执行一个指令时，系统会依照这个环境变量来搜寻这个执行档并加以执行.. 
+
+内定 shell 不会将目前目录 . 加到 $PATH 中，因此如果你想在目前目录执行这
+ 个目录下的执行文件而不想加上 ./ 时，可在你的 shell 中将 . 加入..
+
+如一般在 FreeBSD 都是使用 tcsh，你可编辑个人 home 目录下的 .cshrc 文件
+set path = ( ........ ，在此加入 . 即可..
+
+记得重新退出 shell 再登录，以便让你的新设定生效. 
+
+35、在提示列秀出 [使用者]目前工作目录 (可以少打很多次pwd) 
+
+ # cd /root 
+编辑 .cshrc 
+
+ # set prompt="'hostname -s'# " ### 找到这一行并 mark 起来 
+set prompt = "[%n]%/# " ### 新增此行并存盘离开 
+
+# logout 
+
+ login: root ....重新登入 
+
+ps.其它user id 是否可照办? 我还没试过哩..刚装freebsd而已 
+
+36、rm 是 DEL 一个档案 
+rm -r 是 DEL 整个目录 
+
+37、介绍一些一些有用的参数(注意大小写).. 
+
+ %B 代表高亮度 
+%n 代表用者名称 
+%m 主机名称 
+%/ 目前的目录 
+
+ 一般我们可能比较在意以上几点，如我要管理好几台 FreeBSD 主机，那么以上几个参数就很重要了.. 
+
+举个实例来说，如我想把我的 prompt 改成这样，而且要高亮度显示： 
+
+ 使用者名称@主机名称[目录名称]> 
+
+则 prompt 的设定应该是这样的.. 
+
+set prompt = "%B%n@%m[%/]> " 
+
+注意 = 左右都要有一个空白，否则会出错，导致无法登入，另外如果要统一所有
+ 使用者的 prompt 的话，除了更改 /home/使用者/.cshrc 外，最好也在
+/etc/csh.cshrc 中设定这一行，另外如要新增新用者也用这种提示，则请在
+/usr/share/skel/dot.cshrc 中也加上(或改成)这一行，这是因为：
+
+tcsh 在使用时会先参考 /etc/csh.cshrc 这个档案，再依 user 去抓其 home 目
+ 录下的 .cshrc，而设定 /usr/share/skel/dot.cshrc 是让你新使用者时，自动
+ 将其 prompt 设定成 set prompt = "%B%n@%m[%/]> "

@@ -1,0 +1,149 @@
+====== python数据结构 ======
+
+
+===== 一、序列(list) =====
+
+list：一组有序对象的集合。对象可以是：字符串、列表、元组。
+
+==== 1.支持的操作 ====
+
+  操作 	返回值
+  s[i] 	           index为i的元素
+  s[i:j] 	   i=<index=<j的切片
+  s[i:j:step] 	   i=<index=<j，步长为step的切片
+  len(s) 	   元素个数
+  min(s) 	   最小值
+  max(s) 	   最大值
+  sum(s[,initial]) 各项的和
+  all(s) 	   检查所有项是否为True
+  any(s) 	   检查任意项是否为True
+  s[i] = v 	   赋值
+  s[i:j] = v 	   切片赋值
+  s[i:j:step]      有步长切片赋值
+  del s[i] 	   删除
+  del s[i:j] 	   删除切片
+  del s[i:j:step]  删除有步长切片
+
+====2.列表：通过内置函数list(s)生成 ====
+
+    操作                 	作用
+  list(s) 	            将s转换成一个列表
+  s.append(x) 	            将元素x追加到s末尾
+  s.extend(t) 	            将列表t追加到s末尾
+  s.count(x) 	            s中x出现次数
+  s.index(x[,start[,stop]]) 返回值为x的索引，搜索范围可选
+  s.insert(i,x) 	    索引为i处插入x
+  s.pop([i]) 	            返回并移除元素i，缺省时为最后一个元素
+  s.remove(x) 	            移除元素x
+  s.reverse() 	            逆序列表
+  s.sort([key[,reverse]])   排序。key为可选关键字，reverse为可选标志
+
+
+===== 二、元组(tuple) =====
+
+tuple：不可变的list，内置函数tuple()
+
+  s[i] 	index为i的元素
+  s[i:j] 	i=<index=<j的切片
+  s[i:j:step] 	i=<index=<j，步长为step的切片
+  len(s) 	元素个数
+  min(s) 	最小值
+  max(s) 	最大值
+  sum(s[,initial]) 	各项的和
+  all(s) 	检查所有项是否为True
+  any(s) 	检查任意项是否为True
+
+===== 三、集合(set) =====
+
+set：一组唯一项的无序对象,对象不可变。
+
+==== 1.内置函数 ====
+
+set()：创建可变集合。
+
+frozenset()：创建不可变集合。
+
+==== 2.通用方法 ====
+
+  len(s) 	            s中对象数
+  s.copy() 	            s的副本
+  s.difference(t) 	    求差集
+  s.intersect(t) 	    求交集
+  s.isdisjiont(t) 	    若s和t没有交集，返回True
+  s.issubset(t) 	    若s是t的子集，返回True
+  s.issuperset(t) 	    若s是t的超集，返回True
+  s.symmetric_difference(t) 求对称差集
+  s.union(t) 	            求并集
+
+==== 3.可变集合类型方法 ====
+
+  s.add(item) 	将item添加到s中
+  s.clear() 	删除s中所有项
+  s.difference_update(t) 	从s中删除同时在t中的项
+  s.discard(item) 	删除item，若item不在s中，则无任何效果
+  s.intersection_update(t) 	求交集，并将结果放入s中
+  s.pop() 	返回并删除一个元素
+  s.remove(item) 	删除item，若item不在s中，则引发KeyError异常
+  s.symmetric_difference_update(t) 	求对称差集，并将结果放入s中
+  s.update(t) 	将t中所有项添加到s中
+
+===== 四、字典(dict) =====
+
+dict：一个关联数组，通过关键字(key)索引对象。
+
+  len(m) 	        对象数
+  m[k] 	                键值为k的项
+  m[k] = x 	        m[k]设置为x
+  del m[k] 	        删除m[k]
+  k in m 	        判断k是否是m中的键
+  m.clear() 	        删除m中所有项
+  m.copy() 	        m的副本
+  m.fromkeys(s[,value]) 序列s中的值为键，以value为值，创建一个dict
+  m.get(k[,v]) 	        返回m[k]，若m[k]不存在，则返回v
+  m.items() 	        返回由(key,value)对组成 的一个序列
+  m.keys() 	        返回键值组成的一个序列
+  m.pop(k[,default])    删除m[k]，若m[k]不存在，返回default
+  m.popitem() 	        删除一个随机(key,value)，并返回
+  m.setdefault(k[,v])   若找到m[k]，返回m[k];否则，返回v，并设置m[k]为v
+  m.update(b) 	        将b中所有对象添加到m中
+  m.values() 	        返回mzhong所有值的一个序列
+
+====== 五、字符串(string) ======
+
+  s.captitalize() 	          首字符变大写
+  s.center(width[,pad]) 	  在长度为width的字段内将字符串居中，pad为填充字符
+  s.count(sub[,start[,end]]) 	  计算子串sub出现次数
+  s.decode([encoding[,errors]])   解码字符串，并返回Unicode字符串
+  s.encode([encoding[,errors]])   返回字符串的编码版本
+  s.endswith(suffix[,start[,end]])检查字符串是否以suffix结尾
+  s.expandtabs([tabsize]) 	  以空格替换制表符
+  s.find(sub[,start[,end]]) 	  找到sub首次出现的位置,否则返回-1
+  s.format(*args,**kwargs) 	  格式化
+  s.index(sub[,start[,end]]) 	  找到sub首次出现的位置，否则报错
+  s.isalnum() 	是否为字母或数字
+  s.isalpha() 	是否为字母
+  s.isdigit() 	是否为数字
+  s.islower() 	是否是小写
+  s.isspace() 	是否是空格
+  s.istitle() 	是否为标题字符串(每个单词的首字母大写)
+  s.isupper() 	是否为大写
+  s.jion(t) 	以s为分隔符连接序列t
+  s.ljust(width[,fill]) 	     在长度为width字符串内左对齐
+  s.lower() 	                     转换为小写
+  s.lstrip([chrs]) 	             删掉以chrs前面的空格
+  s.partition(seq) 	             以seq为分隔符划分字符串，返回一个元组(head,seq,tail)
+  s.replace(old,new[,maxreplace])    替换子串
+  s.rfind(sub[,start[,end]]) 	     找到sub最后出现的位置
+  s.rindex(sub[,start[,end]]) 	     找到sub最后出现的位置，否则报错
+  s.rjust(width[,fill]) 	     在长度为width字符串内右对齐
+  s.rpartition(seq) 	             以seq为分隔符划分字符串，从结尾处搜索
+  s.rspilt([seq[,maxsplit]]) 	     以seq为分隔符划分字符串，从结尾处搜索
+  s.rstrip([chrs]) 	             删掉以chrs尾部的空格
+  s.rspilt([seq[,maxsplit]]) 	     以seq为分隔符划分字符串
+  s.splitlines([keepends]) 	     将字符串分为一个行列表（是否保留换行符）
+  s.startswith(prefix[,start[,end]]) 检查字符串是否以prefix开始
+  s.strip([chrs]) 	             删掉以chrs开头或者尾部的空格
+  s.title() 	                     将字符串转换为标题格式
+  s.translate(table[,deletechars])   使用字符转换表table转换字符，删除deletechars中的字符
+  s.upper() 	                     转换为大写
+  s.zfill(width) 	             在字符串的右边填充0，使其长度为width

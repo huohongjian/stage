@@ -1,0 +1,4 @@
+====== OpenSuse ======
+----
+  * [[opensuseYuan       |系统配置]]
+  * [[zypper             |zypper使用]]

@@ -1,0 +1,43 @@
+
+====== archlinux下VMWARE10无法启动服务 ======
+
+  # mkdir /etc/init.d
+  # pacman -S linux-headers
+  yaourt -S vmware-patch
+  vmware-modconfig --console --install-all
+
+
+sh ./VM..... 安装提示找不到：/etc/init.d，就把/etc/init.d输进去，让它到默认位置装完了，
+
+上 aur下载vmware-patch，安装，然后 vmware-modconfig --console --install-all
+
+在/etc/systemd/system/下新建：vmware.service，把下面内容复制进去
+
+<file php vmware.service>
+[Unit]
+Description=VMware daemon
+
+[Service]
+ExecStart=/etc/init.d/vmware start
+ExecStop=/etc/init.d/vmware stop
+PIDFile=/var/lock/subsys/vmware
+TimeoutSec=0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
+</file>
+
+执行：systemctl enable vmware
+重启，就OK了
+
+
+
+====== 让VMWARE10支持efi启动 ======
+
+修改配置文件：以win8为例：
+  vi /root/vmware/win8/win8.vmx
+  添加：
+  firmware = "efi"
+
+

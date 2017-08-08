@@ -1,0 +1,28 @@
+====== hwdb.bin does not exist ======
+
+[2014-11-20]今天重新安装了ArchLinux，GPT+EFI。启动时出现下面提示：
+  starting version 217
+  hwdb.bin does not exist,please run udevadm hwdb --update
+
+我按照提示执行指令：# udevadm hwdb --update好像没有输出信息，而且下次开机还是出现一样得提示。不过好像系统没有什么异常，除了这个提示...上网查看了一下，解决办法：
+
+  要在initramfs中添加一个文件/etc/udev/hwdb.bin，方法是
+  1.修改/etc/mkinitcpio.conf，找到其中FILES变量，添加下面的内容
+  FILES="/etc/udev/hwdb.bin"
+  
+  2. 运行mkinitcpio -p linux
+
+PS. 看帖子里说的样子是跟systemd 217版本有关的问题，在等systemd升级到218版本之后可以试试从initramfs中把添加的文件去掉，看问题是不是没了。
+  # pacman -Qo udevadm
+  /usr/bin/udevadm 属于 systemd 217-6
+
+
+
+====== conky参数详解 ======  
+
+http://blog.163.com/omegao@yeah/blog/static/794702322008412101734968/
+http://blog.163.com/omegao@yeah/blog/static/794702322008412101834968/
+
+
+
+

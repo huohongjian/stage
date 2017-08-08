@@ -1,0 +1,80 @@
+ 
+===== 更改国内源并更新软件 =====
+
+我用的是中科大源，直接终端运行以下命令。
+  sudo zypper mr -da
+  sudo zypper ar -fc https://mirrors.ustc.edu.cn/opensuse/distribution/leap/42.1/repo/oss USTC:42.1:OSS
+  sudo zypper ar -fc https://mirrors.ustc.edu.cn/opensuse/distribution/leap/42.1/repo/non-oss USTC:42.1:NON-OSS
+  sudo zypper ar -fc https://mirrors.ustc.edu.cn/opensuse/update/leap/42.1/oss USTC:42.1:UPDATE-OSS
+  sudo zypper ar -fc https://mirrors.ustc.edu.cn/opensuse/update/leap/42.1/non-oss USTC:42.1:UPDATE-NON-OSS
+  sudo zypper ref
+  sudo zypper up
+（参考https://lug.ustc.edu.cn/wiki/mirrors/help/opensuse）
+
+
+         
+===== 解决wine安装软件缺少dll的问题 =====
+
+在使用Wine安装Windows环境下的软件时会经常需要用到一些dll库文件，通常做法是从Windows下拷贝一份到Wine目录下，比较麻烦，Winetricks这个软件可以帮助我们安装所需要的dll库。
+
+1.下载winetricks
+  $wet http://www.kegel.com/wine/winetricks
+
+2.修改为可执行
+  $sudo chmod +x winetricks 
+
+3. 常用命令及举例
+  $./winetricks --help #查看帮助和其所包含的套件
+  $./winetricks #带有gui界面，可查看所包含的套件列表
+  $./winetricks mfc42 #安装mfc42库
+
+
+===== 安装VLC播放器 =====
+
+增加VLC源，用zypper或yast安装
+sudo zypper ar http://download.videolan.org/pub/vlc/SuSE/Leap_42.1/ VLC
+sudo zypper ref
+sudo zypper in vlc
+
+
+===== 3、增加Packman源，安装chromium和pepperflash =====
+
+像flash、ffmpeg这些非自由版本软件只能通过Packman源安装，flash是上网必备插件这点不用我说吧。
+
+
+sudo zypper ar http://mirrors.hust.edu.cn/packman/suse/openSUSE_Leap_42.1/ Packman
+sudo zypper ref
+sudo zypper in chromium chromium-pepper-flash
+或用增加源后yast安装，
+
+
+===== 4、改konsole和kwrite字体 =====
+
+默认字体对中文显示低了一格，十分不美观，而且字体太小，建议改成其它等宽字体10号大小，如我所用的DroidSans Mono.
+
+
+
+5、如果你是五笔使用都那必需把大统一码改为简体
+先安装五笔简中码表
+sudo zypper in fcitx-table-cn-wubi
+再到fcitx手动配置
+
+
+
+
+
+6、必要的快捷键
+ctrl+alt+t打开终端
+meta+d显示桌面
+meta+e打开文件处理器（用dolphin命令）
+
+
+
+===== opensuse安装adobe flash player插件 =====
+
+  1.从安装源，或get.adobe.com/flashplayer下载RPM安装包
+  2.安装完成后，打开终端,复制flash plugin到browser-plugins
+    cp /usr/lib/flash-plugin/libflashplayer.so /usr/lib/browser-plugins/
+  3.再打开firefox 就看到flash player加载了
+
+

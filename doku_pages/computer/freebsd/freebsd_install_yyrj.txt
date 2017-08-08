@@ -1,0 +1,720 @@
+====== 在FreeBSD10上安装和配置 Nginx ======
+
+===== 安装和配置 Nginx =====
+
+安装：
+  # cd /usr/ports/www/nginx
+  # make install clean
+  或
+  # pkg install nginx
+
+配置：
+<code>
+  # vi /usr/local/etc/nginx/nginx.conf
+  user  www;
+  worker_processes  1;
+  events {
+    worker_connections  1024;
+  }
+  http {
+    include	   mime.types;
+    default_type  application/octet-stream;
+
+    sendfile		on;
+    keepalive_timeout  65;
+
+    server {
+      listen	   80;
+      server_name  localhost;
+
+      location / {
+        root   /home/web;
+        index  index.html index.htm index.php;
+      }
+
+      # redirect server error pages to the static page /50x.html
+      #
+      error_page   500 502 503 504  /50x.html;
+      location = /50x.html {
+        root   /usr/local/www/nginx-dist;
+      }
+
+      # pass the PHP scripts to FastCGI server listening on 127.0.0.1:9000
+      #
+      location ~ \.php$ {
+        root           html;
+        fastcgi_pass   127.0.0.1:9000;
+        fastcgi_index  index.php;
+        fastcgi_param  SCRIPT_FILENAME  __/home/web__$fastcgi_script_name;
+        include		fastcgi_params;
+      }
+    }
+  }
+</code>
+
+启动：
+  # service nginx start
+自启动：
+  # echo 'nginx_enable="YES"' >> /etc/rc.conf
+
+
+===== 安装配置 PHP =====
+
+ nginx目前还不直接支持php，必须先借助于fastcgi来驱动php。现在fastcgi较好的办法有2种，一个是php-fpm，另外一个就是spawn-fcgi，一般来说可能php-fpm更强大一点，但是spawn-fcgi也有相当数量的人在使用。
+
+==== 使用php-fpm支持php ====
+
+  # cd /usr/ports/www/php56
+  # make install clean
+  
+  # cd /usr/ports/www/php56-extensions
+  # make install clean
+
+复制默认的配置文件：
+  # cd /usr/local/etc 
+  # cp php-fpm.conf.default php-fpm.conf
+  # cp /usr/local/etc/php.ini-production /usr/local/etc/php.ini
+
+启动：
+  # service php-fpm start
+自启动：
+  # echo 'php-fpm_enable="YES"' >> /etc/rc.conf
+
+
+==== 使用spawn-fcgi支持php ====
+
+首先需要安装lighttpd，以取得spawn-cgi
+  # cd /usr/ports/www/lighttpd 
+  # make install clean 
+
+编辑nginx.con文件：
+  # vi /usr/local/etc/nginx/nginx.conf 
+  location ~ \.php$ { 
+    fastcgi_pass 127.0.0.1:9000; 
+    fastcgi_index index.php; 
+    fastcgi_param SCRIPT_FILENAME /data1/www$fastcgi_script_name; 
+    include fastcgi_params; 
+  } 
+
+用spawn-fcgi启动php-cgi进程：
+  # spawn-fcgi -a 127.0.0.1 -p 9000 -u www -C 3 -f /usr/local/bin/php-cgi
+然后启动nginx即可：
+
+
+===== freebsd下安装minidlna =====
+
+  cd /usr/ports/net/minidlna
+  sudo make install clean
+
+
+初期設定
+  # mkdir /var/db/minidlna
+  # chown dlna:dlna /var/db/minidlna
+
+
+sudo vi /usr/local/etc/minidlna.conf
+  media_dir=A,/home/mike/Public/Music （我存放音乐文件的地方）
+  media_dir=V,/home/mike/Public/Video （我存放视频文件的地方）
+  media_dir=P,/home/mike/Public/Pictures （我存放图片的地方）
+  
+  network_interface=re0
+  friendly_name=MiniDLNA
+  notify_interval=3600
+  root_container=B
+
+
+然后找到 #db_dir=/var/cache/minidlna 的部分。在这里设置想存放数据库文件的地方。比如我是这样设置的：
+  db_dir=/home/mike/minidlna/cache
+
+
+MiniDLNA将在/home/mike/minidlna/cache的里面创建数据库文件
+
+最后找到 #log_dir=/var/log 在这里设置想存放log文件的地方。比如我是这样设置的：
+  log_dir=/home/mike/minidlna
+
+MiniDLNA将在/home/mike/minidlna的里面创建log文件。
+
+这样就将MiniDLNA设置好了。其他的一些设置项目保持缺省状态就可以（当然也可以设置一下）。
+
+
+
+起動
+  # /usr/local/etc/rc.d/minidlna onestart
+
+
+查看媒体库
+  http://192.168.1.9:8200/
+
+
+
+強制起动
+  # /usr/local/etc/tc.d/minidlna force-reload
+  
+  # rm /var/db/minidlna
+  # /usr/local/etc/rc.d/minidlna onerestart
+
+
+自启动：
+  # vi /etc/rc.conf
+  minidlna_enable = "YES"
+
+
+
+===== FreeBSD中Samba Server 安装及配置 =====
+
+  # cd /usr/ports/net/samba43
+  # make install clean
+  # rehash
+  
+
+配置文件:
+  # vi /usr/local/etc/smb4.conf
+
+  [globe]
+  workgroup = FreeBSD
+  NetBIOS name = FreeBSD
+  server string = FreeBSD Samba Server
+  security = share | user
+  
+  [dlna]
+  comment = dlna floder   #名称，随便填
+  path = /home/dlna/      #要共享的目录，最重要!
+  valid users = dlna      #能够访问的用户(可以多个)用空格隔开
+  public = no             #
+  writable = yes          #是否可写
+  browseable = yes
+  printable = no
+  create mask = 0765      #客户建立文件和目录的时候设置文件权限
+
+建立samba访问用户(输入密码):
+  # smbpasswd -a dlna  注意：dlna 一定为系统用户，否则失败
+
+启动命令:
+  # /usr/local/etc/rc.d/samba_server onestart 或
+  # service samba_server onestart | onerestart
+
+设置自动启动:
+  # vi /etc/rc.conf
+  添加samba_server_enable="YES"
+
+在我的电脑地址里输入\\192.168.1.xxx 然后输入用户和密码则可。
+
+另:如果你想登陆密码就是系统登陆密码密码，则同步密码.则在/usr/local/etc/smb.conf里面面开放下面那行
+;pam_smbpass #注意於 cracklibs 那行後就是
+
+
+
+
+
+
+===== FreeBSD8.1下用Transmission下载BT =====
+
+transmission 采用客户服务器模式，可以用FreeBSD作为主机，从客户端发送BT种子给服务器，让服务器进行下载，或用客户端管理服务器上的下载文件。
+
+1.安装
+  cd /usr/ports/net-p2p/transmission
+  make install clean
+  rehash
+
+2.创建下载目录，一个是下载完成的目录，一个是未完成的目录，具体目录根据你的情况决定：
+  # mkdir -p /home/transmission/downloading
+  # mkdir -p /home/transmission/incomplete    # finished downloads
+
+3.可用普通用户启动，首次启动在指定目录下生成一个 settings.json 配置文件
+  transmission-daemon -g /home/transmission  #配置文件目录
+
+4.修改配置文件 /etc/transmission/settings.json：
+  "download-dir": "/home/pi/complete",         #未完成的下载目录
+  "incomplete-dir": "/home/pi/incomplete",     #下载目录位置：
+  "rpc-whitelist": "192.168.1.*",              #允许Web访问的白名单地址
+ 
+  "bind-address-ipv4": "10.10.10.10",
+  "rpc-bind-address": "10.10.10.10",
+  "ddress-ipv4": "10.10.10.10",
+  "rpc-port": 9091,                            # web访问端口
+
+5.重启
+  transmission-daemon -g /home/BT
+现在就可以web访问：http://192.168.1.9:9091/ 。访问时输入用户名和密码，默认都是：transmission。
+
+
+6.也可以用下列命令访问，但目前还没搞懂。
+  sudo service transmission-daemon reload
+  sudo service transmission-daemon restart
+
+
+  
+
+
+
+===== 用FreeBSD搭建下载专用机 — 安装mldonkey =====
+
+
+安装：
+  # cd /usr/ports/net-p2p/mldonkey-core
+  # make install clean
+  # rehash
+
+设置步骤：
+  •为mldonkey添加一个专用的系统帐户 
+  •为mldonkey创建所需的目录 
+  •初始化mldonkey的配置文件 
+  •将mldonkey设置为自动启动 
+  •为admin用户设置密码 
+  •导入.met文件 
+  •设置下载文件存放路径
+
+为mldonkey添加一个专用的系统帐户。处于系统安全的考虑，我们将以一个特定的系统账号运行mldonkey的服务进程。该用户名为mlnet，隶属于mlnet组。命令如下：
+  # pw group add mlnet
+  # pw useradd mlnet -g mlnet -m
+  # id mlnet
+  uid=1002(mlnet) gid=1003(mlnet) groups=1003(mlnet)
+
+为mldonkey创建所需的目录
+  # mkdir /home/mlnet/mldonkey
+  # mkdir /home/mlnet/mldonkey/temp
+  # mkdir /home/mlnet/mldonkey/done
+  # mkdir /home/mlnet/mldonkey/done/files
+  # mkdir /home/mlnet/mldonkey/done/directories
+  # chown -R mlnet /home/mlnet/mldonkey
+  # chmod 777 /home/mlnet/mldonkey/done/*
+
+初始化mldonkey的配置文件
+ 对mldonkey进行初始设置时，只需要使用相应的参数启动mlnet进程一次即可。进程启动后，将自动在用户的主目录下面创建一个名为.mldonkey的子目录，并把配置文件存放于该目录中。
+  # su - mlnet
+  $ /usr/local/bin/mlnet -client_name 'yourname' -allowed_ips '127.0.0.0/8 192.168.0.0/24' -enable_overnet true -enable_kademlia true -enable_bittorrent true -enable_donkey true -enable_opennap true -enable_fasttrack true -enable_fileTP true -mtu_packet_size 1464 -run_as_user mlnet -start_gui false -temp_directory /home/mlnet/mldonkey/temp -create_file_mode 664 -create_dir_mode 777 -pid /home/mlnet/mldonkey/run
+
+此时在另外一台机器上面访问http://:4080可以打开mldonkey的web界面。该web页面将提示我们设置admin用户的密码。我们稍后在进行设置，先按+C键终止mlnet进程。
+
+
+将mldonkey设置为自动启动.向/etc/rc.conf文件加入下面信息。
+  mlnet_enable="YES"
+  mlnet_user="mlnet"
+  mlnet_flags=""
+  mlnet_logfile=""
+重启电脑，使得mlnet进程启动。
+
+
+为admin用户设置密码
+ 对admin用户设置密码，需要运行mldonkey内置的命令。我们可以使用telnet工具连接运行mlnet进程的PC机的4000端口访问mldonkey的命令行接口。设置过程如下：
+  $ telnet localhost 4000
+  > useradd admin 
+  > exit
+完成后再次访问mldonkey的web界面，此时浏览器将弹出身份验证对话框。输入用户名admin以及设置的密码即可。
+
+建议此时使用Option页面对mldonkey进一步进行设置。
+
+
+导入.met文件。为了使得mldonkey能够连接到emule的服务器，我们需要导入.met文件。
+
+
+设置下载文件存放路径。默认时mldonkey将把下载下来的文件存放到~/.mldonkey/incoming目录下面。根据UNIX系统的文件命名规则，.mldonkey是一个隐藏文件。因此我决定将文件的存放目录修改为/home/mlnet/mldonkey/done。可以如下解决：
+  # su - mlnet
+  $ cd /home/mlnet/.mldonkey/incoming
+  $ mv directories directories.bak
+  $ ln -s ~/mldonkey/done/directories
+  $ mv files files.bak
+  $ ln -s ~/mldonkey/done/files
+至此，所有mldonkey所需的设置已经完成，重启系统即可工作。
+
+ 
+ 
+
+
+
+mldonkey 是一套免费的 e-Donkey 客户端。 不过在文字接口的搜寻有点简陋，笔者通常都是利用网页界面来存取， 也有 GTK 图形接口。
+  # cd /usr/ports/net-p2p/mldonkey
+  # make WITHOUT_TK=yes WITHOUT_X11=yes install clean
+
+然后最好自己选个共同的地方放，像是建立一个新使用者 mldonkey， 然后将档案都由该使用者来执行。
+  # mkdir -p /home/mldonkey
+  # cd /home/mldonkey
+第一次执行会产生一些设定档，接着先暂停执行， 修改一些设定档后，利用远程网页来控制。
+  % mlnet-real &
+  % sh /usr/local/bin/kill_mldonkey
+  % vi servers.ini
+  known_servers = [
+  { server_network = Donkey
+  server_age = 59138548
+  server_addr = ("140.123.108.139", 7654)
+  server_desc = "TLF Taiwan ED Server"
+  server_name = "TLF Taiwan ED Server"
+  };]
+
+  % vi downloads.ini
+  allowed_ips = [
+  "127.0.0.1";
+  "203.204.8.177";]
+
+  % mlnet-real &
+然后就可以开启远程 http://127.0.0.1:4080/ 来抓档案啰。
+
+
+如果要使用中文搜寻，则先在搜寻接口先按右键， 编码 -> 繁体中文， 然后再输入要搜寻的中文名称即可。 或是安装 outta-port/mldonkey， 也可以直接把 outta-port/mldonkey/files 底下的档案复制到 net/mldonkey/files 底下。 因为 mldonkey 直接在 http header 中设定了 charset=iso-8859-1， 因此最好的做法是希望作者提供其它编码的选项， 不然只能 patch source 了。
+
+
+
+摘自《http://netlab.cse.yzu.edu.tw/~statue/freebsd/zh-tut/mldonkey.html》 
+
+
+
+===== MLDonkey =====
+
+
+安装MLDonkey（电驴、BT）
+  # cd /usr/ports/net-p2p/mldonkey
+  # make WITHOUT_GUI=yes WITHOUT_X11="YES" WITHOUT_TK="YES" install clean
+  % ln -s ~/.mldonkey/incoming ~
+
+在/etc/rc.conf加入
+  mlnet_enable="YES"
+  mlnet_user="用户名非root"
+
+  % /usr/local/etc/rc.d/mlnet start (注意是%)
+  1.% telnet 127.0.0.1 4000
+  2.> auth admin ""
+  3.> passwd 键入你想设置的密码
+  4.> set allowed_ips "127.0.0.1 192.168.0.0/24" (根据你自己的情况设置)
+  5.> save
+  6.> exit
+mldonkey需要一个非root用户来运行。
+具体情况可以参考http://forums.freebsd.org/showthread.php?t=227
+现在就可以在浏览器里输入：localhost:4080来设置和下载文件了。
+
+
+默认mldonkey的文件夹是隐藏的，在用户目录下。找下载好的电影有点不方便，把incoming连接到你的用户目录下就好了。当然你也可以自己修改默认下载路径。
+
+mldonkey简单设置:
+  enable_kademlia的选项为true――打开kad减少对服务器的依赖。
+  max_hard_upload_rate默认是10    （全局最大上传，根据自己情况设置）
+  max_hard_download_rate默认是50 （全局最大下载，根据自己情况设置）
+  mldonkey有两组两组带宽控制模式，通过点击Bandwidth toggle来更改带宽控制模式。
+   
+添加服务器列表：
+  点击servers>Import Server.met输入http://ed2k.im/server.met(放心都是安全服务器列表)
+  或者下载下来手工导入：servers "/home/username/server.met"
+
+添加overnet启动用户列表：
+  ov_load "/home/username/contact.dat"
+
+添加kad节点信息
+  下载地址：http://emulefans.com/emule-kad-node-dat/
+  kad_load "/home/username/nodes.dat"
+
+添加firefox for mldonkey插件：
+  下载地址：http://www.informatik.uni-oldenburg.de/~dyna/mldonkey/
+
+
+
+
+===== 通过web设置电驴MLDonkey =====
+
+
+在浏览器中输入http://localhost:4080
+
+1.导入emule服务器列表：
+  在input前输入:   servers 服务器列表地址
+          例如：   servers http://www.emule.org.cn/server.met
+  敲回车键或按input导入。也可以先下载，再导入
+
+2.导入kad的node列表：
+  在input前输入:  kad_load   http://upd.emule-security.org/nodes.dat  或先下载，再导入
+  
+  servers “/home/username/server.met”——导入服务器列表
+  ov_load “/home/username/contact.dat”——导入overnet启动用户列表
+  kad_load “/home/username/nodes.dat”——导入kad启动用户列表
+
+
+3.单击options标签：
+  client_name设为[CHN] [VeryCD]sdds   有些server需要特殊的用户名才可以连上，sdds可改。
+  
+(敲回车键应用这个设置，下面也一样)
+  max_hard_upload_rate 上传速度最大值
+  max_hard_download_rate 下载速度最大值
+
+如果要限制传输速度，就设置这两个参数，0表示不限，单位是KB
+  max_hard_upload_rate_2  第二个上传速度最大值
+  max_hard_download_rate_2  第二个下载速度最大值
+
+  max_opened_connections 为最大链接数 
+  max_concurrent_downloads 最大容许的同时下载线程默认是60
+
+4.单击 delays标签：
+  buffer_writes：是否打开缓存写入，建议打开
+  buffer_writes_delay：写入缓存时的延迟时间，单位为秒，建议30.或者更高
+  buffer_writes_threshold：缓存到了指定值时强制写入，单位为KB，默认1024KB（设为3000 ，3MB之后强制写入硬盘）
+
+5.协议设置 Options - Settings - Net
+  enable_overnet：Overnet网络，建议打开
+  enable_kademlia：KAD网络，必须打开
+  enable_donkey：eDonkey网络，必须打开
+  enable_bittorrent：BT，建议打开，不用的也可以不开
+  enable_fasttrack：FastTrack网络，好像已经停用了
+  enable_directconnect：DirectConnect网络，不常用，可以可关闭
+  enable_fileTP：FTP和HTTP，打开吧
+
+6.Donkey设置 Options - all
+  ED2K-max_connected_servers：最大连接的服务器数量，太大也没用，一般稳定后就5个
+  ED2K-force_client_high_id：打开，强制客户端为HighID
+  ED2K-force_high_id：打开，强制自己为highID
+  ED2K-keep_best_server：保持使用最好的服务器
+  ED2K-good_client_rank：它表示需要维持连接的客户端长度，默认500，第500以外的客户端将断开，等待下一次访问
+  ED2K-connect_only_preferred_server: 只连接优先选定的服务器，这样就避免了连接资源量小和无用的服务器，前提是你必须设置了优先服务器
+  ED2K-update_server_list_server：从连接的服务器里更新服务器列表，建议关闭，否则会出现一些垃圾服务器
+  ED2K-update_server_list_server_met：从服务器列表文件更新服务器，必须打开
+  ED2K-update_server_list_client ：从连接到的客户端里更新服务器列表，建议关闭，否则会出现一些垃圾服务器
+
+7.其他 Options - Settings - files
+  hdd_temp_minfree：临时目录最小可用空间，默认大小设置为50M
+  hdd_temp_stop_core：如果临时目录的可用空间少于上面设置的指定值，程序就会自动停止
+  client_buffer_size：表示缓存的总大小，单位字节，默认值是500000，即50MB，内存是不很吃紧的建议设大点
+  share_scan_interval：共享目录的检查时间，单位分钟，默认是30分钟，0是不检查共享目录
+
+8.自带的IPblocking误杀那么严重当然要改掉。首先要从网络过滤名单中删掉原来的过滤文件地址。进入Options - Settings - web infos(页面在底下)，找到下面这一行：“guarding.p2p 96 http://www.bluetack.co.uk/config/level1.gz ”，点击左面的“Remove”按键将它删除掉。顺带说一下，这一行里的数字“96”就是更新时间间隔，单位为小时，即每96小时更新一次文件。
+
+添加网络过滤名单，还是刚才的web infos页面，点击列表右上角的“Add URL”按键，在弹出框里输入：
+  guarding.p2p 过滤文件地址 96  例如：
+  guarding.p2p http://upd.emule-security.net/ipfilter.zip 96
+
+9.web管理页面--help ----sysinfo --porttest中 查看和检测相关端口是否工作！点击options按钮，在plugins下拉菜单中选择donkey，修改ed2k-port
+
+修改ed2k端口donkey所用的端口列表：原来藏在Help＋ －－－－－ Sysinfo 下面。终于被我找到了，反正也是做一次端口映射
+
+
+
+10.用命令添加或取消共享目录
+  用share命令添加共享目录，在命令栏里输入：share 0 共享的目录地址
+  这里是数字0，不是字母o，表示优先等级
+  例如
+  share 0 /home/shares
+  用unshare命令可以将已经共享了的目录取消，在命令栏输入：unshare 要取消的共享目录地址
+  例如
+  unshare /home/shares
+
+WebUI的菜单能直观方便地管理共享目录
+  Options -> Shares进入共享目录菜单，可以看到已经共享的目录和一些有关说明，同时能很简单地添加活取消共享目录。
+  取消目录共享，只要点某共享目录旁的“Unshare”按键就可以了。
+  添加共享目录是点击"Add Share"按键然后输入：0 共享的目录地址
+  例如
+  0 /home/share
+
+11.BT的torrent文件用URL方式可行，如：http://bt.hz0752.net/up/v32.torrent，把地址贴到右上角的文本框里，点Input即可。但如果BT种子是压缩文件就不知道怎么办了，有兴趣的试试。成功了告诉我，呵呵。
+ed2k协议也是如此，如：ed2k://aabbccddeeff/贴到右上角的文本框里，点Input即可。
+
+
+种子文件扫描
+  把种子放到/home/harbinbeer/.mldonkey/torrents/incoming/，mldonkey会自动扫描添加
+
+12.其它一些主要的配置文件：
+  ~/.mldonkey/downloads.ini 基本的设置( 这个是for edonkey和其他协议的) 
+  ~/.mldonkey/servers.ini 服务器列表文件 
+  ~/.mldonkey/files.ini 当前已经完成的和未完成的文件列表 
+  ~/.mldonkey/friends.ini 好友列表 
+  ~/.mldonkey_gui.ini 图形前端的配置文件 
+另外其他的网络协议都有其单独的配置文件，一般都放在~/.mldonkey目录下
+
+13.意外断电后，mldonkey无法启动
+  tail ~/.mldonkey/mlnet.log查看错误 也可以手工运行mlnet查看输出信息 有时候可以尝试删除/home/harbinbeer/.mldonkey/friends.ini
+
+参考自http://uodog.com/posts/201008/setting-mldonkey.html
+
+
+
+
+http://blog.sina.com.cn/s/blog_4a8d06ce0100lmkd.html
+http://www.jtben.com/document/1046794
+
+
+
+
+
+
+
+===== 在 FreeBSD 上用 mpd5 构建 PPTP VPN =====
+
+==== 安装 MPD5 ====
+  # cd /usr/ports/net/mpd5
+  # make install clean
+
+在 /etc/rc.conf 中启用 mpd5 添加如下行 
+  mpd_enable="YES"
+
+==== 配置 mpd pptp VPN ====
+
+复制默认的 mpd.conf 配置文件 
+  #cd /usr/local/etc/mpd5/
+  #cp mpd.conf.sample mpd.conf
+修改 mpd.conf 文件中的 startup: default: pptp_server: 三块，其它的不要理睬，放在里面不要删除，因为可以通过 default: 标签来调用需要执行的模块，所以不受影响。 
+
+以下是这三部分的代码，需要修改的地方见我的中文解释。 
+  startup:
+        # configure mpd users
+        set user admin password ### 设置 mpd 的访问帐号及密码，通过 telnet 或 web 访问时需要此帐号
+        #set user foo1 bar1
+        # configure the console
+        set console self 127.0.0.1 5005
+        set console open
+        # configure the web server
+        set web self 0.0.0.0 5006
+        set web open
+  
+  #
+  # Default configuration is "dialup"
+  
+  default:
+        #load dialup
+        load pptp_server ### 默认调用 pptp_server 模块
+  
+  pptp_server:
+  #
+  # Mpd as a PPTP server compatible with Microsoft Dial-Up Networking clients.
+  #
+  # Suppose you have a private Office LAN numbered 192.168.1.0/24 and the
+  # machine running mpd is at 192.168.1.1, and also has an externally visible
+  # IP address of 1.2.3.4.
+  #
+  # We want to allow a client to connect to 1.2.3.4 from out on the Internet
+  # via PPTP.  We will assign that client the address 192.168.1.50 and proxy-ARP
+  # for that address, so the virtual PPP link will be numbered 192.168.1.1 local
+  # and 192.168.1.50 remote.  From the client machine's perspective, it will
+  # appear as if it is actually on the 192.168.1.0/24 network, even though in
+  # reality it is somewhere far away out on the Internet.
+  #
+  # Our DNS server is at 192.168.1.3 and our NBNS (WINS server) is at 192.168.1.4.
+  # If you don't have an NBNS server, leave that line out.
+  #
+  
+  # Define dynamic IP address pool.
+        set ippool add pool1 192.168.1.50 192.168.1.99
+  
+  # Create clonable bundle template named B
+        create bundle template B
+        set iface enable proxy-arp
+        set iface idle 1800
+        set iface enable tcpmssfix
+        set ipcp yes vjcomp
+  # Specify IP address pool for dynamic assigment.
+        set ipcp ranges 192.168.1.1/32 ippool pool1
+        set ipcp dns 8.8.8.8  ### 设置 dns
+        #set ipcp nbns 192.168.1.4 ###如果你用不到 wins 的话，可以注释掉这块，
+  # The five lines below enable Microsoft Point-to-Point encryption
+  # (MPPE) using the ng_mppc(8) netgraph node type.
+        set bundle enable compression
+        set ccp yes mppc
+        set mppc yes e40
+        set mppc yes e128
+        set mppc yes stateless
+  # Create clonable link template named L
+        create link template L pptp
+  # Set bundle template to use
+        set link action bundle B
+  # Multilink adds some overhead, but gives full 1500 MTU.
+        set link enable multilink
+        set link yes acfcomp protocomp
+        set link no pap chap eap
+        set link enable chap
+        
+  # We can use use RADIUS authentication/accounting by including
+  # another config section with label 'radius'.
+  #       load radius
+        set link keep-alive 10 60
+  # We reducing link mtu to avoid GRE packet fragmentation.
+        set link mtu 1460
+  # Configure PPTP
+        set pptp self 202.101.8.18 ###设置 pptp 的监听 ip 地址，也就是你的网卡的 IP 地址
+  # Allow to accept calls
+        set link enable incoming
+
+好了，就这么简单。 
+
+==== 启动 mpd5 ====
+
+  # /usr/local/etc/rc.d/mpd5 start
+
+检查 mpd5 是否已经启动 
+  # netstat -a
+
+可以看到类似于这样的输出信息 
+  tcp4       0      0 vpn.server..pptp  *.*                    LISTEN
+
+说明 pptp 已正常启动 
+
+==== 添加 VPN 帐号 ====
+
+创建 /usr/local/etc/mpd5/mpd.secret 文件，输入用户名及密码，一行一个，如 
+  vpnaccount1  password1
+  vpnaccount2  password2
+  riku         password3
+
+然后就可以在 windows 下尝试登录 vpn 服务器了 
+
+==== 启用包转发 ====
+以上配置好后，但只能访问内部网络，而不访问外网，所以要让服务器启用包转发。我用 ipfw 来提供此功能。 
+
+在 /etc/rc.conf 中加入以下行 
+  gateway_enable="YES"
+  firewall_enable="YES"
+  firewall_type="OPEN"
+  firewall_logging_enable="YES"
+  natd_enable="YES"
+  natd_interface="em0" // em0 为网卡型号，你可以用 ifconfig 来检查你的网卡型号
+
+编辑 ifpw 的规则文件 /etc/ipfw.rules 
+  ipfw add allow all from any to any
+  ipfw add divert natd ip from any to any via em0
+
+最后重新启动 
+
+当然如果你不想重启的话，也可以通过以下命令来启用包转发。 
+  sysctl net.inet.ip.forwarding=1
+  /etc/rc.d/ipfw start
+
+好了，配置完成。 
+
+==== 高级：使用主机系统帐号登录 ====
+
+在 mpd.conf 中的 # load radius 后添加两行 
+  set auth disable internal  ### 禁止使用 mpd.secert 文件作为帐户认证
+  set auth enable system-auth ### 添加系统认证方式
+
+修改 /etc/login.conf ，把帐号加密方式改为 nth 
+  :passwd_format=nth:\
+  #:passwd_format=md5:\
+
+重建 login.conf 数据库 
+  cap_mkdb /etc/login.conf
+
+最后添加新帐户 
+  adduser
+
+==== 用 mpd5 作为 pptp client 连接 VPN ====
+
+这块也很简单，只要改一下默认配置中的几行，见下面代码中的中文注释。 
+
+另外，上面的default: 标签中要加入 load pptp_client 这行，以便重启 mpd 时加载 pptp client 模块。 
+  pptp_client:
+  #
+  # PPTP client: only outgoing calls, auto reconnect,
+  # ipcp-negotiated address, one-sided authentication,
+  # default route points on ISP's end
+  #
+
+        create bundle static B1
+        set iface route default
+        set ipcp ranges 0.0.0.0/0 0.0.0.0/0
+
+        create link static L1 pptp
+        set link action bundle B1
+        set auth authname riku  ###VPN 帐号
+        set auth password password  ###  VPN 密码
+        set link max-redial 0
+        set link mtu 1460
+        set link keep-alive 20 75
+        set pptp peer 208.1.2.3 ### VPN 服务器的 ip 地址
+        set pptp disable windowing
+        open
+
+重启 mpd5 
+  /usr/local/etc/rc.d/mpd5 restart
+
+最后还需要重新设一下路由。 

@@ -1,0 +1,100 @@
+====== 在Raspberry-pi上安装设置wireless AP ======
+　　经过几番努力，终于在失望的尽头把Raspberry pi wireless ap搭建起来，让我兴奋了好几天。几天来，在一次次承受打击的煎熬中，终于尝到了成功的喜悦。总结起来，成功主要归功于两点：1.网络上这篇文章，应该是台湾人写的，客观地说在信息化方面，台湾要比大陆先进好多年，至少台湾的大学更注重对基础科学的研究，从台湾大学的网站就可以感受到这一点；2.在努力和坚持中不断寻找答案。下面是安装配置的主要步骤，根据实际情况对原文进行了略微修改，希望下次安装配置时，可以不用再折腾。[[http://blog.carlcarl.me/1399/raspberry_pi_archlinux_wifi_ap/|原文请参见这里]]。
+===== 环境 =====
+  - Raspberry pi 2
+  - ArchLinux
+  - TP-LINK WN725N v2.0
+搭建AP的关键是搞定无线网卡驱动和下载适合该驱动的Hostapd。
+首先测试是否支持该无线网卡：可以用 lsmod 看有沒有 r8188eu，如果有就 OK。
+下面开步安装和配置：
+===== 設置 wlan0 =====
+接下來要把 wlan0 設置起來，建立 /etc/systemd/system/network-wireless@.service 這個檔案並編輯它的內容:
+<file php network-wireless@.service>
+[Unit]
+Description=Wireless network connectivity (%i)
+Wants=network.target
+Before=network.target
+BindsTo=sys-subsystem-net-devices-%i.device
+After=sys-subsystem-net-devices-%i.device
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=/etc/conf.d/network-wireless@%i
+ExecStart=/usr/bin/ip link set dev %i up
+ExecStart=/usr/bin/ip addr add ${address}/${netmask} broadcast ${broadcast} dev %i
+ExecStop=/usr/bin/ip addr flush dev %i
+ExecStop=/usr/bin/ip link set dev %i down
+
+[Install]
+WantedBy=multi-user.target
+</file>
+
+接著建立並編輯 /etc/conf.d/network-wireless@wlan0:
+  address=192.168.10.1
+  netmask=24
+  broadcast=192.168.10.255
+
+address 的部分就自己設個範圍，預設是由有線出去，所以這邊就不用加上 gateway 了。編輯完就可以 enable 這個 service:
+
+  sudo systemctl enable network-wireless@wlan0.service
+  sudo systemctl start network-wireless@wlan0.service
+
+===== 安裝設置 dnsmasq =====
+  sudo yaourt -S dnsmasq
+
+編輯 /etc/dnsmasq.conf，參考以下做修改:
+  interface=wlan0
+  dhcp-range=192.168.10.100,192.168.10.200,255.255.255.0,12h
+
+Enable service:
+  sudo systemctl enable dnsmasq
+  sudo systemctl start dnsmasq
+
+===== 安裝設置 hostapd =====
+  sudo yaourt -S hostapd-8188eu
+
+編輯 /etc/hostapd/hostapd.conf 檔案內容，參考下方做修改，來源參考 Software access point:
+<code php hostapd.conf>
+ssid=Raspberry
+wpa_passphrase=Raspberry
+interface=wlan0
+auth_algs=3
+channel=7
+hw_mode=g
+logger_stdout=-1
+logger_stdout_level=2
+max_num_sta=5
+rsn_pairwise=CCMP
+wpa=2
+wpa_key_mgmt=WPA-PSK
+wpa_pairwise=TKIP CCMP
+</code>
+
+Enable service:
+  sudo systemctl enable hostpad
+  sudo systemctl start hostpad
+
+hostpad 啟動後，應該就會有 wifi 的訊號出來，然後輸入 wifi 密碼之後是可以連上的，不過還沒辦法連外才對。這時候還需要設定 NAT 的部分。
+
+
+===== 設置 NAT =====
+
+編輯 /etc/sysctl.d/30-ipforward.conf，加上以下內容:
+<code php 30-ipforword.conf>
+net.ipv4.ip_forward=1
+net.ipv6.conf.default.forwarding=1
+net.ipv6.conf.all.forwarding=1
+</code>
+
+設定 iptables 並啟動 service:
+  sudo iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+  sudo iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+  sudo iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+
+  sudo sh -c "iptables-save > /etc/iptables/iptables.rules"
+  sudo systemctl enable iptables
+  sudo systemctl start iptables
+
+iptables 預設會讀取 /etc/iptables/iptables.rules，所以不需要再多做讀取 rule 的設置。
+最後 reboot 板子，測試連外是否正常就 ok 了。

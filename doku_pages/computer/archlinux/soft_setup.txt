@@ -1,0 +1,352 @@
+
+====== 常用软件安装 ======
+
+===== 常用软件列表 =====
+
+  1、窗口管理器：fluxbox + fvwm
+  2、文件管理器：rox
+  3、输入法：fcitx
+  4、浏览器：firefox
+  5、网络连接：rp-pppoe
+  6、文字编辑：leafpad + Gvim + xetexlatex
+  7、看doc：antiword，catdoc
+  8、音乐播放器：moc
+  9、Mplayer+解码器
+  10、看图：xzgv
+  11、解压：file-roller + unrar + p7zip + gzip
+  12、看chm：chmsee
+  13、看PDF：foxitreader
+  14、下载：wget + lynx
+  15、聊天：pidgin-lwqq
+  16、终端：Urxvt + xterm
+  17、读写ntfs分区：ntfs-3g
+  18、音乐播放：kwplayer   使用了kuwo.cn(酷我音乐盒)的网络资源, 内容非常丰富.
+  19、网络台电：pianobar
+
+
+===== IM软件 =====
+
+  # pacman -S pidgin pidgin-lwqq
+
+
+
+===== 安装yaourt =====
+
+  vim /etc/pacman.conf  添加下列内容
+    [archlinuxfr]
+    SigLevel = Never
+    Server = http://repo.archlinux.fr/$arch
+  pacman -S yaourt
+
+===== 安装Xorg =====
+
+安装Xorg-server
+  sudo pacman -S xorg-server xorg-server-utils xorg-xinit
+
+安装显卡驱动
+  pacman -S xf86-video-vesa                  # 通用显卡驱动，不提供任何2D和3D加速功能
+  pacman -S xf86-video-intel                 # Intel
+  pacman -S xf86-video-nouveau nouveau-dri   # Nvidia
+  pacman -S xf86-video-ati                   # Ati
+
+配置Xorg
+  sudo X -configure
+  X -config /root/xorg.conf.new              #测试配置文件，按Ctrl+Alt+Backspace退出
+  sudo cp /root/xorg.conf.new /etc/X11/xorg.conf.d/xorg.conf
+
+测试Xorg
+  #pacman xorg-twm xterm    #小型的窗口管理器和终端模拟器，用来测试xorg能不能启动。
+  startx
+
+ThinkPad T430i 双显卡设置
+  Bios：Config：Display 
+    Graplics Device：Intergrated Graplics  集成显卡Intel
+                     Discrete Graplics     独立显卡nvidia
+  yaourt -S nvidia-173xx                   安装nvidia 5系驱动不成功
+  
+查看显卡型号和BusID
+  lspci | grep VGA
+
+===== 安装窗口管理器 =====
+
+  sudo pacman -S fluxbox rox
+  vim $HOME/.xinitrc
+  exec fluxbox
+
+
+===== 安装桌面环境(xfce4 kde lxde gnome) =====
+
+  pacman -S xfce4 kde lxde gnome
+  cp /etc/skel/.xinitrc $HOME/.xinitrc
+  vim .xinitrc
+    xrandr -s 1366x768   # 制定屏幕分辨率
+    exec startkde        # kde
+    exec gnome-session   # gnome
+
+
+===== 安装字体 =====
+
+  #pacman -S ttf-dejavu  wqy-microhei
+
+
+===== 安装fcitx输入法 =====
+
+  pcaman -S fcitx
+  pcaman -S kcm-fcitx          # For kde
+  pacman -S fcitx-googlepinyin # Google拼音
+
+配置输入法：
+  fcitx-configtool
+  # 在Input Method -> 去掉Only Show Currentt Language勾 -> 搜索Chinese -> Google Pinyin
+  
+  vi $HOME/.xinitrc    .xinitrc里添加:
+    export GTK_IM_MODULE=fcitx
+    export QT_IM_IMDULE=fcitx
+    export XMODIFIERS="@im=fcitx"
+
+
+===== 安装常用工具 =====
+
+  # pacman -S sudo
+  # visudo 修改sudoer文件，找到“# %wheel ALL=(ALL) NOPASSWD: ALL”这行，去掉前面的#
+
+  # pacman -S vim
+  # cp /usr/share/vim/vim73/vimrc_example.vim /etc/vimrc  建立vimrc配置文件 
+
+
+
+===== 安装firefox浏览器 =====
+  sudo pacman -S firefox firefox-i18n-zh-cn flashplugin
+
+===== 声音管理 =====
+
+  sudo pacman -S alsa-utils [alsa-lib alsa-oss]
+
+===== 笔记本触摸板支持 =====
+
+  pacman -S xf86-input-synaptics
+
+
+
+
+
+
+
+
+
+
+===== Some softwares =====
+
+  pacman -S openssh     # sshd
+  pacman -S git         # git
+  pacman -S subversion
+  pacman -S wget        # wget
+  pacman -S net-tools   # ifconfig
+  pacman -S dnsutils    # nslookup
+
+
+
+===== njit-client =====
+
+  mkdir build && cd build
+  wget https://github.com/linzsummer/njit8021xclient_for_swufe/archive/master.zip
+  unzip master.zip
+  pacman -S automake autoconf libpcap pkg-config
+  # pacman -S  libssl
+  ./configure
+  make
+  make install
+  cd .. && rm -rf build
+
+
+
+===== 安装WPS =====
+
+  vim /etc/pacman.conf
+    + [multilib]
+    + SigLevel = PackageRequired
+    + Include = /etc/pacman.d/mirrorlist
+  pacman -Syu    # renew database (Repository multilib)
+  yaourt -S kingsoft-office
+
+
+
+
+
+====== Mirage ======
+
+ 原来介绍过 Gimmage 和 Ristretto 这两款轻量的图像浏览器，类似于 Windows 下的图片和传真查看器，简单快速，适合一般性的图片浏览。今天再介绍一个相似的软件 Mirage，Mirage 基于 PyGtk，并且只依赖 PyGtk 和 Gtk，不依赖其他的复杂软件包和桌面环境。同时，Mirage 也支持幻灯片放映、图片大小调整、图片切割和旋转等功能。\\
+Mirage 的主页：http://mirageiv.berlios.de/
+
+
+====== Sakura ======
+
+ Sakura 是一款轻量的虚拟终端软件，提供了标签页、自动识别链接、颜色字体设置等一般虚拟终端软件具有的功能。并且 Sakura 只依赖于 Gtk+ 和 VTE 这两个库，这样即使不用安装庞大的 Gnome 桌面环境，也可以顺利使用，省了不少麻烦～\\
+Sakura 的主页： http://pleyades.net/david/sakura.php
+
+===== 使用快捷键 =====
+
+   1. Ctrl + Shift + T                                 新增终端窗口
+   2. Ctrl + Shift + W                                 关闭当前终端窗口
+   3. Ctrl + Shift + C                                 copy
+   4. Ctrl + Shift + V                                 粘贴
+   5. Alt  + Left cursor                               前一个终端窗口
+   6. Alt  + Right cursor                              后一个终端窗口
+   7. Alt  + [1-9]                                     切换到哪个窗口
+   8. Ctrl + Shift + S                                 切换滚动
+   9. Ctrl + Shift + Mouse left button                 打开链接
+  10. F11                                              全屏
+  11. Ctrl + ‘+’                                       增加字体大小
+  12. Ctrl + ‘-’                                       减少字体大小
+
+====== Excelsior ======
+
+ Excelsior 是一款以蓝色为基调的主题，基于 Clearlooks 引擎，按钮和标签页都带有一些材质渲染效果～ Excelsior 的下载地址： http://www.gnome-look.org/CONTENT/content-files/76486-excelsior-1.1.tar.bz2
+安装方法：
+  ./autogen.sh --prefix=/usr --enable-animation
+  make
+  sudo make install
+
+
+
+====== 隐藏 gvim 的工具栏和菜单 ======
+
+ 经常用 gvim 来写代码，不过 gvim 默认会在窗口上方显示菜单还有工具栏，一般来说，各种操作都通过快捷键命令来完成了，很少会用到菜单和工具栏，但是它们却白白浪费了窗口的空间，其实可以写个 vim 脚本把它们隐藏起来，需要的时候再调出来～
+转自： http://liyanrui.is-programmer.com/articles/1791/gvim-menu-and-toolbar-toggle.html
+作者： lyanry
+
+ 
+gvim 菜单栏与工具栏隐藏与显示动态切换
+
+ 
+
+编辑 $HOME/.gvimrc 文件，添加以下代码：
+"Toggle Menu and Toolbar
+set guioptions-=m
+set guioptions-=T
+map <silent> <F2> :if &guioptions =~# 'T' <Bar>
+        \set guioptions-=T <Bar>
+        \set guioptions-=m <bar>
+    \else <Bar>
+        \set guioptions+=T <Bar>
+        \set guioptions+=m <Bar>
+    \endif<CR>
+
+再次启动 gvim 时，菜单栏与工具栏默认是隐藏的，这样可以充分利用窗口空间，使其显示更多的文本内容。
+
+在必要时，可使用 F2 键呼出菜单栏/工具栏；待不使用时，用 F2 键将其关闭。
+
+
+
+====== 在fluxbox中使用rox-filer ======
+
+  - 安装rox。sudo pacman -S rox
+  - 随fluxbox一起启动。sudo vi .fluxbox/apps 中添加启动项，[startup] {rox -p=PIN}。
+  - 设定壁纸：右键->Backdrop... 打开找到一个图片拖到弹出对话框中的那个矩形框中就OK了。
+  - 设定双击打开。右键－>ROX-Filer-> Options,（如果告诉你找不到options文件，那你就得把 源码目录/ROX-Filer/options.xml中复制到~/下了。"Filer windows"->“Window behaviour"->"Single-click navigation",取消前边那个勾。然后"Pinboard"->"Pinboard behaviour"->"Single-click to open" 取消前边那个勾。OK。
+  - 在桌面上添加常用程序的图标。以firefox为例，which firefox发现是在/usr/bin/下，打开/usr/bin/目录，找到firefox，把它拖到桌面上就OK了。没有图标？一般程序的图标都是在/usr/share/pixmaps/里边。自己找找，如果没有就从网上下载一个png的图标，嫌大的话可以用gthumb缩小下。在图标上右键->"File 'firefox' "-> "Set icons", 把那个图标拖进去就哦了。
+  - 使用原来fluxbox的弹出菜单。感觉rox的菜单不如自己定义的那个方便？没事，咱让它还原过来。右键->ROX-Filer->Options->"Compatibility"->"Window manager problem"->勾上"Pass all backdrop mouse clicks to window manager"。
+
+
+
+====== 我的conky配置文件 ======
+
+这是我的coinky配置文件，简洁实用大方。
+<file php .conkyrc>
+# Conky sample configuration
+#
+# the list of variables has been removed from this file in favour
+# of keeping the documentation more maintainable.
+# Check http://conky.sf.net for an up-to-date-list.
+
+# set to yes if you want Conky to be forked in the background
+background no
+use_xft yes
+xftfont DejaVu Sans Mono:size=10
+
+xftalpha 0.9
+update_interval 3
+total_run_times 0
+own_window yes 
+own_window_type desktop
+own_window_transparent yes
+own_window_hints undecorated,below,sticky,skip_taskbar,skip_pager
+double_buffer yes
+#minimum_size 220
+#maximum_width 220
+draw_shades no
+draw_outline no
+draw_borders no
+draw_graph_borders yes
+default_color white
+default_shade_color black
+default_outline_color black
+alignment top_right
+gap_x 9
+gap_y 6
+no_buffers yes
+uppercase no
+cpu_avg_samples 2
+override_utf8_locale yes
+
+
+TEXT
+
+
+
+${color green}SYSTEM and STATUS ${hr 1}${color}
+
+HOSTNAME: $alignr$nodename
+KERNEL: $alignr$kernel
+UPTIME: $alignr$uptime
+#TEMP: ${alignr}${color red}${acpitemp} ${color}°C
+TEMP: ${alignr} ${if_match ${acpitemp}>50}${color red}${endif}${acpitemp} ${color}°C
+
+LOAD: ${alignr}$loadavg
+PROCESSES: ${alignr}$processes (${running_processes} ACT)
+
+
+CPU: ${freq} MHz ${alignr}${cpu}%
+${cpubar 3}
+RAM: $mem/$memmax ${alignr}$memperc%
+${membar 3}
+#SWAP: $swap/$swapmax ${alignr}$swapperc%
+#${swapbar 3}
+BAT: ${color yellow}${if_match "${acpiacadapter}"=="on-line"}${if_match ${battery_percent BAT0}>98}charged${else}charging...${endif}${else}${battery_time BAT0}${endif}${color}${alignr}${battery_percent BAT0}%
+${if_match ${battery_percent BAT0}>75}${color}${else}${if_match ${battery_percent BAT0}<20}${color #960000}${else}${color #969600}${endif}${endif}${battery_bar 3 BAT0}
+
+${color yellow}PROCESSES    ${alignr}CPU%${color}↓${color yellow} MEM%${color}
+${top name 1}${alignr}${top cpu 1}${top mem 1}
+${top name 2}${alignr}${top cpu 2}${top mem 2}
+${top name 3}${alignr}${top cpu 3}${top mem 3}
+${top name 4}${alignr}${top cpu 4}${top mem 4}
+${top name 5}${alignr}${top cpu 5}${top mem 5}
+
+SSID:${color yellow}${wireless_essid wlp3s0}${color}${alignr}${wireless_link_qual_perc wlp3s0}%
+${wireless_link_bar 3,220 wlp3s0}
+WLAN:${alignr}${addrs wlp3s0}
+${downspeedgraph wlp3s0 25,108 00ff00 0000ff}${alignr}${upspeedgraph wlp3s0 25,108 0000ff 00ff00}
+${voffset -30}${offset 5}${color yellow}↓${offset 3}${color}${downspeedf wlp3s0}K/S
+${voffset -15}${offset 120}${color yellow}↑${offset 3}${color}${upspeedf wlp3s0}K/S
+
+${voffset -2}LAN:${alignr}${addrs eth0}
+${downspeedgraph eth0 25,108 00ff00 0000ff}${alignr}${upspeedgraph eth0 25,108 0000ff 00ff00}
+${voffset -30}${offset 5}${color yellow}↓${offset 3}${color}${downspeedf eth0}K/S
+${voffset -15}${offset 120}${color yellow}↑${offset 3}${color}${upspeedf eths0}K/S
+
+
+ROOT: ${alignr}${fs_free /} / ${fs_size /}
+${fs_bar 3 /}
+HOME: ${alignr}${fs_free /home} / ${fs_size /home}
+${fs_bar 3 /home}
+${exec feh --bg-scale "/home/hhj/image/desktop/lenovo.jpg"}
+
+</file>
+
+
+
+
+
+
+====== 标题 ======
+

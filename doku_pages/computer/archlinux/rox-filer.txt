@@ -1,0 +1,112 @@
+
+====== rox-filer使用技巧 ======
+
+ROX-Filer是由Thomas Leonard开发，为X11设计的RISC OS风格的许可证为GPL的文件管理器。其初始版本早于1999年11月3日，至今已有逾12年的历史，其稳定性成熟度可见一斑。它可以在使用X11的Linux/UNIX系统上运行，只需搭配一个窗口管理器比如dwm、openbox，瞬间便构成一个高效方便的桌面。尤其适合不喜欢GNOME、KDE、XFCE等庞大桌面环境的用户。
+
+===== ROX-Filer特点 =====
+
+ROX-Filer支持桌面管理并自带壁纸设定，支持在MS-Windows上流行的”拖拽“，用户可以将任何文件“拖”到桌面，点击即可运行。这样避免了无休止地编辑窗口管理器菜单或者桌面环境菜单的麻烦，也有效地利用了桌面。
+
+用户可以自由设定打开特定文件类型的动作，比如所有影音文件使用mplayer播放，文本文件使用less查看。除了已存在的可执行文件，在ROX-Filer中打开某个文件也可以是一个复杂的SHELL脚本，注意在脚本中"$@" 表示当前文件。
+
+ROX-Filer在root（超级用户）使用时会有警告“Running as user 'root'，这是为了提示用户在获取超级用户权限对系统谨慎操作。因为虽然目前有libtrash等软件可以充当ROX-Filer回收站，但是 ROX-Filer本身不带回收站，误删除文件问题可大可小。
+
+root使用ROX-Filer会弹出警告提示，既没有实际用途又影响美观。用户可以自行修改ROX-Filer/src/main.c，删除以下三行：
+  if (euid == 0 || show_user)
+  show_user_message = g_strdup_printf(_("Running as user '%s'"),
+  user_name(euid));
+ 
+
+最后的小提示：别用ROX-Filer打开/proc/文件夹，ROX-Filer会卡死。
+
+
+===== ROX-Filer安装 =====
+
+Debian以及使用APT的Linux/UNIX系统，其用户可以自己修改源码后打包安装：
+  apt-get source rox-filer
+  apt-get build-dep rox-filer
+  dpkg-source -x rox_version-revision.dsc
+  cd rox_version
+  vim ROX-Filer/src/main.c
+  dpkg-buildpackage -rfakeroot -b
+  echo -e "rox-filer hold" | dpkg --set-selections（最后一句即阻止rox-filer从源中升级，以免自编译包被覆盖）
+
+其他发行版Slackware、ArchLinux等GNU/Linux发行版以及FreeBSD等使用ports的操作系统为用户提供了一键式软件包生成脚本，简单地修改源码重打包，执行脚本即可。
+
+
+===== ROX-Filer文件关联 =====
+
+  cd ~/.config/rox.sourceforge.net/MIME-types/
+
+
+==== SHELL脚本 ====
+
+  vim application_x-shellscript
+  #!/bin/bash
+  exec "$@"
+
+==== 文本 ====
+
+  vim text
+  #!/bin/bash
+  xterm -e less "$@"
+
+==== 网页 ====
+
+  vim text_html
+  #!/bin/bash
+  firefox "$@"
+
+==== 图片 ====
+
+  vim image
+  #!/bin/bash
+  gimp "$@"
+
+==== 视频 ====
+
+  vim video
+  #!/bin/bash
+  mplayer "$@"
+
+
+==== RMVB视频 ====
+
+  vim application_vnd.rn-realmedia
+  #!/bin/bash
+  mplayer "$@"
+
+
+=== 音乐 ===
+
+  vim audio
+  #!/bin/bash
+  xterm -e mplayer "$@"
+
+
+=== BT种子 ===
+
+  vim application_x-bittorrent
+  #!/bin/bash
+  cd ~/Document/Download/BT/;xterm -e ctorrent "$@";exit 0
+
+
+=== PDF文档 ===
+
+  vim application_pdf
+  #!/bin/bash
+  acroread "$@"
+
+
+然后在~/.config/rox_sourceforge_net/MIME-types/目录下执行chmod 0755 *即可。
+
+
+===== rox快捷键 =====
+
+  - 在当前目录下，按键盘的`健（就是1 左边那个），可以弹出当前目录下的虚拟终端。
+  - 按 ! 键，可以在弹出的shell命令框输入命令行shell代码。比如解压、拷贝、复制、移动等等一切shell指令。
+  - 按 / 键，可以方便的改变路径，而且支持tab提示。
+  - 快速定位路径：比如要在任意快速回到 /home/ 下， 那么先到 /home ，按ctrl+1 。以后无论在什么目录深度，只要按1，就可以到达 /home 了。对其他想快速定位的目录，只要按“ctrl+数字键” 就可以记录定位，以后就只要按数字键就可以快速到达了，而且即使重启系统，也不会丢失定位信息。另外，ctrl＋num　的方法还可以用来保存选定的目标，方法是用鼠标圈定目标文件/文件夹后，再按ctrl+num。
+  - 用rox作桌面管理器。比如xfce和wmaker，在X的启动初始配置文件（如~/.xinitrc）加入 rox -p Default &， 就可以用rox进行桌面管理了。支持背景图片、图标、图标化程序呢！
+  - 按 . 键，可以输入选定对象（用正则式），这样就可以快速的从大量文件中选出自己的目标。
+  - 有人说rox移动文件文件夹很麻烦，要开两个窗口。其实这是不熟悉快捷操作的缘故。下面说说我的技巧：比如我要从~/music/ 下移动一群mp3文件（假定文件名为01.mp3, 02.mp3 ... 99.mp3）到 ~/dest/ 下。那么我先到~/music/下， 然后按(6)中的方法按'.'键，输入[0-9][0-9].mp3，rox马上就选定了这些mp3文件了，再按esc，再按'!'键弹出shell命令框，输入 mv "$@" ~/dest/ ，回车──看看吧，那些mp3是不是都正确的移动到目标路径下了？当然，如果你不会用正则式的话，也可以用鼠标把文件选定后再用'!'shell来执行拷贝或者移动命令。当文件名是中文的时候，用rox进行文件的移动/拷贝操作就显得非常简单了！

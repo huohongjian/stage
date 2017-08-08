@@ -1,0 +1,454 @@
+====== Freebsd 下如何最有效率的安装软件 ======
+
+
+FreeBSD的默认下载工具是fetch，既慢又不好用。在FreeBSD下安装软件有一些很有效率的方式，下面就给大家介绍一下。
+
+Ports机制。首先，FreeBSD下最有特色的软件安装和升级机制就是ports，既方便又高效。下面我们从ports套件的安装开始讲起，让你细致的了解有关ports的每一个细节
+
+===== 一、ports套件的安装 =====
+
+①我的FreeBSD 8.0-release是最小化安装，所以既没有ports，也没有/usr/ports目录。选择启用ports的话，需要在root下输入"sysinstall"来安装它：
+
+输入sysinstall --> 选择Configure --> Distributions --> ports，然后安装即可。
+
+②ports的默认路径是/usr/ports。这个ports的根目录下面有很多的文件夹及子文件夹，组成一个树状目录，包含大量ports下的软件。比如mail是邮件服务软件，games是游戏，www代表web服务软件，databases则是数据库软件。
+[root@bsd01 /usr/ports]# cd www
+[root@bsd01 /usr/ports/www]# ls -d apache*
+apache-contrib apache13 apache13-modssl+ipv6
+apache-forrest apache13+ipv6 apache13-ssl
+apache-jserv apache13-modperl apache20
+apache-mode.el apache13-modssl apache22
+
+如果你需要安装什么软件，只要进入当前目录，然后“make install clean”即可。
+[root@bsd01 ~]# cd /usr/ports/www/apache22
+[root@bsd01 /usr/ports/www/apache22] make install clean
+
+/usr/ports/distfiles是存放软件包的文件夹。ports会先检查/usr/ports/distfiles目录内有没有这个软件包，如果没有它就会自动从网上下载安装。
+
+===== 二、加速ports的升级速度 =====
+
+
+ports从网上下载软件包自动安装，那么从那里下载呢？首先，我们需要安装axel来取代默认的下载工具fetch，这样可以提高ports的安装速度：
+  cd /usr/ports/ftp/axel
+  make install
+
+然后，我们需要一个源地址管理。跟ubuntu上的/etc/source.list文件一样，freebsd用的文件是/etc/make.conf，我们可以修改其文件，达到加速下载的目的。
+#修改 /et/make.conf
+  vi /etc/make.conf
+  #加入以下内容
+  FETCH_CMD=axel
+  FETCH_BEFORE_ARGS= -n10 -S10 -a
+  FETCH_AFTER_ARGS=
+  DISABLE_SIZE=yes
+  MASTER_SITE_OVERRIDE?=\
+  http://ports.hshh.org/${DIST_SUBDIR}/\
+  http://ports.cn.freebsd.org/${DIST_SUBDIR}/\
+  ftp://ftp.freeBSDchina.org/pub/FreeBSD/ports/distfiles/${DIST_SUBDIR}/
+  MASTER_SITE_OVERRIDE?=${MASTER_SITE_BACKUP}       
+
+这样处理后，在公司的网络环境下，FreeBSD的下载速度明显提高了，有时居然能达到1M/s,这样升级及安装软件方便极了；呵呵，终于可以摆脱fetch的龟速了。
+
+===== 三、更新ports目录树 =====
+
+
+既然ports的树目录全部下载到本地，那么即使FreeBSD有新的软件包或者添置了新的软件，本地目录树也不会更新。所以，我们每隔一段时间需要更新本地目录树。我来介绍一种在FreeBSD中方便、快捷的更新ports的方法：使用portsnap来更新ports目录树。
+
+==== ①配置portsnap： ====
+
+我们使用portsnap，首先要设置一下它的配置文件，位于/etc/portsnap.conf:
+[root@bsd01 /usr/ports]# vi /etc/portsnap.conf
+
+  把
+  SERVERNAME=portsnap.freebsd.org
+  修改成：
+  SERVERNAME=portsnap.hshh.org
+
+这个是他的更新服务器。另外还有几个国内比较快的portsnap服务器：
+  portsnap.hshh.org
+  portsnap2.hshh.org
+  portsnap3.hshh.org (网通)
+  portsnap4.hshh.org
+
+==== ②首次使用portsnap： ====
+
+在你的FreeBSD首次使用portsnap必须执行下面2步：
+  [root@bsd01 ~]# portsnap fetch      是从网上获取portsnap快照的最新压缩包，听闻这个压缩包官方每小时更新一次。
+  [root@bsd01 ~]# portsnap extract    把这个压缩包创立到/usr/ports。
+  （注：这2步可以合成使用，指令为 [root@bsd01 ~]# portsnap fetch extract）
+
+==== ③以后使用portsnap更新，只需要执行下面2步： ====
+
+  [root@bsd01 ~]# portsnap fetch
+  [root@bsd01 ~]# portsnap update
+
+portsnap第一次运行extract命令时，可能需要一段时间，以后更新使用update的时候，速度就快很多了。
+
+
+
+
+===== freebsd设定ftp服务器 =====
+
+FreeBSD 内建有 FTP 服务器的功能，如果要使用内建的 ftpd，不需要进行安装，只要做好设定即可。
+
+==== 启动 FTP 服务器 ====
+
+我们有二种方式启动 ftpd，一种是使用 standalone daemon，另一种是使用 inetd。inetd 是 UNIX 系统中一个强大的「超级服务器」，我们可以使用它来管理许多系统服务，例如 telnet、ssh、ftp 等。大部份的系统服务都是使用 inetd 来启动，使用它的好处在于可以统一管理各种服务，并经由它来设定服务规则，例如是否要阻挡某些 IP 来源等。不过，使用 inetd 的方式缺点是每次有联机要求时，inetd 的 daemon 必须依联机的种类去执行相对映的指令，所以速度比较慢。
+
+另一种启动 FTP 的方式是使用 standalone daemon，也就是直接执行 FTP daemon，当它接收到新的联机时，就 fork() 出来处理，这种方式联机建立的速度较快，比较适合专门的 FTP 服务器。
+
+=== 1、使用 inetd ===
+
+我们先来介绍如何使用 inetd 的方式启动 FTP 服务器。首先，请编辑 /etc/inetd.conf，将 ftp 设定开头的 # 移除：
+  ftp     stream  tcp     nowait  root    /usr/libexec/ftpd       ftpd -l
+  ftp     stream  tcp6    nowait  root    /usr/libexec/ftpd       ftpd -l
+接下来，我们必须使用下列指令重跑 inetd：
+  # kill -1 `cat /var/run/inetd.pid`（该命令基于已经运行了inetd）如果没有运行ftp服务器，则Alt+F2里输入： inetd
+现在您就可以开始使用 FreeBSD 的 FTP 服务了。
+
+=== 2、使用独立 Daemon ===
+
+如果您要以独立的 daemon 方式启动 FTP，请先确定在 inetd.conf 中没有启动 FTP 服务。接下来，请在新增一个档案 /usr/local/etc/rc.d/ftpd 内容如下：
+<file php ftpd>
+#!/bin/sh
+ ftpd_program="/usr/libexec/ftpd"
+ ftpd_flags="-D -l"
+ case $1 in
+ start)
+         echo "Starting FTPD"
+         $ftpd_program $ftpd_flags
+ ;;
+ stop)
+         echo "Stopping FTPD"
+         killall ftpd
+ ;;
+ restart)
+         $0 stop
+         sleep 1
+         $0 start
+ ;;
+ esac
+</file>
+编辑完后，我们必须将该档案变成可执行：
+  # chmod 755 /usr/local/etc/rc.d/ftpd
+接下来，您就可以使用下列指令启动 FTPD 了：
+  # /usr/local/etc/rc.d/ftpd start 或
+  # service ftpd start
+如果您要停止 FTPD 服务，则使用下列指令：
+  # /usr/local/etc/rc.d/ftpd stop
+
+==== 三、编辑欢迎讯息 ====
+
+ 当我们联机到一个 FTP 站台时，我们可以看到二个欢迎讯息，一个是登入前的讯息，另一个是登入后的讯息。以下列讯息为例：
+<code>
+# ftp localhost
+ Trying ::1...
+ Connected to localhost.alexwang.com.
+ 220- Welcome to My FTP Server.
+ 220-
+ 220- This is a welcome message
+ 220-
+ 220- Nice to see you.
+ 220 vmware.alexwang.com FTP server (Version 6.00LS) ready.
+ Name (localhost:alex):
+ 331 Password required for alex.
+ Password:
+ 230- This is the message of the day.
+ 230- 
+ 230- It will be shown after user login.
+ 230 User alex logged in.
+ Remote system type is UNIX.
+ Using binary mode to transfer files.
+ ftp>
+</code>
+开头为 220- 的就是登入前的讯息，我们称它为欢迎讯息。以 230- 为开头的是登入后的讯息，我们称它为本日讯息 (Message of the day)。这二种讯息我们都可以自行设定。
+如果您要设定的是登入前的讯息，请新增一个档案 /etc/ftpwelcome，并将您的讯息写入该文件中。以下为上述范例中的讯息内容：
+  Welcome to My FTP Server.
+  This is a welcome message
+  Nice to see you.
+您不需要写 220- 等数据，FTP 服务器会自动帮您加上这种代码。而登入后的讯息是存放在 /etc/ftpmotd，您可以编辑该档以进行设定。
+
+
+
+
+
+
+mosh 终端连接工具  2013-01-20 19:47:04|  分类： Linux |  标签：mosh  install  linux   |举报 |字号大
+中
+小 订阅 
+         
+用微信  “扫一扫”
+
+将文章分享到朋友圈。
+
+   
+用易信  “扫一扫”
+
+将文章分享到朋友圈。
+
+  下载LOFTER客户端 
+ 最近无意发现mosh这个东西，感觉不错。与传统的ssh来讲使用udp协议。理论上从速度及断线率会有很好的提高。对于一些网络环境差的，例如：3g网络，来讲还是很有优势的。
+ 在网上看到一些人说这个是替代ssh，实际上是依赖。通过mosh-server，基于sshserver实现的。
+
+ 查看了mosh官网（http://mosh.mit.edu）发现mosh的支持还是很广泛的，linux，mac，android基本都支持。但没有发现支持windows，需要用cygwin之类编译后才能在windows下使用。mosh看来主要是为linux用户准备的。
+ 在ubuntu 12.04下可以直接通过
+ sudo apt-get install mosh 
+ 进行安装。
+ 
+ ubuntu 10.04以后的版本可以通过添加以下源进行安装
+ $ sudo apt-get install python-software-properties 
+ $ sudo add-apt-repository ppa:keithw/mosh 
+ $ sudo apt-get update 
+ $ sudo apt-get install mosh
+ 
+ 编译安装方法：
+ $wget https://github.com/downloads/keithw/mosh/mosh-1.2.3.tar.gz
+ $apt-get install protobuf-compiler libprotobuf-dev libncurses5-dev zlib1g-dev libutempter-dev libio-pty-perl libssl-dev pkg-config
+ $make
+    $make install 
+ 注：在mosh网站上没有说要安装pkg-config包。实际安装中需要。
+ 
+ 安装完成。一共应该有mosh、mosh-client、mosh-server，三个可执行文件。这里主要用到的是mosh，他的使用方法基本和ssh是一样。可以通过：
+ mosh user@hostname
+ 进行连接。
+ mosh-server，可以看做是mosh加到ssh上的壳。这个程序可以不用运行。用mosh登录时，会自动加载。通ps aux命令可以查看。通过命称也可以看出这个必须安装在ssh server上，否则光mosh是不能执行的。
+
+
+ 使用mosh-server还可以方便的建立一个临时会话。这样可以不用给其它开相关的用户。即可直接使用。
+ 使用方法如下：
+ 在服务器端运行
+ #mosh-server
+ 记下端口号和key，发给相关人员。
+ 相关人员通过
+ MOSH_KEY=key mosh-client remote-IP remote-PORT
+ 方式，即可以连接。退出后相当moshserver关闭。这里要注意remote-IP，必须是ip，域名好象无法解释。
+ 
+ 一般ssh server为了安全。会改变原来的22的端口。mosh可以通过以下方式解决
+ mosh remotehost --ssh="ssh -p 2222" ; // 2222为改变后的端口号。
+
+
+注：mosh使用60000–61000 upd端口，使用时，请注意防火墙端口是否打开。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+ 
+
+  
+
+
+登录/注册
+
+  |  手机版 
+
+收藏网站
+ 
+
+IT专家网，汇聚专业声音 解析IT潮流  
+winsystem    
+
+
+  
+
+
+     
+ 
+专家视点在现场环球瞭望 
+ 
+
+
+
+
+基础架构
+存储/服务器/网络/安全 
+
+软件与服务
+管理软件/操作系统/开发 | 数据库 
+
+新闻
+业界/移动互联/电子商务 
+云计算大数据 移动化虚拟化 数据中心 中小企业IT CIOCTO 
+
+专家会客室专 题 
+ 
+ 
+IT专家网 > winsystem 
+
+
+
+==== FreeBSD下的开机自启动 ====
+
+
+作者：冰封的心出处：博客2010-12-22 06:55 
+
+ 
+
+
+　　先简单的说，要让某个程序(脚本)开机自动运行，只需要在/etc/rc.local文件中添加程序(脚本)的启动行即可。(注：这个文件如果不存在，可以自行建立，并赋予可执行权限即可)。
+
+　　例如： vim /etc/rc.local
+
+
+
+以下是代码片段：
+    #!/bin/sh 
+　　/usr/local/apache/bin/apachectl start 
+　　/usr/local/mysql/bin/mysqld_safe --user=mysql& 
+
+
+　　这样，开机的时候就会自动启动apache和mysql了。
+
+　　这个很多人知道，其实BSD开机的时候并不是直接执行这个脚本的。大家可以查看/etc/rc.d/ 目录，这里才是BSD的开机启动所有脚本。但为什么/etc/rc.local能够生效呢？只要打开/etc/rc.d/local文件看看，就明白了。下面贴出这个文件的内容，一看便知：
+
+
+
+以下是代码片段：
+    #!/bin/sh 
+　　# 
+　　# $NetBSD: local,v 1.6 2002/03/22 04:33:59 thorpej Exp $ 
+　　# $FreeBSD: src/etc/rc.d/local,v 1.6 2004/10/07 13:55:26 mtm Exp $ 
+　　# 
+　　# PROVIDE: local 
+　　# REQUIRE: DAEMON 
+　　# BEFORE: LOGIN 
+　　# KEYWORD: shutdown 
+　　. /etc/rc.subr 
+　　name="local" 
+　　start_cmd="local_start" 
+　　stop_cmd="local_stop" 
+　　local_start() 
+　　{ 
+　　echo -n 'Starting local daemons:' 
+　　if [ -f /etc/rc.local ]; then 
+　　. /etc/rc.local 
+　　fi 
+　　echo '.' 
+　　} 
+　　local_stop() 
+　　{ 
+　　echo -n 'Shutting down local daemons:' 
+　　if [ -f /etc/rc.shutdown.local ]; then 
+　　. /etc/rc.shutdown.local 
+　　fi 
+　　echo '.' 
+　　} 
+　　load_rc_config $name 
+　　run_rc_command "$1" 
+
+
+　　这个脚本简单来说，就是判断如果存在/etc/rc.local文件，就去执行它。
+
+　　OK，现在应该都清楚了吧
+
+Freebsd开机自启动系统服务
+
+　　Freebsd下安装了一些服务，这些服务需要设置为开机启动。
+
+　　方法一：
+
+　　1. 写脚本放置到/usr/local/etc/rc.d下面
+
+　　如：/usr/local/etc/rc.d/cvsd
+
+　　2. 设置脚本执行权限
+
+
+
+以下是代码片段：
+chmod a+x cvsd 
+
+
+　　重新启动后cvsd服务就自动启动了，启动其他服务类似
+
+　　方法二：
+
+　　1. 在/etc/rc.local中添加添加要启动的服务
+
+　　如:/usr/local/mysql/bin/mysqld_safe
+
+　　2. 如果没有文件/etc/rc.local则先创建即可。
+
+　　[b] 问题：禁用sendmail开机启动？[/b]
+
+　　一般服务都是在/etc/rc.conf中加，如
+
+　　sshd_enable=”NO”
+
+　　sendmai比较特殊，需要这样写：
+
+　　sendmail_enable=”NONE”
+
+　　为了每次系统重启后都能运行mysql可以写一个脚本放到 /etc/rc.d目录下
+
+　　写一个脚本mysql_start.sh
+
+
+
+以下是代码片段：
+    #!/bin/sh 
+　　/usr/local/mysql/bin/mysqld_safe & 
+
+
+　　保存到/etc/rc.d目录下，那么以后reboot系统后都能启动mysql了。
+
+　　所以很多应用程序都可以用这种方法开机自启动啦。
+
+
+
+
+
+

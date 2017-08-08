@@ -1,0 +1,273 @@
+====== MongoDB数据库入门 ======
+
+在Node开发中，MongoDB是非常流行的NoSQL数据。
+
+===== 安装 =====
+
+freebsd：
+  cd /usr/ports/database/mongodb
+  make install clean
+配置：
+  vi /etc/rc.conf
+  mongod_enable="YES"   #开机启动
+  mongod_dbpath="/data/mongodb"  # DB存储目录
+运行:
+  /usr/local/etc/rc.d/mongod start
+
+安装MongoDB for Node模块
+  npm install mongodb     //原生驱动
+  npm install mongoose    //建模工具
+
+创建数据库：
+  var mongodb = require('mongodb');
+  var dbServer = new mongodb.Server('localhost', 27017, {auto_reconnect: true});   //连接中断后自动连接
+  var db = new mongodb.Db('mydb', dbServer, {w: 1});  //{w:1}与写相关，表明这是主mongodb实例
+  db.authenticate(user, password, function(){ /*callback*/ });
+  
+===== MongoDB中的CRUD =====
+
+CRUD,创建、读取、更新和删除文档。
+
+==== 创建集合 ====
+
+  db.open(function(err, conn){
+      db.collection('myCollection', function(err, collection){       //创建一个新集合myCollection
+          collection.insert({a: 'myItem'}, function(err, result){    //添加一个文档，用的是回调函数
+              console.log(result);  //输出结果
+              db.close();
+          });
+      });
+  });
+  
+==== 读取数据 ====
+
+  db.open(function(err, conn){    //打开数据库连接
+      db.collection('myNewCollection', function(err, collection){   //选择集合
+          var count = 0;
+          for (var i=0; i<5; i++){
+              collection.insert({num:i}, function(err, result){
+                  console.log(result);
+                  count ++;
+                  if (count>4) db.close();
+              });
+          }
+      });
+  });
+上面的代码中有一个重要的Node开发模式。尽管其中有一个带增量的for循环，但不能用这个增量确定什么时候关闭数据连接。因为Node中的所有调用都是异步的。为了解决这个问题，我们用一个count值，在每个异步回调结束时给它加一，当这个值足够高时，我们就可以安全地关闭数据连接。
+
+=== 选择集合中的所有记录 ===
+
+  db.open(function(err, conn){
+      db.collection('myNewCollection', function(err, collection){
+          collection.find().toArray(function(err, result){
+              console.log(result);
+              db.close();
+          });
+      });
+  });
+
+=== 选择特定记录 ===
+
+  db.open(function(err, conn){
+      db.collection('myNewCollection', function(err, collection){
+          collection.find({num: 2}).toArray(function(err, result){
+              console.log(result);
+              db.close();
+          });
+      });
+  });
+
+=== 更高级的查询 ===
+
+  db.open(function(err, conn){
+      db.collection('myNewCollection', function(err, collection){
+          collection.find({num: {$gt: 1, $lt: 4}}).toArray(function(err, result){
+              console.log(result);
+              db.close();
+          });
+      });
+  });
+在MongoDB中可以用正则表达式选择特定的字符串，只要把正则表达式放到选择器中就行了，例如collection.find({name: /^a/}).
+
+=== 限制记录条数 ===
+
+  db.open(function(err, conn){
+      db.collection('myNewCollection', function(err, collection){
+          collection.find({}, {limit: 3}).toArray(function(err, result){
+              console.log(result);
+              db.close();
+          });
+      });
+  });
+在只需要返回一个文档时，可以用findOne()代替find().
+
+=== 记录排序 ===
+
+  db.open(function(err, conn){
+      db.collection('myNewCollection', function(err, collection){
+          collection.find({}, {sort: [['num', 'desc']]}).toArray(function(err, result){
+              console.log(result);
+              db.close();
+          });
+      });
+  });
+sort接受一个数组，上例按num域降序排序，若不设置sort，按_id升序排序。
+
+==== 更新数据 ====
+
+=== 更新整条记录 ===
+
+  db.collection('myNewCollection', function(err, collection){
+      collection.update({num: 2}, {num: 10}, {safe: true}, function(err){
+          if (err) console.log(err) else console.log('Successfully updated');
+          db.close();
+      });
+  });
+update()接受4参数：
+  * 更新条件
+  * 要做的修改
+  * 更新选项对象，{safe:true}设定了安全模式，就个应该总用；{multi:true}允许更新多个文档。
+  * 回调函数
+
+=== 更新或插入 ===
+
+  db.collection('myNewCollection', function(err, collection){
+      collection.update({num: 2}, {num: 10}, {safe: true, upsert: true}, function(err){
+          if (err) console.log(err) else console.log('Successfully updated');
+          db.close();
+      });
+  });
+upsert参数，如果文档存在，就会进行更新，否则将要更新的值作为新的文档插入。
+
+=== 设定特定域 ===
+
+  db.collection('myNewCollection', function(err, collection){
+      collection.update({num: 2}, {$set: {desc: 'favorite number'}}, {safe: true}, function(err){
+          if (err) console.log(err) else console.log('Successfully updated');
+          db.close();
+      });
+  });
+$set修饰符，设定文档的desc域，其他域保持不变。
+
+=== 查找并修改 ===
+
+  db.collection('myNewCollection', function(err, collection){
+      collection.findAndModify({num: 2}, [['_id', 'asc']], {num: 10}, {safe: true}, function(err, result){
+          if (err) console.log(err) else console.log(result);   //输出受影响的文档
+          db.close();
+      });
+  });
+findAndModify()接受5个参数：
+  * 查询条件
+  * 排序
+  * 要做的修改
+  * 选项对象
+  * 回调函数，返回的文档是修改之前的。
+
+==== 删除数据 ====
+
+=== 移除文档 ===
+
+  db.collection('myNewCollection', function(err, collection){
+      collection.remove({num: 2}, function(err){
+          if (err) console.log(err) else console.log('Successfully removed');
+          db.close();
+      });
+  });
+如果还需要对移除的记录做什么操作，可以用findAndRemove()
+  db.collection('myNewCollection', function(err, collection){
+      collection.findAndRemove({num: 2}, [['_id', 'asc']], function(err, result){
+          if (err) console.log(err) else console.log(result);  //输入受影响的文档
+          db.close();
+      });
+  });
+
+=== 删除集合 ===
+
+  db.open( function(err, conn){
+      db.dropCollection('myNewCollection', function(err, result){
+          if (err) console.log(err) else console.log(result);
+          db.close();
+      });
+  });
+
+
+===== Mongoose入门 =====
+
+安装：
+  npm install mongoose
+连接数据库：
+  var mongoose = require('mongoose');
+  mongoose.connect('localhost', 'mydb');
+  var db = mongoose.connection;
+  //错误回调
+  db.on('error', function(msg){
+      console.log('Connection Error: %s', msg);
+  });
+  //成功回调
+  db.on('open', function callback(){
+      console.log('Database opened succesfully');
+  });
+
+==== 创建模型 ====
+Mongoose中的模型用来定义文档。模型将数据库系统隐藏起来，让我们可以专注于真正想要的东西：数据。
+
+=== 创建Schema ===
+创建模型的第一步是为模型创建定义数据类型和结构的Schema
+
+  var fruitSchema = mongoose.Schema({
+      name: {type: String, require: true, trim: true, unique: true},
+      color: String,
+      quantity: Number,
+      ripe: Boolean
+  });
+=== 创建模式 ===
+
+  var Fruit = mongoose.model('fruit', fruitSchema);   // 定义模型
+这个模型是用前面定义的那个fruitSchema创建的。第一个参数设定了模型的名称。该值和用来保存数据集合的名称相对应。在结构创建好之后，给该模型创建一个实例。
+  var apple = new Fruit({
+      name: 'apple',
+      color: 'red',
+      quantity: 3,
+      ripe: true
+  });
+
+=== 保存模型 ===
+
+  apple.save(function(err, apple){
+      if (err) console.log(err) else console.log(apple);
+  });
+这段代码将模型存为MongoDB中的文档。在创建或修改模型中的数据时，可以随时调用save()方法把变化同步到数据库中。
+
+==== 读取数据 ====
+
+=== 查询所有模型 ===
+
+  var Fruit = mongoose.model('fruit', fruitSchema);
+  //选择所有fruit
+  Fruit.find(function(err, fruit){
+      if (err) console.log(err) else console.log(fruit);
+  });
+
+=== 查询特定模型 ===
+只选择apple:
+  Fruit.find({name: 'apple'}, function(err, fruit){
+      if (err) console.log(err) else console.log(fruit);
+  });
+Mongoose支持MongoDB中所有强大的查询选项。比如可以用正则表达式选择模型。
+  Fruit.find({name: /e$/}, function(err, fruit){
+      if (err) console.log(err) else console.log(fruit);
+  });
+也可以用MongoDB的操作符：
+  Fruit.find({quantity: {$lt: 4}}, function(err, fruit){
+      if (err) console.log(err) else console.log(fruit);
+  });
+
+=== 访问模型中的域 ===
+
+可以用对象中的键获取所需的任何域数据。
+  Fruit.fint(function(err, fruits){
+      fruits.forEach(function(fruit){ console.log(fruit.name); });
+  });
+
+

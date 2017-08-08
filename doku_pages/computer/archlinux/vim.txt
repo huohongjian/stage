@@ -1,0 +1,556 @@
+====== Vim使用手册 ======
+
+vim是Vi IMproved，是编辑器Vi的加强版，一个极其强大并符合IT工程师（程序员、运维）习惯的编辑器。如果你是一名职业的SE，那么一定在寻找一款出色的能够自由定制、满足灵活编辑功能的编辑器。那么答案，就是vim或者Emacs。现在就为您介绍vim编辑器。
+
+
+===== （一）初级个性化配置你的vim =====
+
+==== 1、配置文件在哪？ ====
+
+  * Windows系统的配置文件是vim安装目录下的vimrc文件。
+  * Linux系统，RHEL的配置文件是/etc/vimrc，Debian的配置文件是/usr/share/vim/vimrc。
+  * Mac OS X的配置文件是/usr/share/vim/vimrc。
+
+==== 2、vimRC中的RC是什么意思？ ====
+
+一般在运行某个软件、环境或工具之初，要初始执行的一些命令，称为Run Commands，即RC。根据Wikipedia.org的记载，RC缩写的用法源自MIT的相容分时操作系统（Compatible Time-Sharing System，CTSS）[参考1]。所以以后如果你看到了SystemRC或者ScreenRC，也就知其缘由了。
+
+==== 3、三种基本模式 ====
+
+3种模式：Normal Mode、Insert Mode和Command-line Mode。
+  * 从Normal Mode进入Insert Mode，可以按i、I、a、A、o、O、r、R即可。其中i和I表示插入（Insert），r和R表示替换（replace）。
+  * 从Insert Mode进入Normal Mode，只需要按ESC键即可。
+  * 从Normal Mode进入Command-line Mode，可以按“:”、“/”、“?”。其中“:”表示输入vim命令，“/”表示后面输入要向下搜索的字符串，“?”表示后面输入要向上搜索字符串。
+  * 从Command-line Mode进入Normal Mode，只需要按ESC键即可了。
+
+你可以把Normal Mode理解为常态，进入其他任何一种模式，需要某种特殊方式，而从其他特殊模式回到Normal Mode，就按ESC键即可。
+
+==== 4、vim中那些最最常用的配置 ====
+
+=== （1）颜色设置 ===
+
+  syntax on       "开启代码高亮
+  syntax off      "关闭代码高亮
+  syntax enable   "开启代码高亮
+
+=== （2）搜索设置 ===
+
+  set hlsearch    "开启搜索高亮
+  set nohlsearch  "关闭搜索高亮
+  set incsearch   "输入搜索字符串的同时进行搜索
+  set ignorecase  "搜索时忽略大小写
+
+=== （3）用户界面 ===
+
+  set showmode        "开启模式显示
+  set ruler           "开启光标位置提示
+  set number          "显示行号
+  set nonu            "不显示行号
+  set cursorline      "强调光标所在行
+  set cmdheight=1 "命令部分高度为1
+
+=== （4）编辑辅助配置 ===
+
+  set autoindent      "自动缩进
+  set noautoindent    "不自动缩进
+  set smartindent     "智能缩进
+  set autoread        "当文件在外部被改变时，vim自动更新载入
+  set showmatch       "显示匹配的括号
+
+
+===== （二）常用的状态切换按键 =====
+
+==== 1、Normal Mode -> Insert Mode ====
+
+  i 小写字母i，在光标位置插入
+  a 小写字母a，在光标的下一个位置插入
+  I 大写字母I，在光标所在行的第一个非空格处插入
+  A 大写字母A，在光标所在行的最后一个字符处插入
+  o 小写字母o，在光标所在行的下一行处插入新行
+  O 大写字母O，在光标所在行的上一行处插入新航
+  r 小写字母r，替换光标所在处的字符一次
+  R 大写字母R，持续替换光标所在处的字符，直到按下ESC
+
+==== 2、Normal Mode -> Command-line Mode ====
+
+  :w 保存文件
+  :w! 强制保存文件（前提是用户有修改文件访问权限的权限）
+  :q 退出缓冲区
+  :q! 强制退出缓冲区而不保存
+  :wq 保存文件并退出缓冲区
+  :wq! 强制保存文件并退出缓冲区（前提是用户有修改文件访问权限的权限）
+
+  :w <filename> 另存为名为filename文件
+  :n1,n2 w <filename> 将n1行到n2行的数据另存为名为filename文件
+  :x 如果文件有更改，则保存后退出。否则直接退出。
+
+==== 3、Insert Mode 或Command-line -> Normal Mode ====
+
+  按下ESC键
+
+
+
+===== （三）常用光标移动按键 =====
+
+==== 1、光标字符操作 ====
+
+  j 向下； k 向上； h 向左； l 向右
+  $ 光标移动到行尾（End），注意要按Shift键
+  0 光标移动到行首（Home）
+  ^ 光标移动到行首第一个非空白字符（Home），注意要按Shift键
+
+==== 2、光标词操作 ====
+
+  w 光标移动到后一词的词首
+  W 光标移动到后一词的词首且忽略标点符号
+  e 光标移动到后一词的词尾
+  E 光标移动到后一词的词尾且忽略标点符号
+  b 光标移动到前一词的词首
+  B 光标移动到前一词的词首且忽略标点符号
+
+==== 3、光标句操作 ====
+
+  ) 光标移动到后一句的句首
+  ( 光标移动到前一句的句首
+  % 配合“(”和“)”使用，寻找相匹配的另一半
+
+==== 4、光标行操作 ====
+
+  G 光标移动到文档的最后一行的第一个非空白字符
+  nG 光标移动到文档的第n行，相当于”:n”
+  gg 光标移动到文档的第1行的第一个非空白字符，相当于”1G”，也相当于”:1″
+  <N> 光标向下移动N行
+
+==== 5、光标段操作 ====
+
+  } 光标移动到下一段的段首
+  { 光标移动到上一段的段首
+  % 配合“(”和“)”使用，寻找相匹配的另一半
+
+==== 6、光标页操作 ====
+
+  Ctrl+f 向下翻页（Pagedown）
+  Ctrl+b 向上翻页（Pageup）
+  Ctrl+d 向下翻半页
+  Ctrl+u 向上翻半页
+
+  H 光标移动到目前显示页的第一行
+  M 光标移动到目前显示页的中间行
+  L 光标移动到目前显示页的最后一行
+
+==== 7、光标自由操作 ====
+
+  Ctrl+o 回到光标的上一位置
+
+
+
+===== （四）常用编辑操作按键 =====
+
+==== 1、删除操作（delete） ====
+
+  dd 删除光标所在行
+  ndd 删除从光标所在行开始，向下的n行
+  d1G 删除从光标所在行开始，到第一行的所有行
+  dG 删除从光标所在行开始，到最后一行的所有行
+  d$ 删除从光标所在位置，到行尾的所有字符
+  d0 删除从光标所在位置，到行首的所有字符
+
+==== 2、复制操作（yank） ====
+
+  yy 复制光标所在行
+  nyy 复制从光标所在行开始，向下的n行
+  y1G 复制从光标所在行开始，到第一行的所有行
+  yG 复制从光标所在行开始，到最后一行的所有行
+  y$ 复制从光标所在位置，到行尾的所有字符
+  y0 复制从光标所在位置，到行首的所有字符
+
+==== 3、粘贴操作（paste） ====
+
+  p 小写字母p，粘贴剪贴板中的数据，从光标所在行的下一行开始
+  P 大写字母P，粘贴剪贴板中的数据，从光标所在行的上一行开始
+
+==== 4、撤销与重做操作（undo，redo） ====
+
+  u （Undo）撤销上一个操作
+  Ctrl+r （Redo）重做上一个操作
+
+==== 5、重复操作 ====
+
+  . 重复上一操作
+
+==== 6、替换操作（replace） ====
+
+  r 替换光标所在处字符
+  R 进入替换模式，直至按ESC退出
+  cc 替换光标所在行
+  cw 替换光标所在的英文单词
+  ~ 转换大小写
+
+==== 7、排版操作 ====
+
+  :le<ft> 光标所在行左对齐
+  :ri<ght> 光标所在行右对齐
+  :ce<nter> 光标所在行居中
+
+
+
+===== （五）常用多缓冲区操作按键 =====
+
+==== 1、多文件编辑模式 ====
+
+  （1）argument list模式，就是在打开vim编辑器时，携带多个文件路径参数。
+  （2）buffer list模式，就是在进入vim编辑器后，打开多个缓冲区进行编辑。
+
+==== 2、单一缓冲区打开多个文件 ====
+
+  :files 显示目前打开了哪些文件
+  :n 切换到下一个缓冲区内容
+  :N 切换到上一个缓冲区内容
+  :2n 切换到下下个缓冲区内容
+  :bn 下一个缓冲区内容（buffer next）
+  :bp 上一个缓冲区内容（buffer previous）
+
+==== 3、多个缓冲区打开多个文件 ====
+
+  :sp [filename] 打开一个新的缓冲区，如果有filename则内容为该文件，否则为当前文件
+  Ctrl+w n 新建一个缓冲区
+  Ctrl+w q 退出光标所在的缓冲区
+  Ctrl+w j 光标移动到下一缓冲区
+  Ctrl+w k 光标移动到上一缓冲区
+  Ctrl+w l 光标移动到右一缓冲区
+  Ctrl+w h 光标移动到左一缓冲区
+  Ctrl+w v 左右切割窗口新建缓冲区
+  Ctrl+w s 上下切割窗口新建缓冲区
+  Ctrl+w o 使光标所在缓冲区最大化，其他缓冲区隐藏
+
+
+
+===== （六）常用搜索与书签操作快捷键 =====
+
+===== 1. 搜索字符串 =====
+
+  /string 向下搜索字符串“string”
+  ?string 向上搜索字符串“string” 
+
+===== 2. 重复上次搜索 =====
+
+  n 根据上次搜索条件找到下一个匹配的字符串
+  N 根据上次搜索条件找到上一个匹配的字符串 
+
+===== 3. 搜索单词 =====
+
+  * 向下搜索光标所在处的单词（完全匹配）
+  # 向上搜索光标所在处的单词（完全匹配）
+  g* 向下搜索光标所在处的单词（部分匹配）
+  g# 向上搜索光标所在处的单词（部分匹配） 
+
+===== 4. 标记书签（mark） =====
+
+  ma a为小写字母，为光标所在处设定文档书签a
+  mA A为大写字母，为光标所在处设定全局书签A 
+
+===== 5. 使用书签（mark） =====
+
+  `a 到文档书签a处，Tab键上方
+  'a 到文档书签a所在行行首处，Enter键左边
+  `A 到全局书签A处，Tab键上方
+  'A 到全局书签A所在行行首处，Enter键左边
+  `n 如果n=0，缓冲区将打开上一次的文档，且光标在上次编辑最后的位置，1-9以此类推
+  'n 如果n=0，缓冲区将打开上一次的文档，且光标在上次编辑最后的位置所在行的行首，1-9以此类推 
+
+===== 6. 查看书签列表 =====
+
+  :marks 查看当前所有书签
+
+
+====== （七）关于加密 ======
+
+===== 1、加密你的文本文件 =====
+
+当你用vim打开或新建一个文件时，如果加上-x参数，即：
+  vim -x filename
+那么vim会提示你：
+  Enter entryption key:
+当你输入了密码后，vim会提示你重复输入以确认：
+  Enter same key again:
+你在设置密码的时候，是以*来显示的，非明文。当下次有人（包括你自己）打开该文件的时候，vim就会提示：
+  Need encryption key for "main.cpp"
+  Enter encryption key:
+这时你只要输入你之前所设置的密码就可以了。如果你输入的密码是错误的，vim并不会提示你密码错误，而是显示一堆无意义的垃圾代码。
+
+
+==== 2、解除加密与重设密码 ====
+
+打开你已经加密的文件，然后输入：
+  :set key=
+这样，你的密码就被设置为空了，今后进入就不再需要输入密码了。而如果你向重设密码的话，你可以输入：
+  :X
+注意是个大写字母X。这时vim会提示你，只要反复输入两次新的密码就可以了：
+  Enter entryption key: *****
+  Enter sanme key again: *****
+
+
+=== 3、加密引起的问题 ===
+
+vim的加密功能，可以说是问题一大堆。比如：
+
+  - 如果密码输入错误，vim不会拒绝访问者编辑文件。在这种显示乱码的情况下编辑文件并保存，整个文件就会变得混乱不堪，无法辨识。今后即使使用正确的密码打开文件，也看不到正确的文档了。
+  - 如果对一个需要编译的源代码文件进行了加密，则无法通过编译器的语法检查。
+  - 交换文件是无法加密的。这样引起什么问题？问题就是如果其他用户想办法读取到了你的交换文件，就可以绕过解密环节，你的加密也就无意义了。解决的办法就是，不使用交换文件。方法有三个，一是修改你的vimrc文件（vim配置文件）：
+  set noswapfile
+二是在用vim打开文件之初就输入命令：
+  vim -x -n filename
+  （注意-x是加密参数，与我们所说的swap没有关系，不要搞混）
+三是在进入vim编辑该文件后，输入：
+  :setlocal noswapfile
+不过不使用交换文件的坏处就是，你可能会面临数据丢失而无法找回的悲剧。所以又想用加密，又想不丢失文件的朋友们，就勤按“:w”吧。
+
+摘自: http://www.ha97.com/4984.html
+
+
+
+====== (八)配置你的vim ======
+
+下面是网上比较流行的一个版本，可以直接拿来用。在用戶主目录下建一个文件.vimrc(这是一个隐藏文件)，把下面的内容拷贝到这个文件中
+再用vim打开程序，就能看到语法高亮以及其他诸多功能
+<file php .vimrc>
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 一般设定
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 设定默认解码
+  set fenc=utf-8
+  set fencs=utf-8,usc-bom,euc-jp,gb18030,gbk,gb2312,cp936
+
+  " 不要使用vi的键盘模式，而是vim自己的
+  set nocompatible
+
+  " history文件中需要记录的行数
+  set history=100
+ 
+  " 在处理未保存或只读文件的时候，弹出确认
+  set confirm
+ 
+  " 与windows共享剪贴板
+  set clipboard+=unnamed
+ 
+  " 侦测文件类型
+  filetype on
+ 
+  " 载入文件类型插件
+  filetype plugin on
+ 
+  " 为特定文件类型载入相关缩进文件
+  filetype indent on
+ 
+  " 保存全局变量
+  set viminfo+=!
+ 
+  " 带有如下符号的单词不要被换行分割
+  set iskeyword+=_,$,@,%,#,-
+ 
+  " 语法高亮
+  syntax on
+ 
+  " 高亮字符，让其不受100列限制
+  :highlight OverLength ctermbg=red ctermfg=white guibg=red guifg=white
+  :match OverLength '\%101v.*'
+ 
+  " 状态行颜色
+  highlight StatusLine guifg=SlateBlue guibg=Yellow
+  highlight StatusLineNC guifg=Gray guibg=White
+ 
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 文件设置
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 不要备份文件（根据自己需要取舍）
+  set nobackup
+ 
+  " 不要生成swap文件，当buffer被丢弃的时候隐藏它
+  setlocal noswapfile
+  set bufhidden=hide
+ 
+  " 字符间插入的像素行数目
+  set linespace=0
+ 
+  " 增强模式中的命令行自动完成操作
+  set wildmenu
+ 
+  " 在状态行上显示光标所在位置的行号和列号
+  set ruler
+  set rulerformat=%20(%2*%<%f%=\ %m%r\ %3l\ %c\ %p%%%)
+ 
+  " 命令行（在状态行下）的高度，默认为1，这里是2
+  set cmdheight=2
+ 
+  " 使回格键（backspace）正常处理indent, eol, start等
+  set backspace=2
+ 
+  " 允许backspace和光标键跨越行边界
+  set whichwrap+=<,>,h,l
+ 
+  " 可以在buffer的任何地方使用鼠标（类似office中在工作区双击鼠标定位）
+  set mouse=a
+  set selection=exclusive
+  set selectmode=mouse,key
+ 
+  " 启动的时候不显示那个援助索马里儿童的提示
+  set shortmess=atI
+ 
+  " 通过使用: commands命令，告诉我们文件的哪一行被改变过
+  set report=0
+ 
+  " 不让vim发出讨厌的滴滴声
+  set noerrorbells
+ 
+  " 在被分割的窗口间显示空白，便于阅读
+  set fillchars=vert:\ ,stl:\ ,stlnc:\
+ 
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 搜索和匹配
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 高亮显示匹配的括号
+  set showmatch
+ 
+  " 匹配括号高亮的时间（单位是十分之一秒）
+  set matchtime=5
+ 
+  " 在搜索的时候忽略大小写
+  set ignorecase
+ 
+  " 不要高亮被搜索的句子（phrases）
+  set nohlsearch
+ 
+  " 在搜索时，输入的词句的逐字符高亮（类似firefox的搜索）
+  set incsearch
+ 
+  " 输入:set list命令是应该显示些啥？
+  set listchars=tab:\|\ ,trail:.,extends:>,precedes:<,eol:$
+ 
+  " 光标移动到buffer的顶部和底部时保持3行距离
+  set scrolloff=3
+ 
+  " 不要闪烁
+  set novisualbell
+ 
+  " 我的状态行显示的内容（包括文件类型和解码）
+  set statusline=%F%m%r%h%w\[POS=%l,%v][%p%%]\%{strftime("%d/%m/%y\ -\ %H:%M")}
+ 
+  " 总是显示状态行
+  set laststatus=2
+ 
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 文本格式和排版
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 自动格式化
+  set formatoptions=tcrqn
+ 
+  " 继承前一行的缩进方式，特别适用于多行注释
+  set autoindent
+ 
+  " 为C程序提供自动缩进
+  set smartindent
+ 
+  " 使用C样式的缩进
+  set cindent
+ 
+  " 制表符为4
+  set tabstop=4
+ 
+  " 统一缩进为4
+  set softtabstop=4
+  set shiftwidth=4
+ 
+  " 不要用空格代替制表符
+  set noexpandtab
+ 
+  " 不要换行
+  set nowrap
+ 
+  " 在行和段开始处使用制表符
+  set smarttab
+ 
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " CTags的设定
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 按照名称排序
+  let Tlist_Sort_Type = "name"
+ 
+  " 在右侧显示窗口
+  let Tlist_Use_Right_Window = 1
+ 
+  " 压缩方式
+  let Tlist_Compart_Format = 1
+ 
+  " 如果只有一个buffer，kill窗口也kill掉buffer
+  let Tlist_Exist_OnlyWindow = 1
+ 
+  " 不要关闭其他文件的tags
+  let Tlist_File_Fold_Auto_Close = 0
+ 
+  " 不要显示折叠树
+  let Tlist_Enable_Fold_Column = 0
+ 
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " Autocommands
+  """""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+  " 只在下列文件类型被侦测到的时候显示行号，普通文本文件不显示
+ 
+  if has("autocmd")
+    autocmd FileType xml,html,c,cs,java,perl,shell,bash,cpp,python,vim,php,ruby set number
+    autocmd FileType xml,html vmap <C-o> <ESC>'<i<!--<ESC>o<ESC>'>o-->
+    autocmd FileType java,c,cpp,cs vmap <C-o> <ESC>'<o
+    autocmd FileType html,text,php,vim,c,java,xml,bash,shell,perl,python setlocal textwidth=100
+    autocmd Filetype html,xml,xsl source $VIMRUNTIME/plugin/closetag.vim
+    autocmd BufReadPost *
+      \ if line("'"") > 0 && line("'"") <= line("$") |
+      \ exe " normal g`"" |
+      \ endif
+  endif "has("autocmd")
+
+  " F5编译和运行C程序，F6编译和运行C++程序
+  " 请注意，下述代码在windows下使用会报错
+  " 需要去掉./这两个字符
+ 
+  " C的编译和运行
+  map <F5> :call CompileRunGcc()<CR>
+  func! CompileRunGcc()
+  exec "w"
+  exec "!gcc % -o %<"
+  exec "! ./%<"
+  endfunc
+ 
+  " C++的编译和运行
+  map <F6> :call CompileRunGpp()<CR>
+  func! CompileRunGpp()
+  exec "w"
+  exec "!g++ % -o %<"
+  exec "! ./%<"
+  endfunc
+ 
+  " 能够漂亮地显示.NFO文件
+  set encoding=utf-8
+  function! SetFileEncodings(encodings)
+      let b:myfileencodingsbak=&fileencodings
+          let &fileencodings=a:encodings
+          endfunction
+          function! RestoreFileEncodings()
+              let &fileencodings=b:myfileencodingsbak
+                  unlet b:myfileencodingsbak
+                  endfunction
+ 
+                  au BufReadPre *.nfo call SetFileEncodings('cp437')|set ambiwidth=single au BufReadPost *.nfo call RestoreFileEncodings()
+ 
+                  " 高亮显示普通txt文件（需要txt.vim脚本）
+                  au BufRead,BufNewFile *  setfiletype txt
+ 
+                  " 用空格键来开关折叠
+                  set foldenable
+                  set foldmethod=manual
+                  nnoremap <space> @=((foldclosed(line('.')) < 0) ? 'zc':'zo')<CR>
+ 
+                  " minibufexpl插件的一般设置
+                  let g:miniBufExplMapWindowNavVim = 1
+                  let g:miniBufExplMapWindowNavArrows = 1
+                  let g:miniBufExplMapCTabSwitchBufs = 1
+                  let g:miniBufExplModSelTarget = 1
+</file>

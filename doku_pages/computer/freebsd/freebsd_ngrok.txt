@@ -1,0 +1,51 @@
+
+====== ngrok反向代理  ======
+hhj
+Hhj19750902
+
+ ngrok可以让外网计算机访问内网电脑。主页 https://ngrok.com/
+
+
+
+1.Start by downloading ngrok.
+
+2.Install your authtoken
+
+./ngrok authtoken zdtt2sSVu14aR96gq6Am_7kdVadj5PizujynEdgPkK
+
+
+3.Create your first secure tunnel
+
+./ngrok http 80
+
+
+4.Open the web interface at http://localhost:4040 to inspect and replay requests
+
+
+5.Read the documentation for instructions on advanced features like adding HTTP authentication, setting custom subdomains and more.
+
+
+====== ngrok反向代理  ======
+hrr
+Hhj19750902
+
+1.Start by downloading ngrok.
+2.
+Install your authtoken
+
+./ngrok authtoken 7mVDtW3dZqt4Ut7bX44ze_7fb9L7yLLuCjxDGSbpXyW
+
+3.
+Create your first secure tunnel
+
+./ngrok http 80
+
+4.
+Open the web interface at http://localhost:4040 to inspect and replay requests
+
+5.
+Read the documentation for instructions on advanced features like adding HTTP authentication, setting custom subdomains and more.
+
+
+
+

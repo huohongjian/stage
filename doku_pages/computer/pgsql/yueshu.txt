@@ -1,0 +1,101 @@
+====== 约束 ======
+
+===== 非空值约束 =====
+
+在为表创建结构时，使用NOT NULL保留字可以防止用户给某字段赋空值。
+对于已建的表，可从删除原表再创建新表的方式，进行设置，如：
+  CREATE TABLE tmp AS SELECT * FROM student;
+  DROP TABLE student;
+  CREATE TABLE student (
+    sno char(7) NUT NULL,
+    sname char(8) NOT NULL);
+  INSERT INTO student SELECT * FROM tmp;
+  DROP TABLE tmp;
+
+===== 唯一性约束 =====
+
+利用UNIQUE保留字可以将字段标识为唯一性字段。
+  CREATE TABLE student (
+    sno char(7) NUT NULL UNIQUE,
+    sname char(8) NUT NULL);
+对于唯一性字段，PostgreSQL自动为其建立一个唯一性索引。还可以限定多个字段组合唯一：
+  CREATE TABLE upTEST(
+    col1 integer,
+    col2 integer,
+    UNIQUE (col1, col2));
+
+===== 主键约束 =====
+
+主键约束相当于非空值约束和唯一性约束的组合.
+  CREATE TABLE student (
+    sno char(7) PRIMARY KEY,
+    sname char(8) NOT NULL);
+如果主键由多个字段组成，则使用下列命令：
+  CREATE TABLE pkTEST (
+    col1 integer,
+    col2 integer,
+    PRIMARY KEY (col1, col2));
+
+===== 外键约束 =====
+
+外键约束主要用于保证数据库的参照完整性。
+==== 一般使用 ====
+
+  CREATE TABLE provname (
+    code char(2) PRIMARY KEY,       --省市代码主键
+    name char(6));                  --省市名称
+
+  CREATE TABLE customer (
+    cno integer,
+    name char(30),
+    prov char(2) REFERENCES provname); --所在省市代码，参照provname
+
+==== 主键的更新 ====
+
+被参照的主键更新时，外键同时更新.
+  CREATE TABLE customer (
+    cno integer,
+    name char(30),
+    prov char(2) REFERENCES provname
+                   ON UPDATE CASCADE   --与主键同步修改
+                   ON DELETE SET NULL  --主键删除时，置为空值
+  );
+上例中，CASCADE表时当主键被修改时，对外键作同样的修改；如果主键被删除，外键所在行也被自动删除。SET NULL表明当主键被修改或主键所在行被删除时，将外键设置为空值。除此之外，可用的动作还有两个：
+  NO ACTION   --不允许修改或删除被参照的主键。这是默认的动作。
+  SET DEFAULT --当主键被修改或删除时，外键自动设置为默认值。
+
+==== 空值问题 ====
+
+为了避免用户部分地将外键设置为空值，MATCH FULL保留字强迫进行完全匹配操作。当外键中的某个字段为空值时，完全匹配操作将不会成功。
+  CREATE TABLE fkTEST (
+    col3 integer,
+    col4 integer,
+    FOREIGN KEY (col3, col4) REFERENCES pkTEST
+                               MATCH FULL);
+
+==== 外键检查时机 ====
+
+默认情况下，外键参照性检查在INSERT、DELETE和UPDATE命令结束时立即进行。如果是大型事务，则影响效率。解决问题的方法是使用外键的DEFERRABLE可选项以及SET CONSTRAINTS命令。这样，参照性检查将在一个事务结束时进行，而不是在每个更新命令执行完时进行。
+  CREATE TABLE pkTEST_df (
+    col integer PRIMARY KEY);
+
+  CREATE TABLE fkTEST_df (
+    col integer REFERENCES pkTEST_df
+                   DEFERRABLE
+  );
+
+  COMMIT;
+  BEGIN;
+  SET CONSTRAINTS ALL DEFERRED;
+  INSERT INTO fkTEST_df VALUES(11);
+  COMMIT;
+
+===== 数据检验 =====
+
+利用CHECK对数据进行检验。
+  CREATE TABLE ckTEST (
+    name char(8) NOT NULL,
+    age integer CHECK(age>=0 AND age<=150),
+    gender char(2) CHECK(gender IN ('男', '女'));
+
+

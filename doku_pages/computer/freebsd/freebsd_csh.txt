@@ -1,0 +1,275 @@
+====== 配置csh/tcsh ======
+
+
+
+和许多刚从 Linux 转到 BSD 的人不同，我并没有装完 BSD 就顺手安装 bash，
+ 因为之前除了打命令，我没有用到额外的功能，bash 也好，csh 也罢，在我眼里都是当做 shell 来用。
+ 但是渐渐地，我发现 csh 真的挺好用，它小巧、简单、开放，不需要额外依赖。
+
+
+可能有人要拿脚本能力来作对比，比如bash脚本支持函数，csh不支持等。
+ 对我来说，其实我从未像模像样地写过一个脚本，我的工作是 C++ 程序员。
+ 从我的角度来看，
+ 论脚本能力，其实bash、csh、zsh都比不上Python，
+ 论兼容性，bash、csh、zsh都比不上sh，
+ 论强大，bash、csh、zsh都比不上C/C++，甚至asm。
+ 再看易学程度，bash、csh、zsh可能还是要输给Python。
+ 综上，脚本能力忽略不计。:-x
+
+
+好了，说了这么多大不敬的话，我们开始切入正题。8-) 
+
+配置文件
+
+
+全局配置文件 /etc/csh.cshrc
+个人配置文件 ~/.cshrc或~/.tcshrc
+
+
+为了方便，建议修改全局性的配置文件，这样每个账号都可以享受便利。
+
+
+按键绑定
+
+
+通常，我们不设置按键绑定也能很好地工作，
+ 但是对于远程登录，可能需要一些额外的配置。
+ 比如，为了避免putty登录后，Home、End、Delete等变成~，你需要如下配置：
+
+bindkey '\e[1~' beginning-of-line      # Home
+bindkey '\e[3~' delete-char            # Delete
+bindkey '\e[4~' end-of-line            # End
+bindkey "^W" backward-delete-word      # Delete
+bindkey -k up history-search-backward  # PageUp
+bindkey -k down history-search-forward # PageDown
+
+提示符
+
+
+设置一个漂亮使用的的提示符可以让工作变得更愉快高效。
+ 以下是一个合理的配置方案：
+
+if ( $?prompt ) then                                #如果$prompt变量尚未设置，则做如下设置
+     if ( "$uid" == "0" ) then                      #判断用户的uid
+         set prompt = "%U%n%u@%m [%l] %B%~%b # "    #对于root，我们显示“#”号
+     else
+         set prompt = "%U%n%u@%m [%l] %B%~%b % "    #对于普通用户，显示“%”号。
+     endif
+endif
+
+Konsole中的效果如下：
+prompt2_img 
+
+一种彩色的配置方案如下：
+
+set cr = "%{\e[31m%}" #开始红色
+set cg = "%{\e[32m%}" #开始绿色
+set c0 = "%{\e[0m%}"  #恢复为默认色彩
+
+# Set some variables for interactive shells
+if ( $?prompt ) then
+    if ( "$uid" == "0" ) then
+	set prompt = "%B%U%n%u@%m.$cr%l$c0%b %c2 %B%#%b " 
+    else
+	set prompt = "%B%U%n%u@%m.$cg%l$c0%b %c2 %B%%%b "
+    endif
+endif
+
+Konsole中的效果如下：
+prompt3.png 
+
+颜色代码：
+1 for brighter colors
+ 4 for underlined text
+ 5 for flashing text
+ 30 for black foreground
+ 31 for red foreground
+ 32 for green foreground
+ 33 for yellow (or brown) foreground
+ 34 for blue foreground
+ 35 for purple foreground
+ 36 for cyan foreground
+ 37 for white (or gray) foreground
+ 40 for black background
+ 41 for red background
+ 42 for green background
+ 43 for yellow (or brown) background
+ 44 for blue background
+ 45 for purple background
+ 46 for cyan background
+ 47 for white (or gray) background
+
+
+查看更多参数，及其作用:
+
+man tcsh  #查看man手册
+/%/       #搜索到“%/”开始的地方
+
+环境变量等
+
+
+你在抱怨 FreeBSD下的 ls 没有显示颜色， grep 出来的东西没有高亮吗？ 那么你需要如下的配置：
+
+#让 ls 鲜艳些
+setenv LSCOLORS ExGxFxdxCxegedabagExEx
+setenv CLICOLOR yes
+#让 grep 匹配到的字符高亮
+setenv GREP_OPTIONS --color=auto
+
+对于在KDE下使用fcitx的人，需要如下三行设置，
+ 其实就是fcitx安装完后所提示的内容，如果你够细心的话。
+
+setenv XMODIFIERS @im=fcitx
+setenv QT_IM_MODULE xim
+setenv GTK_IM_MODULE xim
+
+嗯， ls 有颜色了，但是等等，为何 tab 不能补全？
+ 你需要如下配置：
+
+set autolist
+
+如果命令输错了，让csh/tcsh 为你纠正：
+
+set correct = cmd
+
+为了在命令行启动某个游戏，或者kde程序，例如dolphin、kcalc，
+ 你需要加两个路径到$path中去：
+/usr/games /usr/local/kde4/bin/ 
+set path = (/sbin /bin /usr/sbin /usr/local/bin /usr/games /usr/local/sbin /usr/bin $HOME/bin /usr/local/kde4/bin/) 
+
+黑魔法防御术
+
+
+
+重定向防御
+
+
+重定向很强大，我们有时候会运行诸如“date ? b.txt”，“ls -l > files.txt”等命令。
+ 然而如果一不小心，把“?”输成“>”会造成什么后果呢？
+ 为此，tcsh提供了noclobber这个选项：
+
+set noclobber
+
+有了它，悲剧就不会发生。如果“>”的目标文件已存在，tcsh会拒绝重定向。
+
+
+覆盖防御
+
+
+是否遇到过“mv a b”，从而把有用的b文件覆盖掉了？
+ 为此，我们要让mv和cp的行为更谨慎：
+
+alias mv 'mv -i'
+alias cp 'cp -i'
+
+如果目标文件已存在，mv和cp会拒绝操作，除非使用参数“-f”。
+
+
+误删防御
+
+
+rm这个命令自从诞生起，就一直是个危险的操作。
+ 我们可以让rm更温和：
+
+alias rm 'rm -i'
+
+这样rm之前，会要求再次确认。
+
+
+一切皆alias
+
+
+前面，我们在黑魔法防御术中已经初步见识了alias。
+alias不仅可以避免危险操作，还可以简化命令，自创命令。
+ 除非极短，否则良好的alias命名，应当以某个统一的单词或字母开头，
+ 例如下面即将展示的reload/edit系列、update系列、show系列等。
+
+
+先展示最基本的alias，并逐条解释。
+
+alias ..    'cd ..'       #两点即可回到上级目录
+alias -	    'cd -'        #一杠返回上次的目录
+alias q	    'exit'        #退出登录
+alias rm    'rm -i'       #误删防御
+alias del   'rm -r'       #删除整个目录
+alias mv    'mv -i'       #覆盖防御
+alias cp    'cp -i'       #覆盖防御
+alias ls    'ls -I'       #root状态下，默认不显示隐藏文件（.*）。BSD的ls很特殊，root默认显示所有文件。
+alias la    'ls -a'       #显示所有文件
+alias ll    'ls -h -l'    #显示文件权限和大小（以合理的单位）
+alias lr    'ls -R'       #递归显示目录
+alias dh    'df -h -a -T' #以合适的单位显示所有磁盘的剩余空间，以及文件系统类型（如ufs、devfs、procfs）。
+alias ds    'du -sh'      #以合适的单位显示查看每个文件/文件夹的大小
+
+find/wc系列。快速查找当前目录下的所有c/cxx/python源码文件。结合wc可以统计行数。
+
+alias find-c	'find . -name "*.h" -o -name "*.c"'
+alias find-x	'find . -name "*.h" -o -name "*.hpp" -o -name "*.cpp" -o -name "*.cxx"'
+alias find-py	'find . -name ".py"'
+alias wc-c	'find . -name "*.h" -o -name "*.c" | xargs wc | sort -k 4'
+alias wc-x	'find . -name "*.h" -o -name "*.hpp" -o -name "*.cpp" -o -name "*.cxx" | xargs wc | sort -k 4'
+alias wc-py	'find . -name ".py" | xargs wc | sort -k 4'
+
+reload/edit系列。实现快速修改，载入配置文件。
+
+alias reload-rc.conf  'sh /etc/rc'
+alias reload-cshrc    'unalias * && source /etc/csh.cshrc'
+alias edit-xorg.conf  'vim /etc/xorg.conf'
+alias edit-csh.cshrc  'vim /etc/csh.cshrc'
+alias edit-make.conf  'vim /etc/make.conf'
+alias edit-kern.conf  'vim /etc/kernconf/thinkpad'
+alias edit-rc.conf    'vim /etc/rc.conf'
+alias edit-vimrc      'vim /usr/local/share/vim/vimrc'
+
+set系列。快速设置locale。 
+alias setlocale-zhcn 'setenv LC_ALL zh_CN.UTF-8 && setenv LANG zh_CN.UTF-8'
+alias setlocale-c    'setenv LC_ALL C'
+
+startx专用。
+ 保持命令行下为英文locale（避免date等命令出现乱码），而让x环境为中文，适合手动startx而不是kdm的人。 
+alias sx 'setenv LC_ALL zh_CN.UTF-8 && setenv LANG zh_CN.UTF-8 && startx && setenv LC_ALL C'
+
+make系列。快速编译kernel/world。 
+alias make-world  'cd /usr/src && make buildworld && cd -'
+alias make-kernel 'cd /usr/src && make kernel KERNCONF=thinkpad && cd -'
+alias make-installworld 'cd /usr/src && make installworld && make delete-old && cd -'
+
+show系列。查看状态或某些信息。 
+alias show-ifstat	'systat -ifstat'    #查看网络接口的数据流量
+alias show-geom		'gstat'             #查看I/O状态
+alias show-thermal	'sysctl dev.acpi_ibm.0.thermal'  #查看ThinkPad笔记本的各部分温度
+alias show-cpufreq	'sysctl dev.cpu.0.freq'          #查看当前cpu频率
+alias show-cpulevels	'sysctl dev.cpu.0.freq_levels'   #查看可用的cpu频率
+alias show-battery	'sysctl hw.acpi.battery.life && sysctl hw.acpi.battery.time' #查看电力
+alias show-smartctl	'smartctl -a /dev/ad4'           #需要安装smartmontools，查看磁盘smart参数
+alias show-alldep	'make all-depends-list'            #需要在ports的安装目录下执行，显示所有依赖
+alias show-dep		'portmaster --show-work ./ | sort' #同上，且需要安装portmaster，只显示尚未安装的依赖
+alias show-ver		'pkg_version -v'                   #查看是否有软件可更新
+
+update系列。顾名思义，更新嘛。
+
+alias update-locatedb    '/usr/libexec/locate.updatedb'            #更新locate数据库
+alias update-kernsrc     'csup -L 2 /etc/supfiles/stable-supfile'  #同步kernel tree
+alias update-ports       'portsnap fetch update'                   #同步ports tree
+alias update-apps	 'portmaster -a --force-config'            #需要安装portmaster，更新所有软件，提示配置选项
+
+杂项，均需要安装第三方软件才能用。 
+alias lt    'tree -N -C'       #需要安装tree。树状显示目录，-N可以保证中文显示，-C使用彩色
+alias l3    'tree -N -C -L 3'  #目录最多递归三级
+alias l4    'tree -N -C -L 4'  #四级
+alias l5    'tree -N -C -L 5'  #五级
+alias l6    'tree -N -C -L 6'  #六级
+alias v	    'vim'              #不用说，我懒
+alias m     'mocp'             #控制台下的cs架构播放器
+alias getdir	'wget -c -r -np -k'                  #递归下载目录
+alias ssh-home	'ssh raphael.vicp.cc -l root'        #用root账号登录，结合key可以免输密码
+alias ftp-home   'ftp ftp://syh:syh@raphael.vicp.cc' #BSD自带的ftp，免输账号密码。主机已被电信和工信部和谐，勿再试
+alias lft-phome	'lftp raphael.vicp.cc -u syh,syh'    #lftp的免输账号密码。
+alias scons	'scons -Q -j 4'                      #构建工具，默认4个线程进行
+alias valgrind-checkmem 'valgrind --tool=memcheck --leak-check=full'  #检查内存泄漏
+
+最好的教材
+
+
+最好的教材莫过于man手册，真的什么都有了。 
+man tcsh

@@ -1,0 +1,106 @@
+====== 连接查询 ======
+
+连接是将两个或多个表的字段拼接成一个更大表的操作，生成的表中包含满足连接条件的所有记录。
+
+===== 设计数据表 =====
+
+学生基本情况表(s)：
+   sno        sname   sex   age    dept
+   学号        姓名    性别  年龄    系别
+  980301     李小波    男    20    计算机
+  980302     王前      男    21    计算机
+  980302     保林      女    20    机械
+  980304     刘淇      女    20    机械
+
+课程基本情况表(c)：
+  cno        cname    teacher
+  课程号    课程名称   任课老师
+  03014    操作系统   李玲
+  03011    数据库     钟福利
+  10021    机械制图   黄为
+
+成绩表(sc)：
+  sno     cno      grade
+  学号    课程号    成绩
+  980301  03014    85
+  980302  03014    79
+  980301  03011    67
+  980302  03011    98
+
+===== 复杂连接查询 =====
+
+1.查询 李小波 所修的全部课程
+  SELECT s.sname AS 姓名, c.cname AS 课程名称 
+  FROM s, sc, c
+  WHERE s.sno=sc.sno AND sc.cno=c.cno AND s.sname='李小波';
+
+2.查询的有成绩在80分以上的学生姓名和所在的系
+  SELECT distinct s.sname, s.dept
+  FROM s, sc
+  WHERE s.sno=sc.sno AND 
+  (s.sno NOT IN (
+     SELECT sc.sno FROM sc WHERE grade<80)
+  );
+  不能写成sc.grade>=80,因为，只要有一门成绩在80分以上，就在结果之列。
+
+3.查询没有选修 操作系统 课程的学生姓名
+  SELECT DISTINCT s.sname
+  FROM s, sc, c
+  WHERE s.sno=sc.sno AND sc.cno=c.cno AND
+    (s.sno NOT IN (
+      SELECT sc1.sno FROM sc sc1, c c1
+      WHERE sc1.cno=c1.cno AND c1.cname='操作系统')
+  ); 
+  另外一种写法：
+  SELECT DISTINCT s.sname
+  FROM s, sc, c
+  WHERE s.sno = sc.sno AND sc.cno = c.cno AND
+    (s.sno NOT IN (
+      SELECT sc.sno FROM sc
+      WHERE sc.cno IN (
+        SELECT cno FROM c WHERE cname='操作系统')
+      )
+    );
+
+4.查询"操作系统"成绩比"数据库"成本好的学生姓名
+  SELECT DISTINCT s.sname
+  FROM s, sc sc1, sc sc2
+  WHERE s.sno = sc1.sno AND s.sno = sc2.sno AND
+    sc1.cno = (
+      SELECT cno
+      FROM c
+      WHERE cname='操作系统') AND
+    sc2.cno = (
+      SELECT cno 
+      FROM c
+      WHERE cname='数据库') AND
+    sc1.grade > sc2.grade;
+
+5.查询至少选修两门课程的学生姓名和性别
+  SELECT DISTINCT s.sname, s.sex
+  FROM s, sc
+  WHERE s.sno = sc.sno AND s.sno IN (
+    SELECT DISTINCT sno FROM sc
+    GROUP BY sno
+    HAVING count(*)>=2);
+
+6.查询没有选修李老师所讲课程的学生姓名/性别和所在系
+  SELECT DISTINCT s.sname, s.sex, s.dept
+  FROM s, sc
+  WHERE s.sno = sc.sno AND sc.sno NOT IN (
+    SELECT sc.sno FROM sc, c
+    WHERE sc.cno = c.cno AND c.teacher LIKE '李%');
+
+7.查询选修李老师的讲课程的学生数
+  SELECT count(*) FROM sc, c 
+  WHERE sc.cno = c.cno AND c.teacher LIKE '李%';
+
+8.查询对于同一门课程，比所有女生成绩都好的男生姓名
+  SELECT s1.sname
+  FROM sc sc1, s s1
+  WHERE sc1.sno = s1.sno AND s1.sex='男' AND
+    sc1.grade>(SELECT max(sc2.grade)
+      FROM sc sc2, s s2
+      WHERE sc2.sno = s2.sno AND s2.sex='女' AND
+        sc2.cno = sc1.cno);
+

@@ -1,0 +1,86 @@
+====== 在ArchLinux上搭建Nginx Php Sqlite ======
+
+===== 安装 =====
+
+  sudo pacman -S php php-cgi php-fpm php-gd php-mcrypt nginx sqlite
+
+
+===== 配置Nginx =====
+
+sudo vi /etc/nginx/nginx.conf
+<file php nginx.conf>
+
+worker_processes  1;
+error_log  /var/log/error.log;
+events {
+    worker_connections  1024;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+
+    access_log  /var/log/access.log  main;
+
+    sendfile        on;
+    #tcp_nopush     on;
+
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+
+    gzip  on;
+
+    server {
+        listen       8012;
+        server_name  localhost;
+        charset utf-8;
+        location / {
+            root   /home/web;
+            index  index.html index.htm index.php;
+        }
+
+        error_page   500 502 503 504  /50x.html;
+        location = /50x.html {
+            root   /usr/share/nginx/html;
+        }
+
+        location ~ \.php$ {
+            root           /home/web;
+	    fastcgi_pass   unix:/run/php-fpm/php-fpm.sock;
+            fastcgi_index  index.php;
+            fastcgi_param  SCRIPT_FILENAME  $document_root$fastcgi_script_name;
+            include        /etc/nginx/fastcgi_params;
+        }
+
+        # deny access to .htaccess files, if Apache's document root
+        # concurs with nginx's one
+        #
+        location ~ /\.ht {
+            deny  all;
+        }
+    }
+}
+</file>
+
+===== 配置php =====
+
+sudo vi /etc/php/php.ini  打开下已安装的模块：
+  extension=gd.so
+  extension=mcrypt.so
+
+sudo vi /etc/php/php-fpm.conf
+  ;listen = 127.0.0.1:9000
+  listen = /run/php-fpm/php-fpm.sock
+  open_basedir = /srv/http/:/home/:/tmp:/usr/share/pear/:/home/web/    --告诉php解析的文件夹
+
+===== 启动相关服务 =====
+
+  sudo systemctl enable nginx.service
+  sudo systemctl enable php-fpm.service
+  sudo systemctl start nginx.service
+  sudo systemctl start php-fpm.service

@@ -1,0 +1,192 @@
+====== 使用Web Workers处理线程 ======
+
+HTML5新增了一个Web Workers API,使用这个API,可以很容易地创建在后台运行的线程，将可能耗费较长时间的处理交给后台去执行，前台页面中执行的操作就完全没有影响了。
+
+===== 适用场合 =====
+
+  * 预先抓取并缓存一些数据以供后期使用
+  * 代码高亮处理或其他一些页面上的文字格式化处理
+  * 拼写检查
+  * 分析视频或音频数据
+  * 后台I/O处理
+  * 大数据量分析或计算处理
+  * canvas元素中的图像数据的运算及生成处理
+  * 本地数据库中数据的存取及计算处理
+
+===== 线程中可用的变量、函数与类 =====
+
+Web Workers属于一种被后台执行的线程，所在在后台线程中只能使用Javascript脚本文件中的部分对象与方法，如下所示：
+  * self:用来表示本线程范围内的作用域。
+  * postMessage(msg):用于向创建线程的源窗口发送消息。
+  * onmessage: 获取接收消息的事件句柄。
+  * importScripts(urls): 导入其他脚本文件，可导入多个脚本。importScripts('j1.js','j2.js')
+  * navigator对象：与window.navigator对象类似，具有appName,platform,userAgent,appVersion属性。
+  * sessionStorage/localStorage: 可以在线程中使用Web Storage.
+  * XMLHttpRequest: 可以在线程中处理Ajax请求。
+  * Web Workers: 可在在线程中嵌套线程。
+  * setTimeout()/setInterval(): 可以在线程中实现定时处理。
+  * close: 用于结束本线程。
+  * eval(), isNaN(), escape()等可以使用所有javascript核心函数。
+  * object: 可以创建和使用本地对象。
+  * WebSockets: 可以使用Web Sockets API来向服务器发送和接收消息。
+  * FileSystem: 可以在线程中通过同步FileSystem API来实现受沙箱保护的文件系统中的文件及目录的创建、更新及删除操作。
+
+===== 使用线程 =====
+使用线程求和示例：
+  <!DOCTYPE html>
+  <html>
+  <head>
+  <meta charset='utf-8'>
+  <script type='text/javascript'>
+      // 创建线程
+      var worker = new Worker('sum.js');
+      
+      // 接收从线程传回的结果
+      worker.onmessage = function(e){
+          alert(e.data);
+      }
+      function calculate(){
+          var val = document.getElementById('num').value;
+          var num = parseInt(val);
+          // 将数值传递给线程，文本格式
+          worker.postMessage(num);
+      }
+  </script>
+  </head>
+  <body>
+      <input type='text' id='num>
+      <button onclick='calculate()'>计算</button>
+  </body>
+  </html>
+sum.js文件如下：
+  onmessage = function(e){
+      var num = e.data;
+      var result = 0;
+      for (var i=0; i<=num; i++){
+          result += i;
+      }
+      //向线程创建源送回消息
+      postMessage(result);
+  }
+
+===== 线程嵌套 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8'>
+    <script type='text/javascript'>
+        var worker = new Worker('script.js');
+        worker.postMessage('');
+        worker.onmessage = function(e){
+            if(e.data != ''){
+                var j;  //行号
+                var k;  //列号
+                var tr, td;
+                var intArray = e.data.split(';');
+                var table = document.getElementById('table');
+                for(var i=0; i<intArray.length; i++){
+                    j = parseInt(i/10, 0);
+                    k = i % 10;
+                    if(k===0){  //该行不存在
+                        tr = document.createElement('tr');
+                        tr.id = 'tr'+j;
+                        table.appendChild(tr);
+                    } else {
+                        tr = document.getElementById('tr'+j);
+                    }
+                    td = document.createElement('td');
+                    tr.appendChild(td);
+                    td.innerHTML = intArray[j*10+k];
+                    td.style.backgroundColor='blue';
+                    td.style.color = 'white';
+                    td.width = '30';
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>从随机生成的数字中抽取3的倍数并显示示例</h1>
+    <table id='table'></table>
+</body>
+</html>
+</file>
+
+<file javascript script.js>
+    onmessage = function(e){
+        var intArray = new Array(100);
+        for(var i=0; i<100; i++){
+            intArray[i] = parseInt(Math.random()*100);
+        }
+        var worker = new Worker('worker2.js');
+        worker.postMessage(JSON.stringify(intArray));
+        worker.onmessage = function(e){
+            postMessage(e.data)
+        }
+    }
+</file>
+
+<file javascript worker2.js>
+    onmessage = function(e){
+        var intArray = JSON.parse(e.data);
+        var returnStr = '';
+        for(var i=0; i<intArray.length; i++){
+            if(parseInt(intArray[i]%3)===0){
+                if(returnStr!='') returnStr += ';';
+                returnStr += intArray[i]; 
+            }
+        }
+        postMessage(returnStr);
+        close();  //关闭子线程
+    }
+</file>
+
+===== 在多个子线程中进行数据的交互 =====
+
+实现子线程与子线程之间的数据交互，大致需要以下几个步骤：
+  - 先创建发送数据的子线程。
+  - 执行子线程中任务，然后把要传递的数据发给主线程。
+  - 在主线程接收到子线程传回的消息时，创建接收数据的子线程，然后把发送数据的子线程中返回的消息传递给接收数据的子线程。
+  - 执行接收数据子线程中的任务。
+
+改写前例，将创建随机数组的工作放到一个单独的子线程中，在该线程中创建随机数组，然后将随机数组传递到另一个子线程中进行能够被3整除的数字的挑选工作，最后把挑选结果传回主页面进行显示。
+<file javascript main.js>
+    onmessage = function(e){
+        var worker;
+        //创建发送数据的子线程
+        worker = new Worker('worker1.js');
+        worker.postMessage('');
+        worker.onmessage = function(e){
+            // 接收子线程的数据，本例中为创建好的随机数组
+            var data = e.data;
+            // 创建接收数据子线程
+            worker = new Worker('worker2.js');
+            // 把从发送数据子线程中返回的消息传递给接收数据的子线程
+            worker.postMessage(data);
+            worker.onmessage = function(e){
+                var data = e.data;
+                // 把挑选出来的结果发送回主页面
+                postMessage(data);
+            }
+        }
+    }
+</file>
+
+发送数据的子线程
+<file javascript worker1.js>
+  onmessage = function(e){
+      var intArray = new Array(100);
+      for(var i=0;i<100;i++)
+          intArray[I] = parseInt(Math.random()*100);
+      postMessage(JSON.stringify(intArray));
+      close();
+  }
+</file>
+
+
+
+
+
+

@@ -1,0 +1,8 @@
+====== Windows Index ======
+
+
+  * [[bios_for_x220|Lenovo X220 Bios 详解]]
+  * [[mbrtogpt|用diskpart命令创建pgt分区]]
+  * [[window_jihuo         |windows10激活方法]]
+
+

@@ -1,0 +1,29 @@
+
+===== head/全局对象 =====
+
+JavaScript代码本身必须包含在对象内部。JavaScript的所有实现都需要使用一种head对象。head对象是由JavaScript在幕后创建，用于封装用户代码，并容纳JavaScript原生代码。head对象是JavaScript环境中可用的最高作用域/上下文。head对象包括下列函数/方法：
+  * decodeURI()
+  * decodeURIComponent()
+  * encodeURI()
+  * encodeURIComponent()
+  * eval()
+  * ifFinite()
+  * isNaN()
+  * parseFloat()
+  * parseInt()
+
+===== Function的call()和apply()方法 =====
+
+  var greet = {
+      runGreet: function() { console.log(this.name, arguments[0], arguments[1] }
+  }
+  var cody = { name: 'cody' };
+  var lisa = { name: 'lisa' };
+在cody对象上调用runGreet函数,输出: 'cody foo bar'
+  greet.runGreet.call( cody, 'foo', 'bar' );
+在lisa对象上调用runGreet函数,输出: 'lisa foo bar'
+  greet.runGreet.apply( lisa, ['foo', 'bar'] );
+call()传递多个分开的参数，apply()传递多个参数组成的数组。
+
+===== 标题 =====
+

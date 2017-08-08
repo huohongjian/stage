@@ -1,0 +1,89 @@
+
+====== Linux下的回收站机制libtrash ======
+
+  yaourt -S libtrash
+
+libtrash和其他的回收站处理不同，他直接作用于linux的底层，相当于是在libc上挂了一个钩子（hook），凡是系统要进行删除文件操作的时候，不管是用rm命令，还是php的unlink函数，都会用到底层的libc，也就逃不过libtrash的掌控，所以说使用起来非常放心、省心。
+
+也正由于libtrash的底层性，所以最好不要启用root用户的回收站功能，因为root对系统的管理要涉及到很多文件修改，如果被libtrash拒绝将会导致无法预知的结果，所以，默认的配置文件/etc/libtrash.conf不要动，复制一份为$HOME/.libtrash，作用用户级的配置文件来使用，默认设置已经比较好用了，不过我还是按照自己的习惯修改了几个地方：
+
+<file php .libtrash>
+#TRASH_CAN = Trash
+# 和Ubuntu默认回收站目录保持一致
+TRASH_CAN = .Trash
+
+#IGNORE_EXTENSIONS = o;log;aux
+# Log文件还是要保留的
+IGNORE_EXTENSIONS = o;aux
+
+#TEMPORARY_DIRS = /tmp;/var
+# /var目录下的日志文件也要保护起来
+TEMPORARY_DIRS = /tmp
+</file>
+
+libtrash是通过LD_PRELOAD机制来启用的，所以需要修改.bashrc作相应的设置：
+
+<file shell .bashrc>
+# libtrash setting
+export LD_PRELOAD=/usr/lib/libtrash.so
+alias TrashOn='export TRASH_OFF=NO'
+alias TrashOff='export TRASH_OFF=YES'
+TrashOn
+</file>
+
+真正起作用的是第一句export，设置了这个环境变量之后，才真正的把钩子“挂上”，后面的alias是设置方便的开关命令，想像一下当你清空移动硬盘上的电影的时候，$HOME被塞满到爆的情况吧，这时候也许就要临时关闭回收站功能了，设置了TRASH_OFF=YES之后，删除的文件不会再被移动到回收站，而是真正的被系统删除。
+
+除了TrashOff之外，配合Rox的SendTo机制，也许更方便一些，在~/.config/rox.sourceforge.net/SendTo目录创建一个脚本trm-Truely_Remove：
+
+<file bash trm-Truely_Remove>
+#! /bin/bash
+# 暂时关闭libtrash，永久删除指定文件
+
+export TRASH_OFF=YES
+
+# 遍历指定的文件进行处理
+for I in "$@"
+do
+        rm -rf $I
+done
+
+export TRASH_OFF=NO
+</file>
+
+这样再有想直接删除的文件，在Rox中选定然后用Send to发送到这个脚本进行处理就可以了，不过一定要确定是真正不要了的文件哦。
+
+还剩下唯一一个缺点，就是libtrash只能指定一个回收站目录，一般是在用户的HOME目录下，如果需要管理的文件不在$HOME下的比较多，比如我习惯使用的/big1, /big2等等，删除后的文件就全都存到$HOME这里来了，即使他们不在一个分区，而不是像Naulius那样每个分区一个回收站目录。所以回收站里的数据会增长的很快，不过也有办法解决，单独给这个目录分配一个分区喽，还不用考虑磁盘碎片的问题。
+
+
+按照上面的设置，从命令行启动的rox能够正常写入回收站，但从Xfce菜单上启动的就不行了，原因未知，不过可以自己写一个脚本中转一下：
+<code>
+#!/bin/bash
+export LD_PRELOAD=/usr/lib/libtrash.so
+/usr/bin/rox
+</code>
+
+在默认的设置中，.Trash目录是受保护的，不管是用shell还是用rox进入这个目录，文件都无法删除，但是可以用上面讲到的那个SendTo...脚本来完成，这样反而觉得更安全些了呢。
+
+
+本文摘自：http://www.fwolf.com/blog/post/324
+
+
+
+
+
+====== 给linux添加一个回收站 ======
+
+linux没有回收站，如果一不小心 rm -rf之后，很难恢复，所以就编写了一个回收站
+
+  mkdir /tmp/trash_tmp     建立一个回收站目录
+  vi /bin/trash            编辑一个文件
+  mv $@ /tmp/trash_tmp
+  :wq保存退出
+
+  vi /etc/bashrc
+  alias rm=/bin/trash      设置别名
+  chmod 755 /bin/trash
+  chmod 777 /tmp/trash_tmp
+  source /etc/bashrc       启用环境变量
+
+如果要真的删除某个文件的时候用 /bin/rm -i file_name，这样一来一个回收站就建立了，以后你用rm的时候会自动的将file_name移动到/tmp/trash_tmp/目录下

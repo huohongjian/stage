@@ -1,0 +1,100 @@
+====== 复杂查询 ======
+
+===== LIKE查询 =====
+
+LIKE常用于对字符型字段的模糊查询。%匹配做生意的字符串，_匹配单个字符。
+  col LIKE 'D%'      匹配第一个字符为D
+  col LIKE '_D%"     匹配第二个字符为D
+  col LIKE 'D%e%'    匹配第一个字符为D且含有字母e
+  col LIKE 'D%e%f%'  匹配第一个字符为D且依次含有字母e和f
+  col NOT LIKE '%D'  匹配最后一个字符不为D
+  col NOT LIKE '%D%' 匹配不含D
+
+===== 正则表达式查询 =====
+
+正则表达式的运算符有：~ 、 ~* 、 !~ 、 !~*。正则表达式的特殊字符表：
+  ^      以指定的字符串开头
+  $      以指定的字符串结束
+  .      匹配任意的单个字符
+  [ccc]  匹配字符集合[ccc]中的任意字符
+  [^ccc] 不匹配字符集[ccc]中的任意字符
+  [c-c]  匹配范围[c-c]之间的任意字符
+  [^c-c] 不匹配范围[c-c]之间的任意字符
+  ?      参照前一个字符，匹配零个或一个这样的字符
+  *      参照前一个字符，匹配零个或多个这样的字符
+  +      参照前一个字符，匹配一个或多个这样的字符
+  |      逻辑或(OR)运算符 
+如要取消上述字符的特殊意义，则必须用"\"来转意。
+  col ~'^D'       匹配D开头的字符
+  col ~'D'        匹配包含D
+  col ~'^.D'      匹配第二个字符为D
+  col ~'^D.*e'    匹配第一个字符为D，且包含e
+  col ~'^D.*e.*f' 匹配每一个字符为D，且依次包含e和f
+  col ~'[A-D]'    匹配包含字母A B C D 或 col ~'[ABCD]'
+  col ~*'a'       匹配包含A或a, 或col ~'[Aa]'
+  col !~'D'       匹配不包含D
+  col !~'^D'      匹配开头不为D
+  col ~ '^ ?D'    匹配以D开头或以一个空格加D开头
+  col ~'^ *D'     匹配以D开头或以若干个空格加D开头
+  col ~'^ +D'     匹配至少一个空格加D开头
+  col ~'G *$'     匹配以G加上若干个空格结尾
+
+===== CASE字句 =====
+  CASE
+      WHEN 条件1  THEN 值1
+      WHEN 条件2  THEN 值2
+      ...
+      WHEN 条件n  THEN 值n
+      ELSE 值n+1
+  END
+例如：
+  SELECT name, age,
+      CASE
+          WHEN age>=18 THEN '成年人'
+          ELSE '非成年人'
+      END AS 年龄
+  FROM friend;
+
+===== 游标 =====
+游标只能是在事务中使用：
+  testdb=#  BEGIN WORK;                      开始一个事务
+  testdb=#  DECLARE friend_cusor CURSOR FOR  定义一个游标
+  testdb=#  SELECT * FROM friend;
+  testdb=#  FETCH 1 FROM friend_cursor;      从游标中取出一行数据
+  testdb=#  FETCH 1 FROM friend_cursor;      从游标中取出另一行数据
+  testdb=#  FETCH 2 FROM friend_cursor;      从游标中取出二行数据
+  testdb=#  FETCH -1 FROM friend_cursor;     从游标中取出前一行数据
+  testdb=#  MOVE 2 FROM friend_cursor;       移动游标位置
+  testdb=#  CLOSE friend_cursor;             关闭游标
+  testdb=#  COMMIT WORK                      提交事务
+
+===== 聚集查询 =====
+
+  COUNT(*)  统计结果行数
+  SUM(col)  求指定数字字段的合计
+  MAX(col)  求指定数字字段的最大值
+  MIN(col)  求指定数字字段的最小值
+  AVG(col)  求指定数字字段的平均值
+简单的聚集查询总是返回一个结果。GROUP BY 子句可以分组计算聚集结果。
+  SELECT prov, max(age), min(age), avg(age)
+  FROM friend
+  GROUP BY prov
+  ORDER BY 4 DESC;
+
+===== HAVING =====
+
+如果要在查询中对聚集结果进行条件判断和控制，可以使用HAVING子句。
+  HAVING cond_expr
+HAVING与WHERE不同：WHERE在主id用GROUP BY 之前过滤出单独的行，而HAVING过滤由GROUP BY创建的行；HAVING的cond_expr中可以使用聚集函数，而在WHERE中不允许使用聚集函数。除非在聚集查询中，否则在cond_expr中引用的每个字段应该明确地指定为某个组的字段。
+  SELECT prov, count(*), sum(age)
+  FROM friend
+  GROUP BY prov
+  HAVING avg(age)>20;
+HAVING通常与GROUP BY一起使用，以控制分组查询结果的输出。
+
+
+
+
+
+
+

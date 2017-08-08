@@ -1,0 +1,146 @@
+====== PostgreSql 安装配置与常用操作 ======
+
+===== 安装PostgreSql =====
+
+  # cd /usr/ports/database/postgresql94-server && make install clean  或
+  # pkg install postgresql94-server，会一起安装client。
+
+安装phpPgAdmin，网页版PGSQL管理工具 
+  # cd /usr/ports/databases/phppgadmin && make install clean 
+  # ln -s /usr/local/www/phpPgAdmin /usr/local/www/data/
+
+安装后的操作
+  * 安装完成后，会新建一个用户pgsql，家目录为/usr/local/pgsql
+  * 切换到pgsql用户：su root && su pgsql。
+  * 创建文件夹: mkdir /usr/local/pgsqldata/data 
+  * 初始化数据库：initdb –encoding=UTF8 -D /usr/local/pgsql/data/ 生成三个数据库：postgres  template0  template1
+
+
+
+===== 配置PostgreSql =====
+
+运行PostgreSQL服务: 
+  # /usr/local/etc/rc.d/postgresql start 或
+  # postgres -D /usr/local/pgsql/data    或
+  # pg_ctl -D /usr/local/pgsql/data -l logfile start
+设置为自启动项:
+  # echo 'postgresql_enable="YES"' >> /etc/rc.conf
+
+允许其他非本地IP链接:
+  # vi /usr/local/pgsql/data/postgresql.conf 
+  listen_addresses = '*' 
+
+修改用户密码加密方式:
+  # vi /usr/local/pgsql/data/pg_hba.conf 
+  host  all  all  10.0.1.0/24  md5 
+
+
+
+===== postgresql常用命令 =====
+<code>
+  1.连接数据库:   psql -U user -d dbname 默认用户pgsql数据库postgres
+  2.切换数据库:   \c dbname，  相当于mysql的use dbname
+  3.列举数据库:	 \l  	      相当于mysql的show databases
+  4.列举表:	 \dt	      相当于mysql的show tables
+  5.查看表结构:   \d tblname   相当于mysql的desc tblname,show columns from tbname
+  6.查看表索引：	 \di
+  7.退出 psql：   \q 
+  8.显示发行条款： \copyright 
+  9.显示设定编码： \encoding [字元编码名称]
+  10.设定内部变数：\prompt [文本] 名称
+  11.更改用户密码：\password [USERNAME]
+  12.使用pg_dump和pg_dumpall备份数据库： pg_dump drupal>/opt/Postgresql/backup/1.bak
+  13.SQL 命令语法上的说明，用 * 显示全部命令   \h [名称]
+
+  14.创建数据库：create database [数据库名]; 
+  15.删除数据库：drop database [数据库名]; 
+  16.创建一个表：create table ([字段名1] [类型1] ,[字段名2] [类型2],...<primary key (字段名m,字段名n,...)>); 
+  17.删除一个表：drop table [表名];
+  18.重命名表名：alter table [表名A] rename to [表名B]; 
+  19.添加表中字段：alter table [表名] add column [字段名][类型]; 
+  20.删除表中字段：alter table [表名] drop column [字段名]; 
+  21.重命名表字段：alter table[表名] rename column[字段] to [字段]; 
+  22.设置字段缺省值：alter table [表名]alter column [字段名] set default[新的默认值];
+  23.删除字段缺省值：alter table [表名] alter column [字段名] drop default; 
+
+  24.插入数据： insert into 表名 ([字段名m],...) values ([列m的值],...); 
+  25.修改数据： update [表名] set [目标字段名]=[目标值] where [该行特征]; 
+  26.删除数据： delete from [表名] where [该行特征]; delete from [表名];--删空整个表 
+
+另外：
+  \h：查看SQL命令的解释，比如\h select。 
+  \?：查看psql命令列表。 
+  \l：列出所有数据库。 
+  \c [database_name]：连接其他数据库。 
+  \d：列出当前数据库的所有表格。 
+  \d [table_name]：列出某一张表格的结构。 
+  \du：列出所有用户。 
+  \e：打开文本编辑器。 
+  \conninfo：列出当前数据库和连接的信息。
+</code>
+  
+
+===== PostgreSQL控制台 =====
+
+初次安装后，默认生成一个名为postgres的数据库和一个名为pgsql的数据库用户。
+下面，我们使用pgsql用户，来生成其他用户和新数据库。
+
+==== 第一种方法，使用PostgreSQL控制台 ====
+
+1.新建一个Linux新用户，dbuser。
+  sudo adduser dbuser		然后，切换到postgres用户。
+  sudo su - pgsql
+2.使用psql命令登录PostgreSQL控制台。
+  psql
+这时相当于系统用户pgsql以同名数据库用户的身份，登录数据库，这是不用输入密码的。如果一切正常，系统提示符会变为"pgsql=#"，表示这时已经进入了数据库控制台。以下的命令都在控制台内完成。
+3.使用\password命令，为pgsql用户设置一个密码。
+  \password pgsql
+4.创建数据库用户dbuser（刚才创建的是Linux用户），并设置密码。
+  CREATE USER dbuser WITH PASSWORD 'password';
+5.创建用户数据库，这里为exampledb，并指定所有者为dbuser。
+  CREATE DATABASE exampledb OWNER dbuser;
+6.将exampledb数据库的所有权限都赋予dbuser，否则dbuser只能登录控制台，没有任何数据库操作权限。
+  GRANT ALL PRIVILEGES ON DATABASE exampledb to dbuser;
+7.使用\q命令退出控制台（也可以直接按ctrl+D）。
+
+
+==== 第二种方法，使用shell命令行。 ====
+
+添加新用户和新数据库，还可以在shell命令行下完成。这是因为PostgreSQL提供了命令行程序createuser和createdb。以新建用户dbuser和数据库exampledb为例。
+1．创建数据库用户dbuser，并指定其为超级用户。
+  sudo -u postgres createuser --superuser dbuser
+2．登录数据库控制台，设置dbuser用户的密码，完成后退出控制台。
+  sudo -u postgres psql
+  \password dbuser
+  \q
+3．在shell命令行下，创建数据库exampledb，并指定所有者为dbuser。
+   sudo -u postgres createdb -O dbuser exampledb
+
+====登录数据库 ====
+
+添加新用户和新数据库以后，就要以新用户的名义登录数据库，这时使用的是psql命令。
+  psql -U dbuser -d exampledb -h 127.0.0.1 -p 5432
+上面命令的参数含义如下：-U指定用户，-d指定数据库，-h指定服务器，-p指定端口。输入上面命令以后，系统会提示输入dbuser用户的密码。输入正确，就可以登录控制台了。
+psql命令存在简写形式。如果当前Linux系统用户，同时也是PostgreSQL用户，则可以省略用户名（-U参数的部分）。举例来说，我的Linux系统用户名为ruanyf，且PostgreSQL数据库存在同名用户，则我以ruanyf身份登录Linux系统后，可以直接使用下面的命令登录数据库，且不需要密码。
+  psql exampledb
+此时，如果PostgreSQL内部还存在与当前系统用户同名的数据库，则连数据库名都可以省略。比如，假定存在一个叫做ruanyf的数据库，则直接键入psql就可以登录该数据库。
+  psql
+另外，如果要恢复外部数据，可以使用下面的命令。
+  psql exampledb < exampledb.sql
+控制台命令
+除了前面已经用到的\password命令（设置密码）和\q命令（退出）以外，控制台还提供一系列其他命令。
+
+数据库操作
+  * 创建新表 CREATE TABLE tbl(name VARCHAR(20), signup DATE);
+  * 插入数据 INSERT INTO tbl(name, signup)VALUES('张', '2013-12-22');
+  * 选择记录 SELECT * FROM tbl;
+  * 更新数据 UPDATE tbl set name = '李四' WHERE name = '张三';
+  * 删除记录 DELETE FROM tbl WHERE name = '李四' ;
+  * 添加栏位 ALTER TABLE tbl ADD email VARCHAR(40);
+  * 更新结构 ALTER TABLE tbl ALTER COLUMN signup_date SET NOT NULL;
+  * 更名栏位 ALTER TABLE tbl RENAME COLUMN signup_date TO signup;
+  * 删除栏位 ALTER TABLE tbl DROP COLUMN email;
+  * 表格更名 ALTER TABLE tbl RENAME TO backup_tbl;
+  * 删除表格 DROP TABLE IF EXISTS tbl;
+
+

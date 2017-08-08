@@ -1,0 +1,15 @@
+====== FreeBsd ======
+
+  * [[freebsd_install_note  |FreeBsd安装笔记]]
+  * [[freebsd_install_soft  |系统软件安装与配置]]
+  * [[freebsd_install_yyrj  |应用软件安装与配置]]
+  * [[FreeBSD_instal_cyrj   |常用软件安装与配置]]
+  * [[freebsd_postgresql    |postgresql安装配置与常用操作]]
+  * [[freebsd_csh           |配置csh/tcsh]]
+  * [[FreeBSD_zfs           |用FreeBSD10搭建基于ZFS的iSCSI服务]]
+  * [[FreeBSD_syjq          |FreeBSD的一些简单使用技巧]]
+  * [[FreeBSD_wtjd          |FreeBSD问题解答]]
+  * [[freebsd_yyrjjs        |FreeBSD应用软件介绍]]
+  * [[freebsd_azxz          |FreeBSD安装卸载工具Ports And Packages]]
+  * [[freebsd_ngrok         |ngrok反向代理]]
+

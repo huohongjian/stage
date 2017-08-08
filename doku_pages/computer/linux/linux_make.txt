@@ -1,0 +1,67 @@
+====== Make详解 ======
+
+
+===== Make工具概述 =====
+make是一个命令工具，它解释Makefile中的语法规则。这个文件告诉make以何种方式编译源代码和链接程序。
+  
+
+===== Makefile文件 =====
+Makefile书写规则：
+  TARGE：Dependency file
+      COMMAND
+  TARGE: Dependency file
+      COMMAND
+  ......
+  TARGE: Dependency file
+      COMMAND
+  * TARGE：表示make工具创建的目标体，通常是最后需要生成的文件名或者是为了实现这个目的面必需的中间过程文件名。
+  * Dependency file:表示要创建目标体需要的依赖文件。
+  * COMMAND:表示创建目标体时需要运行的命令，它限定了make执行这条规则时需要的动作，可由一行或者多行命令组成。命令前要有[tab]。
+例：
+  # File Makefile
+  file1: file1.o file2.o
+      gcc file1.o file2.o -o file1
+  file1.o: file1.c head1.h
+      gcc -wall -O -g -c file2.c -o file1.o
+  file2.o: file2.c head2.h
+      gcc -wall -O -g -c file2.c -o file2.o
+  clean:
+      rm file1 file1.o file2.o
+像clean没有被第一个目标文件直接或间接关联，那么它后面所定义的命令将不会自动执行。不过，当我们执行命令make clean时，clean目标体将执行。
+
+Makefile是个复杂工程，它的一般工作过程如下：
+  * 读取Makefile
+  * 初始化Makefile
+  * 解释规则
+  * 分析变更
+  * 执行
+Makefile编写完毕，就可以执行make命令进行编译操作。Make的执行同其他命令一样，有着丰富的选项：
+  * -f file  将指定当前目录下的file作为Makefile
+  * -I dir   将dir作为被 包含的Makefile所在目录
+  * -C dir   将指定目录下的file作为Makefile
+  * -i       忽略所有命令执行错误
+  * -j       输出执行规则中命令的详细信息
+  * -n       只打印要执行的命令，但不执行这些命令
+  * -s       在执行命令时不显示命令
+  * -d       除打印正常的操作信息外，还打印调试信息
+一个目标可以没有依赖文件，只有命令，比如Makefile中的伪命令clean表示删除make过程中的中间文件，它就没有依赖，只有命令。伪命令是为其他命令服务的，不是强制性的。伪命令一般包括：
+  * clean       删除中间文件
+  * install     安装编译好的程序
+  * uninstall   卸载已安装的程序
+  * print       输出发生改变的源文件
+
+
+===== Makefile变量 =====
+在Makefile中，变量是一个名字，它不仅可以代表一个广西字符串，而且可以用来代表文件名、编译选项、程序运行的选项参数、搜索源文件的目录，以及编译输出的目录。
+
+
+==== 变量的引用 ====
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,10 @@
+====== Python ======
+----
+  * [[install_python       |windows下面安装Python和pip]]
+  * [[python_stock         |用python开发股票自动技术分析的软件]]
+  * [[python_stock_tushare |python stock数据包tushare]]
+  * [[pandas_study         |pandas学习]]
+  * [[python_flask         |flask框架]]
+  * [[python_color_word    |python输出彩色文字]]
+
+

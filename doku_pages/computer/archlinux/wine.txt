@@ -1,0 +1,5 @@
+  * [[http://hi.baidu.com/xiazhujie/item/d67e30557a2bd39a08be1748|64位 archlinux 使用 wine 安装 Microsoft Office 2007]]
+  * [[http://blog.sina.com.cn/s/blog_6f97247e01010ukd.html|64位 archlinux 使用 wine 安装 Microsoft Office 2007]]
+  * 
+  * [[https://www.winehq.org/|wine主页]]
+

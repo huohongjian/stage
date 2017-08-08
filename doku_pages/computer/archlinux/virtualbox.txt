@@ -1,0 +1,59 @@
+
+====== VirtualBox使用说明 ======
+
+
+===== 将用户添加到virtualbox组 =====
+
+  sudo echo "vboxdrv" >> /etc/modules-load.d/virtualbox.conf
+  sudo gpasswd -a #USER vboxusers
+
+
+===== 激活Windows7 =====
+
+  VBoxManage setextradata 虚拟机名称 VBoxInternal/Devices/acpi/0/Config/SLICTable 374字节的SLIC文件
+
+
+
+===== Virtualbox识别USB设备 =====
+
+在默认情况下，Virtualbox是无法读取插到主机的U盘、u盾等USB设备的。但是，Virtualbox官方网站还是提供了解决办法。那就是安装 Oracle_VM_VirtualBox_Extension_Pack-*.vbox-extpack，提供了USB2.0设备支持，Virtualbox远程桌面协议、Intel PXE启动支持。
+
+首先，到这www.virtualbox.org/wiki/Downloads下载对应Virtualbox版本Oracle VM VirtualBox Extension Pack。
+
+  - 下载好后就是这个软件。双击安装，在弹出的窗口中点击Install
+  - 将右侧的滑条拉到底就会变成这样，点击“我同意”
+  - 然后就开始安装可直至出现successfuly安装成功。
+  - 此时，如果Virtualbox安装在Windows，即主机为Windows时，就Virtualbox成功支持了USB、PXE了。
+
+但是对于安装在Linux里的Virtualbox，即主机为Linux时，此时还差一步，即把用户加到vboxusers组里。
+
+  打开终端：sudo vi  /etc/group
+  找到这一行：vboxusers:x:126:
+  添加你的用户名，如你的用户名位kevin，则改成：vboxusers:x:126:kevin
+  然后保存退出，重启计算机。
+
+
+
+
+
+===== VirtualBox建立物理硬盘的虚拟磁盘链接 =====
+
+硬盘映射：
+  VBoxManage internalcommands createrawvmdk -filename ~/nenew.vmdk -rawdisk /dev/sda
+
+分区映射：
+  VBoxManage internalcommands createrawvmdk -filename ~/nenew.vmdk -rawdisk /dev/sda -partitions 1
+
+附 VBoxManage internalcommands createrawvmdk 命令：
+  VBoxManage internalcommands createrawvmdk 创建一个vmdk格式的硬盘
+  -filename <filename> vmdk格式的硬盘所对应的vmdk文件
+  -rawdisk <diskname> vmdk文件所对应的物理硬盘
+  [-partitions <list of partition numbers> vmdk文件对应的物理硬盘的分区
+  [-mbr <filename>] ] 将这个文件包含的引导记录写到vmdk文件
+  [-register] 将这个新创建的硬盘注册到virtualbox
+  [-relative] 激活这个新创建的硬盘的分区
+
+注意 ，如果不是使用root登录的系统，要注意 /dev/sda的权限，可以就图省事，直接chmod 777 /dev/sda了；也可以将用户添加到disk组里面。
+
+
+

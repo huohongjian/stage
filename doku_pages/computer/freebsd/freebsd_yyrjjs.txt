@@ -1,0 +1,166 @@
+====== FreeBSD应用软件介绍 ======
+
+FreeBSD拥有独立的内核和基本系统（包括常用的Unix命令、函数库等）。同时，多数可以在其他Unix，以及在Linux上运行的软件，也可以在 FreeBSD 上运行。下面列出一些日常用的软件。 
+===== 终端界面 =====
+==== 虚拟终端 ====
+  ◾ urxvt的特点是占内存少，启动速度快，中文支持好
+  ◾ xterm的特点是普及, 中文字体显示效果漂亮.
+  ◾ gnome-terminal 配置简单，界面不错，中文支持好。
+  ◾ mlterm 速度快，Unicode 支持好的虚拟终端。
+
+==== full-screen window manager ====
+  ◾screen用来开多个终端的软件，就算退出开的程序还在执行，下次还可以继续
+
+
+==== 浏览器 ====
+  ◾lynx 终端下面的浏览器。用户界面比w3m好。不过访问不了google
+  ◾w3m 能访问google
+
+==== 邮件 ====
+  ◾mutt 小巧，强大，高度可配置的邮件客服端。用户界面好。配置麻烦。
+
+==== 新闻 ====
+  ◾slrn news阅览器。用户界面好。配置麻烦。
+  ◾raggle rss阅读器。操作简洁，上手快。
+  ◾Liferea rss阅读器。
+  ◾gnus Emacs 内嵌的强大的 Email/News 阅读工具。
+
+
+==== 即时通讯 ====
+  ◾irssi irc工具。操作一流,配置简单，速度快。
+  ◾weechat irc工具，集 irssi 优点。
+
+
+==== 多媒体工具 ====
+  ◾ sox 瑞士军刀式的音频格式转换软件
+  ◾ mp3blaster 字符终端下的 mp3 播放器，功能齐全，全屏幕菜单式，类似 xmms，好用。
+  ◾ musicpd + mpc：最简易的音乐播放器 Music Player Daemon，定制性好。
+
+
+==== 安全工具 ====
+  ◾Clamav开源的杀毒软件。安装，使用都简单。 
+
+===== 图形用户界面 =====
+
+==== X Windows系统机理 ====
+  ◾xdm
+  ◾X与3D加速 重要,但是不晓得怎么说
+  ◾X中文机制 重要,但是不晓得怎么说
+  ◾Conky X 的系统监视器
+
+==== 窗口管理器 ====
+  ◾设置你自己的 FVWM2 高度可定制。特点是速度快、内存占用少，界面可以异常简洁，也可以异常华丽。配置稍微麻烦。
+  ◾kde 非常成熟的桌面套件，基于Qt。进入4.5以后，不得不说很漂亮、很稳定。
+  ◾gnome 开源的桌面套件。项目起步晚于kde，依赖于GTK库。
+  ◾awesome 一个目前很受欢迎的平铺窗口管理器
+  ◾dwm 一个非常轻量级的平铺窗口管理器
+  ◾enlightenment 老牌窗口管理器，外观炫目。
+
+
+==== 浏览器 ====
+  ◾chromium 就是 chrome 浏览器。
+  ◾epiphany GNOME 默认的， 使用 webkit 渲染的浏览器。
+  ◾firefox 桌面上面启动最慢的，内存占用最多，经常导致X崩溃的，不能不用的软件。看flash有点问题。
+  ◾FireFox扩展 FireFox 扩展是一个丰富多彩的世界
+  ◾解决 Opera 与中文输入法 fcitx 的冲突 有瑞士军刀的美称，自带邮件客户端。不能看 flash，省了很多内存。
+  ◾tor 俗称“套”。配合 privoxy 可以访问一些平时无法访问网站。
+
+
+==== 多媒体 ====
+  ◾gwenview KDE 的图片浏览、管理器。较快速，功能多，界面相对简洁。
+  ◾gqview 图片预览软件。
+  ◾imgv 图片浏览器。适合那些奉行“珍惜生命，远离鼠标”的特异人士，好多年没更新了。
+  ◾MPlayer 能播放几乎所有格式电影的软件。速度极快，播放任何格式时，快进快退、拖动进度条都是瞬间完毕。
+  ◾shotwell GNOME 的图片浏览、管理器。快速，功能多，界面简洁。
+  ◾smplayer 它是mplayer的Qt界面封装品，KDE下不二的选择。
+  ◾totem GNOME 默认的多媒体播放器，性能、表现等直追 mplayer。
+  ◾vlc 原生的Qt界面播放器。功能上可能不如mplayer，但是代码架构清晰，发展应该很快。
+
+
+==== 邮件 ====
+  ◾evolution Gnome 的邮件处理套件
+  ◾kmail 界面不错，操作不错
+  ◾Sylpheed 界面简洁，操作不错；每封邮件都以文本保存，速度超快。缺点是不支持HTML看邮件。
+  ◾Thunderbird Mozilla 的邮件处理程序
+
+==== 新闻 ====
+  ◾pan Gnome 新闻阅读软件。
+  ◾knode KDE 新闻阅读软件。
+
+
+==== 即时通讯 ====
+  ◾xchat irc聊天工具。操作勉强。
+  ◾eva中国人做的高度仿qq的聊天工具，界面不错，操作勉强。
+  ◾pidgin gaim。聊天的，支持msn,qq,irc等。操作勉强。
+  ◾QQ for Linux QQ for Linux:腾讯官方给Linux开发的QQ客户端。
+  ◾emesene 另一款使用 Python 写的 MSN 客户端。界面简洁。
+  ◾Empathy 即时通讯程序可同时使用 Google Talk、Facebook、MSN 以及许多其它聊天服务。
+
+==== 文档及其编辑 ====
+  ◾LaTex 史上最好的排版系统。科技论文必备工具，能生成漂亮版面。TeX 是计算机大师 Knuth 的杰作。
+  ◾CJK+LaTeX FreeBSD 下使用 *TeX 及其中文化。
+  ◾xpdf 能看中文，不过要调整一下。操作不错。启动速度快。
+  ◾Openoffice.org 办公软件。体积大，速度慢。由于SUN被Oracle收购，故归Oracle所有。后期Oracle将其赠送给Apache社区管理。目前归Apache所有。
+  ◾LibreOffice 由 Document Foundation 建立的 LibreOffice 是 OpenOffice 的新分支。
+  ◾gimp 专业的图像处理软件，与 photoshop 不相上下。
+  ◾denemo 音乐打谱软件，操作不错。
+  ◾blender 3d 建模软件。
+  ◾abiword 类似 windows 下的 office word。
+  ◾gnumeric 类似 windows 下的 office execl。
+  ◾bluefish 类似 windows 下的记事本，但功能要强得多，界面简洁。
+  ◾zim 号称桌面 blog。功能简单的行事历。（我就使用它来记录每天做的事情。）
+  ◾inkscape 矢量图形编辑器。
+  ◾qcad 二维 CAD 软件。
+  ◾dia 画流程图的软件。但如果你使用 LaTeX，pgf/tikz 包完全能胜任流程图。
+  ◾speedcrunch 计算器。
+  ◾rox 文件管理器，在FVWM 下使用堪称绝配。/usr/ports/x11-fm/rox-filer
+  ◾mupdf 相当快速的 pdf 浏览器。使用自己的渲染内核。
+
+==== 科学与教育 ====
+  ◾R 目前最强大的统计计算软件，S 的开源版本，与 S-PLUS 完全兼容。
+  ◾Maxima十分钟教程 用 lisp 写的符号计算数学工具，与 Maple 不相上下。
+  ◾gap 离散代数系统，群论研究的利器，有点儿专业化。
+  ◾jags Gibbs 抽样器，强大的随机模拟工具，与 BUGS (Bayesian inference Using Gibbs Sampling) 兼容。
+  ◾rpy 在 Python 里调用 R 的函数，大大地提升了 Python 的科学计算能力。
+  ◾ess Emacs Speaks Statistics (ESS)，在 Emacs 里使用 R, S-Plus, SAS, Stata 和 JAGS。
+  ◾fbm 贝叶斯建模和随机模拟工具，由加拿大统计学家 Neal 研发，不过好久没更新了。
+  ◾gnuplot 科学绘图工具，是计算机代数系统 Maxima、数值计算工具 Octave、计量经济分析软件 GRETL 等的绘图引擎。
+  ◾octave 数值计算工具，与 MatLab 语言非常类似。一些数学牛人，如 MacKay 喜欢的工具。
+  ◾igraph 画无向图和有向图的软件，是研究图论不可缺少的工具。
+  ◾scilab 仿 MatLab 的软件，但工具包不如 MatLab 丰富。因为 R 完全能胜任 scilab 的工作，所以不强力推荐。
+  ◾nltk 自然语言处理的教学和科研工具。 
+  ◾solfege 一个训练耳朵的软件。主要是和弦，音程，节奏听辨。增加你大脑里面音乐细胞数目的软件。
+  ◾reciteword 轻轻松松背单词。
+  ◾stellarium 天文软件，能让你随时昂望星空。电脑慢的远行不了。
+  ◾kstars KDE 的桌面天文软件，和 xephem 很像。
+  ◾kalzium KDE 的桌面化学元素表，包含很丰富的内容。
+  ◾marble KDE 的 Google Earth 克隆。
+
+
+==== 下载和共享 ====
+  ◾安装amule，并支持DLP（反吸血模块）界面不错，不常用的操作就不说了。特别强调的是，amule有命令行下面的界面，通过网页来配置的。
+  ◾transmission 界面简洁的BT文件下载工具。
+  ◾py-bittornado-core python 语言实现的 BT 命令行下载工具。
+  ◾filezilla ftp下载工具。
+
+
+==== 游戏 ====
+  ◾FretsOnFire 用键盘玩吉他的软件。这是一款超级酷的游戏，界面、速度、操作都不错，可惜在 pthon2.7 下编译不过。
+  ◾美国陆军 超大。免费的商业水准的3D，FPS游戏。
+  ◾tremulous 非常好玩的 FPS/动作类联网游戏。网上人多。
+  ◾supertux Linux/BSD 下的超级玛丽，主角是企鹅。简单耐玩，堪称经典。
+  ◾tuxpaint 一个画图的软件，适合小朋友。
+  ◾zaz 类似泡泡龙，更难更好玩。
+  ◾opanArean 类似 CS，但画面粗糙，玩久了让人头晕想呕吐。
+  ◾xchomp 吃豆子，堪称经典。
+  ◾xsokoban 推箱子－－不好玩的我不说。
+  ◾pydance 跳舞毯。
+
+
+==== 残障 ====
+  ◾flite 英文语音合成软件，比 Festival 要小巧，安装和使用都简单，非残障人士也可以使用。 
+  ◾sphinx 英语语音识别系统，CMU 的杰作。
+
+
+==== 安全工具 ====
+  ◾ClamTKClamav的图形。安装，使用都简单。 

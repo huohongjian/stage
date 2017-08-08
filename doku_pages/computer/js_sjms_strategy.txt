@@ -1,0 +1,134 @@
+====== 策略模式 ======
+
+策略模式是指定义一系列的算法，把它们一个个封装起来，并且使它们可以相互替换。
+
+===== 用策略模式计算奖金 =====
+
+  var strategies = {
+      "S": function(salary){return salary*4},
+      "A": function(salary){return salary*3},
+      "B": function(salary){return salary*2}
+  }
+  
+  var calculateBonus = function(level, salary){
+      return strategies[level](salary);
+  };
+  
+  console.log(calculateBonus('S', 20000));
+  console.log(calculateBonus('A', 10000));
+
+===== 用策略模式重构表单校验 =====
+<file html strate.html>
+<html>
+  <body>
+      <form action='http://xxx.com/register' id='registerForm' method='post'>
+          用户名：<input type='text' name='userName'>
+          密  码：<input type='text' name='passWord'>
+          手机号：<input type='text' name='phoneNumber'>
+          <button>提交</button>
+      </form>
+  <script type='text/javascript'>
+  
+  /*********************** 策略对象 *****************************/
+      var strategies = {
+          isNonEmpty: function(value, errorMsg){
+              if (value==='') return errorMsg;
+          },
+          minLength: function(value, length, errorMsg){
+              if (value.length < length) return errorMsg;
+          },
+          isMobile: function(value, errorMsg){
+              if (!/(^1[3|5|8][0-9]{9}$/.test(value) return errorMsg;
+          }
+      };
+  /************************ Validator类 **************************/
+      var Validator = function(){
+          this.cache = [];
+      };
+  
+      Validator.prototype.add = function(dom, rules){
+          var self = this;
+          for (var i=0, rule; rule=rules[i++];){
+              (function(rule){
+                  var strategoAry = rule.strategy.split(':');             //把strategy和参数分开
+                  var errorMsg = rule.errorMsg;
+                  
+                  self.cache.push(function(){           //把校验的步骤用空函数包装起来，并放入cache
+                      var strategy = strategyAry.shift();
+                      strategyAry.unshift(dom.value);
+                      strategyAry.push(errorMsg);
+                      return strategies[strategy].apply(dom, strategyAry);
+                  });
+              })(rule)
+          }
+      };
+      
+      Validator.prototype.start = function(){
+          for (var i=0, validatorFunc; validatorFunc = this.cache[i++];){
+              var errorMsg = validatorFunc();
+              if (errorMsg) return errorMsg;
+          }
+      };
+  /************************ 客户调用代码 **************************/
+      var registerForm = document.getElementById('registerForm');
+      
+      var validataFunc = function(){
+          var validator = new Validator();
+          
+          validator.add(registerForm.userName, [{
+              strategy: 'isNonEmpth',
+              errorMsg: '用户名不能为空'
+          }, {
+              strategy: 'minLength:10',
+              errorMsg: '用户名长度不能小于10位'
+          }]);
+          
+          validator.add(registerForm.passWord, [{
+              strategy: 'minLength:6',
+              errorMsg: '密码长度不能小于6位'
+          }]);
+          
+          validator.add(registerForm.phoneNumber, [{
+              strategy: 'isMobile,
+              errorMsg: '手机号码格式不正确'
+          }]);
+          
+          var errorMsg = validator.start();
+          return errorMsg;
+      }
+      
+      registerForm.onsubmit = function(){
+          var errorMsg = validataFunc();
+          if(errorMsg){
+              alert(errorMsg);
+              return false;
+          }
+      }
+    </script>
+    </bory>
+</html>
+</file>
+
+===== 策略模式的优缺点 =====
+
+优点：
+  * 策略模式利用组合、委托和多态等技术和思想，可以有效地避免多重条件选择语句。
+  * 策略模式提供了对开放-封闭原则的完美支持，将算法封装在独立的strategy中，使得它们易于切换，易于理解，易于扩展。
+  * 策略模式中的算法也可以复用在系统的其他地方，从而避免许多重复工作。
+  * 在策略模式中利用组合和委托让Context拥有执行算法的能力，这也是继承的一种更轻便的替代方案。
+缺点：
+  * 使用策略模式会在程序中增加许多策略类或者策略对象，但实际上这比它们负责的逻辑堆砌在Context中要好。
+  * 使用策略模式，必须了解所有的strategy，必须了解各处strategy之间的不同点，这样才能选择一个合适的strategy。
+
+===== 一等函数对象与策略模式 =====
+
+Peter Norvig在他的演讲中曾说过：“在函数作为一等对象的语言中，策略模式是隐形的。strategy就是值为函数的变量."在Javascript中，除了使用类来封装算法和行为之外，使用函数也是一种选择。这些“算法”可以被封装到函数中并且四处传递，也就是我们常说的“高阶函数”。实际上在Javascript这种将函数作为一等对象的语言里，策略模式已经融入到了语言本身当中，我们经常用高阶函数封闭不同的行为，并且把它传递到另一个函数中。当我们对这些函数发出“调用”的消息时，不同的函数会返回不同的执行结果。在Javascript中，“函数对象的多态性”来得更加简单。例如：
+
+  var S = function(salary){ return salary*4 };
+  var A = function(salary){ return salary*3 };
+  var B = function(salary){ return salary*2 };
+  
+  calculateBonus(S, 10000);
+
+
+

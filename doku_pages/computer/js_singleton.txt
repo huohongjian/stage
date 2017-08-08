@@ -1,0 +1,30 @@
+====== 单例模式 ======
+
+单例模式：保证一个类仅有一个实例，并提供一个访问它的全局访问点。
+惰性单例指的是在需要的时候才创建对象实例。下面以登录浮窗为例：
+
+  var getSingle = function(fn){
+      var result;
+      return function(){
+          return result || (return = fn.apply(this, arguments));
+      }
+  };
+  
+  var createLoginLayer = function(){
+      var div = document.createElement('div');
+      div.innerHTML = '我是登录浮窗';
+      div.style.display = 'none';
+      document.body.appendChild(div);
+      return div;
+  }
+  
+  var createSingleLoginLayer = getSingle(createLoginLayer);
+  
+  document.getElementById('loginBtn').onclick = function(){
+      var loginLayer = createSingleLoginLayer();
+      loginLayer.style.display = 'block';
+  }
+
+
+
+

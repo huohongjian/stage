@@ -1,0 +1,409 @@
+====== 原型继承 ======
+
+在Brendan Eich为JavaScript设计面向对象系统时，借鉴了Self和Smalltalk这两们基于原型的语言。之所以选择基于原型的面向对象系统，不是因为时间匆忙，设计起来相对简单，面是国为从一开始就没有打算加入类的概念。原型不单是一种设计模式，也被称为一种编程泛型。原型编程基本规则：
+
+===== 所有数据都是对象 =====
+
+JavaScript的根对象是Object.prototype（一个空对象）,JavaScript的每个对象都是从Object.prototype对象克隆而来。
+  var obj1 = new Object();
+  var obj2 = {};
+  console.log(Object.getPrototypeOf(obj1) === Object.prototype);   // true
+  console.log(Object.getPrototypeOf(obj2) === Object.prototype);   // true
+
+===== 要得到一个对象，不是通过实例化类，而是找到一个对象作为原型并克隆它 =====
+
+  function Person(name){
+      this.name = name;
+  }
+  Person.prototype.getName = function(){ return this.name; };
+  
+  var objectFactory = function(){
+      var obj = new Object();                     // 从Object.prototype克隆一个空的对象
+      var Constructor = [].shift.call(arguments); // 取得外部传入的构造器，此例是Person
+      obj.__proto__ Constructor.prototype;        // 指向正确的原型
+      var ret = Constructor.apply(obj, arguments);// 借用外部传入的构造器给obj设置属性
+      return typeof ret === 'object' ? ret : obj; // 确保构造器总是会返回一个对象
+  };
+  
+  var a = objectFactory(Person, 'sven');
+  console.log(a.name); 
+  console.log(a.getName);
+  console.log(Object.getPrototypeOf(a) === Person.prototype);
+
+===== 对象会记住它的原型 =====
+
+Javascript给对象提供了一个名为__proto__的隐藏属性，会默认指向它的构造器的原型对象，即{Constructor}.prototype.
+
+===== 如果对象无法响应某个请求，它会反这个请求委托给它的构造器原型 =====
+
+  var A = function(){}
+  A.prototype = {name: 'sven'}
+  
+  var B = function(){}
+  B.prototype = new A();
+  
+  var b = new B();
+  console.log(b.name);    // sven
+这段代码执行时，引擎做了什么事情？
+  - 尝试遍历对象b中的所有属性，但没有找到name这个属性。
+  - 查找name属性的请求被委托给对象b的构造器原型，它被b.__proto__记录着并且指向B.prototype，而B.prototype被设置为一个通过new A()创建出来的对象。
+  - 在该对象中依然没有找到name属性，于是请求被继续委托给这个对象的构造器原型A.prototype。
+  - 在A.prototype中找到了name属性，并返回它的值。
+
+====== this ======
+
+this的指向可以分为以下四种：
+===== 作为对象的方法调用 =====
+
+  var obj = {
+      a: 1,
+      getA : function(){ alert(this===obj) }
+  }
+
+===== 作为普通函数调用 =====
+
+  window.name = 'globalName';
+  var myObject = {
+      name: 'sven',
+      getName: function(){ return this.name;}
+  }
+  var getName = myObject.getName; // 作为属性被调用
+  console.log(getName());         // globalName
+
+===== 构造器调用 =====
+
+  var MyClass = function(){ this.name = 'sven'; }
+  var obj = new MyClass();
+  alert(obj.name);
+
+===== call/apply调用 =====
+
+跟普通函数调用相比，call/apply可以动态地改变传入函数的this:
+  var obj = {
+      name: 'sven',
+      getName: function(){return this.name;}
+  }
+  var obj2 = { name: 'anne' }
+  console.log(obj1.getName());           // sven
+  console.log(obj1.getName.call(obj2));  // anne
+
+
+====== call和apply的用途 ======
+
+能够熟练使用call和apply是成为一名真正JavaScript程序员的重要一步。
+
+===== 改变this指向 =====
+
+同上例。在实际开发中，经常会遇到this指向被不经意改变的场景，比如有一个div节点，div节点的onclick事件的this本来是指向这个div的：
+  document.getElementById('div1').onclick = function(){ alert(this.id); };
+假如该事件函数中有一个内部函数func，在事件内部调用func时，func函数体内的this就指向了window，而不是我们预期的div:
+  document.getElementById('div1').onclick = function(){
+      alert(this.id);
+      var func = function(){ alert(this.id) };  // undefined
+      func();
+  };
+这时，我们用call来修正func函数内的this，使其依然指向div:
+  document.getElementById('div1').onclick = function(){
+      alert(this.id);
+      var func = function(){ alert(this.id) };  // undefined
+      func.call( this );
+  };
+
+===== Function.prototype.bind =====
+
+大部分高级浏览器都实现了Function.prototype.bind，用来指定函数内部的this指向，即使没有原生的Function.prototype.bind，我们来模拟一个以不是难事:
+  Function.prototype.bind = function (context) {
+      var self = this;
+      return funtion(){ return self.apply(context, arguments);}
+  }
+  var obj = {name: 'sven'};
+  var func = function(){alert(this.name)}.bind(obj);
+  func();
+
+===== 借用其他对象的方法 =====
+
+第一种场景是“借用构造函数”，通过这种技术，可以实现一些类似继承的效果：
+  var A = function(name){ this.name = name;};
+  var B = function(){ A.apply(this, arguments); };
+  B.prototype.getName = function(){ return this.name; };
+  var b = new B('sven');
+  console.log(b.getName());
+第二种场景多是操作arguments，例如往arguments中添加新元素：
+  (function(){
+      Array.prototype.push.call(argument, 3);
+      console.log(arguments);                  // [1,2,3]
+  })(1,2);
+
+
+====== 闭包 ======
+
+在实际开发中，闭包有广泛的应用。
+
+===== 主要作用 =====
+
+==== 封闭变量 ====
+
+闭包可以把一些不需要暴露在全局的变量封闭成“私有变量”。
+
+  var mult = (function(){
+      var cache = {};
+      var calculate = function() {     // 封闭calculate函数
+          var a = 1;
+          for(var i=0, l=arguemnts.length; i<l; i++) a = a * arguments[i];
+          return a;
+      };
+      return function(){
+          var args = Array.prototype.join,call(arguments, ',');
+          if(args in cache) return cache[args];
+          return cache[args] = calculate.apply(null, arguments);
+      }
+  })();
+
+==== 延续局部变量的寿命 ====
+
+  var func = function(){
+      var a=1;
+      return function(){ a++; alert(a);}
+  }
+  var f=func();
+  f();
+  f();
+
+===== 闭包和面向对象设计 =====
+
+过程与数据的结合是形容面向对象中的“对象”时经常使用的表达。对象以方法的形式包含了过程，而闭包则是在过程中以环境的形式包含了数据。通常用面向对象思想能实现的功能，用闭包也能实现。
+  var extent = function(){
+      var value = 0;
+      return {
+          call: function(){
+              value++;
+              console.log(value);
+          }
+      }
+  };
+  var extent = extent();
+  extent.call();    // 1
+  extent.call();    // 2
+如果换成面向对象的写法：
+  var extent = {
+      value: 0,
+      call: function(){
+          value++;
+          console.log(value);
+      }
+  };
+  extent.call();    // 1
+  extent.call();    // 2
+或者：
+  var Extent = function(){
+      this.value = 0;
+  }
+  Extent.prototype.call = function(){
+      this.value++;
+      console.log(value);
+  }
+  var extent = new Extent();
+  extent.call();    // 1
+  extent.call();    // 2
+
+====== 高阶函数应用 ======
+
+===== 判断数据类型 =====
+
+  var Type = {};
+  for(var i=0, type; type=['String', 'Array', 'Number'][i++]){
+      (function (type){
+          Type['is' + type] = function(obj){
+              return Object.prototype.toString.call(obj)==='[object '+type+']';
+          }
+      })(type)
+  };
+  
+  Type.isArray([]);  // true;
+
+===== 实现单例模式 =====
+
+  var getSingle = function(fn){
+      var ret;
+      return function(){
+          return ret || ( ret=fn.apply(this, arguments));
+      }
+  }
+
+===== 实现AOP =====
+
+AOP（面向切面编程）的主要作用是把一些跟核心业务逻辑无关的功能抽离出来，再通过“动态织入”的方式掺入业务逻辑模块中。这样做的好处是可以保持业务逻辑的纯净和高内聚性，也可以很方便地复用日志统计等功能模块。
+  Function.prototype.before = function(beforefn){
+      var __self = this;
+      return function(){
+          beforefn.apply(this, arguments);     //执行新函数，修正this
+          return __self.apply(this.arguments); //执行原函数
+      }
+  }
+  Function.prototype.after = function(afterfn){
+      var __self = this;
+      return function(){
+          var ret =  __self.apply(this.arguments); //执行原函数
+          afterfn.apply(this, arguments);     //执行新函数，修正this
+          return ret;
+      }
+  }
+  var func = function(){console.log(2);};
+  func = func.before(function(){
+      console.log(1);
+  }).after(function(){
+      console.log(3);
+  });
+  func();
+
+===== currying =====
+
+currying(柯里化)又称部分求值。一个currying函数首先会接受一些参数，接受了这些参数后，不会立即求值，而是继续返回另外一个函数，刚才传入的参数在函数形成的闭包中被保存起来。待到函数被真正需要求值的时候，之前传入的所有参数都会被一次性用于求值。
+  var currying = function(fn){
+      var args = [];
+      return function(){
+          if(arguments.length===0) reutn fn.apply(this,args);
+          [].push.apply(args, arguments);
+          return arguments.callee;
+      }
+  }
+  
+  var cost = (function(){
+      var money = 0;
+      return function(){
+          for(var i=0, l=arguments.length; i<l; i++) money += argumentss[i]
+          return money;
+      }
+  })();
+  
+  var cost = currying(cost);  //转化为currying函数
+  cost(100);  //未求值
+  cost(200);  //未求值
+  cost(300);  //未求值
+  alert(cost()); //求值并输出：600
+  
+===== uncurrying =====
+
+我们常常让类数组对象借用Array.prototype的方法，这是call和apply最常见的应用场景之一：
+    (function(){
+        Array.prototype.push.call(arguments, 4);
+        console.log(arguments);        //[1,2,3,4]
+    })(1,2,3);
+这样一来，方法中用到this的地方就不再局限于原来规定的对象，而是加以泛化并得到更广的适用性。那么有没有办法把泛化this的过程提取出来的，uncurrying就是用来解决这个问题的。
+  Function.prototype.uncurrying = function(){
+      var self = this;            // self些时是Array.prototype.push
+      return function(){
+          var obj = Array.prototype.shift.call(arguments); // obj={lenght:1, 0:1}
+          return self.apply(obj, arguments);               // 相当于Array.prototype.push.apply(obj, arguments)
+      }
+  };
+  
+  var push = Array.prototype.push.uncurrying();
+  (function(){
+      push(arguments, 4);
+      console.log(arguemnts);   // [1,2,3,4]
+  })(1,2,3);
+通过uncurrying的方式，Array.prototype.push.call变成了一个通用的push函数。这样一个，push函数的作用就跟Array.prototype.push一样了，同样不仅局限于只能操作array对象。我们还可以一次性地把Array.prototype上的方法“复制”到array对象上，同样这些方法可操作的对象也不仅仅只是array对象。
+  for(var i=0, fn, ary=['push', 'shift', 'forEach']; fn=ary[i++]){
+      Array[fn] = Array.prototype[fn].uncurrying();
+  };
+  
+  var obj={
+      "length": 3,
+      "0": 1,
+      "1": 2,
+      "2": 3
+  };
+  Array.push(obj, 4);
+  var first = Array.shift(obj);  // 1
+  console.log(obj);              // {0:2, 1:3, 2:4, length:3}
+
+下面是uncurrying的另外一个实现方式：
+  Function.prototype.uncurrying = function(){
+      var self = this;
+      return function(){
+          return Function.prototype.call.apply(self, arguments);
+      }
+  }
+
+===== 函数节流 =====
+
+假如函数被非常频繁地调用，可能会造成大的性能问题。例如：window.onresize事件、mousemove事件、上传进度等。我们可以借助setTimeout来完成，即函数节流:
+  var throttle = function(fn, interval){
+      var __self = fn,
+          timer,            // 定时器
+          firstTime = true; // 是否是第一次调用
+      return function(){
+          var args = arguments;
+          var __me = this;
+          if(firstTime){
+              __self.apply(__me, args);
+              return firstTime = false;
+          }
+          if(timer) {       //如果定时器还在，说明前一次延迟执行还没有完成
+              return false;
+          }
+          timer = setTimeout(function(){
+              clearTimeout(timer);
+              timer = null;
+              __self.apply(__me, args);
+          }, interval || 500);
+      };
+  };
+  window.onresize = throttle(function(){
+      console.log(1);
+  }, 500);
+
+===== 分时函数 =====
+
+如果一次性往页面中创建成百上千个节点，显然会让浏览器吃不消，这时需要分时函数(timeChunk)让创建节点的工作分批进行。
+  var timeChunk = function(ary, fn, count){
+      var obj, t;
+      var len = ary.length;
+      var start = function(){
+          for(var i=0; i<Math.min(count || 1， ary.length); i++){
+              var obj = ary.shift();
+              fn(obj);
+          }
+      }
+      reutrn function(){
+          t = setInterval(function(){
+              if(ary.length===0) return clearInterval(t);  // 全部节点都已经被创建好
+              start();
+          }, 200);
+      }
+  }
+  
+  var ary = [];
+  for(var i=1; i<=1000; i++) ary.push(i);
+  var renderFriendList = timeChunk(ary, function(n){
+      var div = document.createElement('div');
+      div.innerHTML = n;
+      document.body.appendChild(div);
+  }, 8);
+  
+  renderFriendList();
+
+===== 惰性加载函数 =====
+
+因浏览器之间的差异，一些嗅探工作不可避免。比如在各个浏览器中能够通用的事件绑定函数addEvent。这时就可以使用惰性加载函数，addEvent被声明为一个普通函数，在函数里依然有一些分支判断，但是在第一次进入条件分支之后，在函数内部重写这个函数，在下一次进入addEvent函数的时候，addEvent函数里就不再存在条件分支语句：
+  var addEvent = function(elem, type, handler){
+      if(window.addEventListener){
+          addEvent = function(elem, type, handler){
+              elem.addEventListener(type, handler, false);
+          }
+      } else if (window.attachEvent){
+          addEvent = function(elem, type, handler){
+              elem.attachEvent('on'+type, handler);
+          }
+      }
+      addEvent(elem, type, handler);
+  }
+  var div = document.getElementById('div1');
+  addEvent(div, 'click', function(){
+      alert(1);
+  });
+
+
+
+

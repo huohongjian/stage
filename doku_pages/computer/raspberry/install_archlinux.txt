@@ -1,0 +1,138 @@
+===== 安装Arch =====
+１.在FreeBSD上制作镜像文件
+  dd if=archlinux.img of=/dev/da0 bs=1M
+
+2.Plug the SD card into raspberry-pi. Then boot, by default, the user name and password are both "root". After logging in , you need to check out all your device with command promtes:
+  fdisk -l /dev/mmcblk0
+
+3.make a 512M room for swap, and the rest for folder "/home"
+  cfdisk /dev/mmckblk0
+  reboot
+  fdisk -l /dev/mmcblk0
+  
+4.Now we need to have swap and format partion:
+  mkswap /dev/mmcblk0p3
+  swapon /dev/mmckblk0p3
+  mkfs.ext4 /dev/mmckblk0p4
+
+5.Now we need to edit the file "/etc/fstab"
+<file php fstab>
+  #<file system> 　　<dir> 　　<type> 　<option> 　　　　　　　　　　　　<dump> 　<pass>
+  devpts　　　　　　/dev/pts 　devpts 　defaults 　　　　　　　　　　　　　　　　0　　 0
+  shm　　　　　　　　/dev/shm 　tmpfs 　nodev,nosuid 　　　　　　　　　　　　　　0 　　0
+  tpmfs　　　　　　　/var/log 　tmpfs 　defaults,noatime,mode=0755,size=5% 　0 　　0
+  /dev/mmcblk0p1 　/boot 　　　vfat　　defualts 　　　　　　　　　　　　　　　　0 　　0
+  /dev/mmcblk0p2 　/ 　　　　　ext4 　　defaults,noatime　　　　　　　　　　　　0 　　0
+  /dev/mmcblk0p3 　none 　　　swap 　　defaults 　　　　　　　　　　　　　　　　0 　　　0
+  /dev/mmcblk0p4 　/home　　　ext4 　　defaults 　　　　　　　　　　　　　　　　0 　　　0
+</file>
+
+
+===== 增加用户 =====
+<code>
+useradd hhj
+passwd hhj
+mkdir /home/hhj
+chown hhj:hhj /home/hhj
+</code>
+将hhj赋予sudo权限
+  pacman -S sudo
+  visudo　　　　　　　　　　　　　#add the below content
+  hhj ALL=(ALL) NOPASSWD:hhj
+
+
+
+===== 安装yaourt =====
+
+设置安装源：
+  sudo nano /etc/pacman.conf   #add below content
+  [archlinuxfr]
+  Server = http://repo.archlinux.fr/any
+安装中如果提示需要package-query>=1.4依存包,安装package-query
+  sudo pacman -S yaourt
+  sudo pacman -S base-devel
+  wget http://aur.archlinux.org/packages/pa/package-query/package-query.tar.gz
+  tar zxvf package-query.tar.gz
+  cd package-query
+  makepkg -si               #不能用root用户
+
+
+
+
+
+
+
+
+
+解决vsftpd的refusing to run with writable root inside chroot错误
+问题的是因为用户的根目录可写，并且使用了chroot限制，而这在最近的更新里是不被允许的。要修复这个错误，可以用命令chmod a-w /home/user去除用户根目录的写权限，注意把目录替换成你自己的。
+allow_writeable_chroot=YES
+===== 时间设置 ===== 
+  设置时间：# timedatectl set-time "2012-10-30 18:17:16"
+  设置时区：# timedatectl set-timezone Asia/Shanghai
+[[https://wiki.archlinux.org/index.php/Time_%28%E7%AE%80%E4%BD%93%E4%B8%AD%E6%96%87%29|更多时间设置]]
+
+===== ddns自动更新ip =====
+
+第一步：到http://www.pubyun.com申请ddns域名:hrr.f3322.org
+  user:huohongjian
+  pwd:Hhj197592
+  
+第二步：建立执行脚本
+<file php ddns.sh>
+#!/bin/bash
+NEWIP=`ifconfig | grep 'inet' | grep -v '127.*' | grep -v '192.*' | awk '{print $2}'`
+OLDIP=`cat /tmp/ip.txt`
+if [ "$NEWIP" = "$OLDIP" ];then
+	echo "ipaddress isn't update"
+else
+	#http://www.pubyun.com	#user:huohongjian  #pwd:Hhj197592
+	lynx -mime_header -auth=huohongjian:Hhj197592 \
+	"http://members.3322.net/dyndns/update?system=dyndns&hostname=hrr.f3322.org"
+	echo $NEWIP > /tmp/ip.txt
+fi
+</file>
+  设置可执行权限：chmod 755 ddns.sh
+第三步：每小时更新一次ip地址
+  # crontab -e
+  1 * * * * ddns.sh
+
+
+===== 打造轻量桌面 =====
+
+窗口管理器：fluxbox
+文件管理器：rox
+面板管理器：fbpanel或lxpanel
+图像浏览器：feh
+中文输入法：fcitx
+
+  sudo pacman -S fluxbox rox feh fbpanel fcitx
+
+vi ~/.xinitrc
+<file php .xinitrc>
+export LANG=zh_CN.UTF-8
+export LC_ALL=zh_CN.UTF-8
+
+export GTK_IM_MODULE=fcitx
+export QT_IM_MODULE=fcitx
+export XMODIFIERS="@im=fcitx"
+fcitx &
+
+exec fluxbox
+</file>
+
+vi ~/.fluxbox/apps
+  [startup] {rox -p=PIN}
+
+==== 设定壁纸 ====
+
+在桌面上单击右键-->背景-->将图片直接拖到矩形框中即可。
+
+==== 在桌面上添加常用程序图标 ====
+
+ 以firefox为例：将/usr/bin/firefox拖到桌面就OK。\\
+ 添加图标：一般程序的图标在/usr/local/pixmaps/里，若没有，下载一个png图标，也可用gthumb缩小。在图标上点击右键-->file 'firefox'-->'Set icon'，把那个图标拖进去就OK了。
+
+
+===== 标题 =====
+

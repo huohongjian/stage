@@ -1,0 +1,4 @@
+====== 程序修改记录 ======
+
+sudo vi /home/web/dokuwiki/lib/tpl/dokuwiki/css/content.less 添加：
+  #dokuwiki__content {line-height:25px;}

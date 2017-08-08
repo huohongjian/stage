@@ -1,0 +1,28 @@
+树莓派B+版改进了供电电路，USB口的最大输出电流也能到1.2A了，这样接移动硬盘就很爽了。 
+
+当然，这有一定的风险，不是再非常必要的情况下不要这么做！如果因此导致的树莓派毁坏，本人概不负责！ 
+
+方法一： 
+  sudo nano /boot/config.txt
+添加以下这行 
+  safe_mode_gpio=4
+需要注意的是，随着树莓派固件的升级，这行会变为： 
+  max_usb_current=1
+之后重启生效
+  sudo reboot
+
+
+方法二：无需重启，只要你安装过WiringPi就行: 
+
+BCM_GPIO 38 是魔法控制针脚，执行以下命令把，不要怀疑 
+
+  gpio -g write 38 0
+  gpio -g mode 38 out
+  gpio -g write 38 0是默认600mAh限制，如果想提升到1.2A那么把0变为1 
+
+  gpio -g write 38 1
+  gpio -g mode 38 out
+
+有兴趣的朋友可以试试！本人对因此带来的任何后果概不负责！ 
+
+原文在这：https://projects.drogon.net/testing-setting-the-usb-current-limiter-on-the-raspberry-pi-b/ 

@@ -1,0 +1,347 @@
+====FreeBSD桌面-Xfce4====
+
+  *如果不是第一次安装的化最好把/usr/ports/distfile或者/var/cache/pkg（一个是ports安装的包一个是pkg安装的包）备份下，装好系统再拷贝回来，这会让你在安装的时候节省很多下载的时间。如果你有狂野的带宽请无视。
+  *新机器安装系统前先看看硬件信息是个好习惯(别忘了看看FreeBSD的硬件兼容性列表确定下你的硬件是否被支持)。
+  *另外用dmesg |grep attached 可以查看哪些设备没有被驱动，再用pciconf -lv看下具体信息。
+  */var/run/dmesg.boot也是排错的参考之一。
+  *仔细看看安装完软件之后的安装信息也是很有用的。
+
+
+====重装系统保留GPT分区数据====
+在操作之前请先记录电脑上的分区情况(使用df -h命令）或查看/etc/fstab文件。
+
+这是我的/etc/fstab文件的内容
+  # Device MountPoint FStype Options Dump Pass #
+  /dev/ada0p2     /       ufs     rw      1       1
+  /dev/ada0p3     none    swap    sw      0       0
+  /dev/ada0p4     /var    ufs     rw      2       2
+  /dev/ada0p5     /tmp    ufs     rw      2       2
+  /dev/ada0p6     /usr    ufs     rw      2       2
+  /dev/ada0p7     /home   ufs     rw      2       2
+  /dev/ada0p8     /peng   ufs     rw      2       2
+
+以保留/peng这个分区下的所有内容为例：
+
+  *1.启动引导至Welcome界面选择Install
+  *2.Keymap Selection界面正常配置你的键盘
+  *3.Set Hostname界面正常配置Hostname
+  *4.Distribution Select界面选择你需要安装的
+  *5.Partitioning界面选择Shell
+
+格式化分区
+  注：需要保留哪个分区的数据就不要格式化哪个分区。如：本例中保留的是/peng。
+  #newfs /dev/ada0p2
+  #newfs /dev/ada0p4
+  #newfs /dev/ada0p5
+  #newfs /dev/ada0p6
+  #newfs /dev/ada0p7
+
+mount /分区到/mnt下
+  #mount /dev/ada0p2 /mnt
+在/mnt下创建文fstab中的分区目录var、tmp、usr、home、peng（/已经mount上了swap不用管）
+  #mkdir /mnt/var /mnt/tmp /mnt/usr /mnt/home /mnt/peng
+mount刚才创建的目录
+  #mount /dev/ada0p4 /mnt/var/
+  #mount /dev/ada0p5 /mnt/tmp/
+  #mount /dev/ada0p6 /mnt/usr/
+  #mount /dev/ada0p7 /mnt/home/
+  #mount /dev/ada0p8 /mnt/peng/
+编辑/tmp/bsdinstall_etc/fstab加入原来的fstab内容并保存退出
+  # Device MountPoint FStype Options Dump Pass #
+  /dev/ada0p2     /       ufs     rw      1       1
+  /dev/ada0p3     none    swap    sw      0       0
+  /dev/ada0p4     /var    ufs     rw      2       2
+  /dev/ada0p5     /tmp    ufs     rw      2       2
+  /dev/ada0p6     /usr    ufs     rw      2       2
+  /dev/ada0p7     /home   ufs     rw      2       2
+  /dev/ada0p8     /peng   ufs     rw      2       2
+推出shell正常后面的安装
+  #exit
+====网络校时====
+  ＃ntpdate pool.ntp.org
+（其他可用的time服务器地址包括time.nist.gov 、chime.utoronto.ca 、ntp.pipex.net 、time.windows.com）
+
+
+====安装更新Ports Collection====
+  #portsnap fetch extract
+（以后更新执行portsnap fetch update就可以了。参见：[[http://cnsnap.cn.freebsd.org/doc/zh_CN.GB2312/books/handbook/updating-upgrading-portsnap.html）]]
+
+
+====安装更新、源代码====
+
+下载release10.2源代码
+  #svnlite checkout svn://svn.freebsd.org/base/release/10.2.0 /usr/src
+以后更新执行
+  #cd /usr/src && svnlite up
+
+
+
+====升级、编译、安装内核====
+(普通桌面用户用GENERIC内核就很好了，当然如果你很特别那就折腾吧。)
+
+参见/usr/src/Makefile文件。
+
+或者http://cnsnap.cn.freebsd.org/doc/zh_CN.GB2312/books/handbook/makeworld.html
+
+
+
+
+====给bsd打补丁(自动打补丁只能用于默认内核)====
+  #freebsd-update fetch
+  #freebsd-update install
+详见手册《更新与升级FreeBSD》（http://www.freebsd.org/doc/zh_CN.GB2312/books/handbook/updating-upgrading.html）
+
+
+
+
+====设置本地化（中文）====
+===登录分类法（管理员级设置）===
+在/etc/login.conf加入：
+  chinese:Chinese Users Account:\
+          :charset=UTF-8:\
+          :lang=zh_CN.UTF-8:\
+          :tc=default:
+然后执行：
+  ＃cap_mkdb /etc/login.conf
+然后：
+  ＃pw user mod 用户名 -L chinese
+
+查看
+  ＃pw user show 用户名
+  XX:*:1001:1001:chinese:0:0:用户名:/home/用户名目录:/bin/sh
+  su －用户名
+  $ locale
+  LANG=zh_CN.UTF-8
+  LC_CTYPE="zh_CN.UTF-8"
+  LC_COLLATE="zh_CN.UTF-8"
+  LC_TIME="zh_CN.UTF-8"
+  LC_NUMERIC="zh_CN.UTF-8"
+  LC_MONETARY="zh_CN.UTF-8"
+  LC_MESSAGES="zh_CN.UTF-8"
+  LC_ALL=
+设置成功
+
+===登录分类（用户级设置）===
+在用户根目录文件.login_conf加入：
+  
+  me:\
+          :lang=zh_CN.UTF-8:\                     #LANG 语言显示
+          :setenv=LC_ALL=zh_CN.UTF-8:\            #指定所有的 Locale
+          :setenv=LC_CTYPE=zh_CN.UTF-8:\          #字元定义 (包含字元分类与转换规则)
+          :setenv=LC_COLLATE=zh_CN.UTF-8:\        #字母順序与特殊字元比较
+          :setenv=LC_TIME=zh_CN.UTF-8:\           #时间格式
+          :setenv=LC_NUMERIC=zh_CN.UTF-8:\        #数字格式
+          :setenv=LC_MONETARY=zh_CN.UTF-8:\       #货币格式
+          :setenv=LC_MESSAGES=zh_CN.UTF-8:\       #信息显示 
+          :charset=UTF-8:\                        #
+          :xmodifiers="@im=ibus":                 #所使用的输入方式
+  注：如果想使用英文界面又需要在X的终端下正确输入和显示中文的话只需要吧上面所有zh_CN的地方修改成en_US即可。
+参考1:http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/using-localization.html
+
+====声卡驱动====
+（注：默认内核已经支持了很多声卡如果您的声卡无声请参考硬件兼容性列表）
+
+详细的说明参见：
+
+Hardware Notes(En)http://www.freebsd.org/releases/10.2R/hardware.html
+
+HandBook(Cn)http://www.freebsd.org/doc/zh_CN.UTF-8/books/handbook/sound-setup.html
+
+HandBook(En)http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/sound-setup.html
+====安装配置xorg====
+也可以安装xorg的一个最小子集xorg-minimal。
+
+pkg安装：
+  #pkg install xorg
+  
+ports安装：
+  #cd /usr/ports/x11/xorg && make BATCH=YES install clean
+
+注意：执行% pkg info xorg-server | grep HAL如果显示的是输入是off则不许要在/etc/rc.d中添加hald_enable="YES"和dbus_enable="YES"反之则添加。
+
+详细说明参见：
+
+(En)Handbook地址：http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/x-install.html
+
+(En)HandBook地址：http://www.freebsd.org/doc/en_US.ISO8859-1/books/handbook/x-config.html
+
+安装文泉驿字库
+
+pkg安装：
+  pkg install wqy-fonts
+ports安装：
+  #cd /usr/ports/x11-fonts/wqy &&make install clean
+====安装xfce4====
+pkg安装：
+  #pkg install xfce
+
+ports安装：
+  #cd /usr/ports/x11-wm/xfce4 && make install clean
+（如果你想允许普通用户关闭或重启计算机具体配置请查看安装完毕后的信息。）
+启动Xfce普通用户下执行
+  >startxfce4
+
+
+
+
+
+
+
+
+====常用软件====
+==ibus输入法==
+pkg安装
+  pkg install zh-ibus-pinyin
+ports安装
+  cd /usr/ports/chinese/ibus-pinyin && make install clean
+配置请根据安装完成后的报告信息进行配置。
+==安装firefox浏览器==
+pkg安装：
+  #pkg install firefox
+ports安装：
+  #cd /usr/ports/www/firefox/ && make BATCH=YES install clean 
+
+==安装firefox中文包==
+ports安装  
+  #cd /usr/ports/www/firefox-i18n/ && make install clean
+
+===安装Thunderbird（邮件客户端）===
+pkg安装
+  #pkg install thunderbird
+ports安装
+  #cd /usr/ports/mail/thunderbird/ && make BATCH=YES install clean
+==安装Thunderbird语言包==
+pkg安装
+  #pkg install thunderbird-i18n
+ports
+  #cd /usr/ports/mail/thunderbird-i18n/ && make install clean
+
+===安装fusefs-ntfs===
+pkg安装
+  #pkg install fusefs-ntfs
+ports安装
+  #cd /usr/ports/sysutils/fusefs-ntfs/ && make install clean
+  #echo 'fusefs_enable="YES"' >> /etc/rc.conf
+  #echo 'fuse_load="YES"' >> /boot/loader.conf
+挂载ntfs分区移动硬盘。
+  #ntfs-3g /dev/da0sX /mnt/
+
+===安装unrar（rar软件）===
+FreeBSD上的WinRAR
+pkg安装
+  #pkg install unrar
+ports安装  
+  #cd /usr/ports/archivers/unrar/ && make install clean
+  #解压缩 unrar x 文件名  或者看help
+  
+===安装p7zip（7z软件）===
+pkg安装
+  #pkg install p7zip
+ports安装
+  #cd /usr/ports/archivers/p7zip && make install clean
+
+===安装Ristretto===
+Xfce项目。一个轻巧的图像查看器。
+pkg安装：
+  #pkg install ristretto
+ports安装：
+  #cd /usr/ports/graphics/ristretto && make install clean
+
+===安装audacious===
+(音频播放器。)
+pkg安装：
+  #pkg install audacious
+ports安装：
+  #cd /usr/ports/multimedia/audacious/ && make install clean
+==安装audacious-plugins==
+（audacious插件,必须安装）
+pkg安装:
+  #pkg install audacious-plugins
+ports安装：
+  #cd /usr/ports/multimedia/audacious-plugins/ && make install clean
+
+===安装smplayer播放器===
+pkg安装：
+  #pkg install smplayer
+ports安装:
+  #cd /usr/ports/multimedia/mplayer && make  install clean
+
+===安装galculator(计算器)===
+pkg安装：
+  #pkg install galculator
+ports安装：
+  #cd /usr/ports/math/galculator/ && make install clean
+
+===安装MLDonkey（电驴、BT）===
+pkg安装
+  #pkg install mldonkey
+ports安装：
+  #cd /usr/ports/net-p2p/mldonkey/ && make WITHOUT_GUI=yes WITHOUT_X11="YES" WITHOUT_TK="YES" install clean
+  #rehash
+启动时激活mlnet：
+  1.#echo 'mlnet_enable="YES"'>> /etc/rc.conf
+  2.#echo 'mlnet_user="p2p"'>> /etc/rc.conf
+创建一个p2p用户
+  1.#pw user add p2p
+  2.#mkdir /home/p2p
+  3.#chown p2p:p2p /home/p2p
+  4.#shutdown -r now
+配置mldonkey  
+  1.#/usr/local/etc/rc.d/mlnet status
+  2.#exit
+  3.%telnet 127.0.0.1 4000
+  4.>auth admin ""
+  5.>passwd 键入你想设置的密码
+  6.>set allowed_ips "127.0.0.1 192.168.0.0/24" (根据你自己的情况设置)
+  7.>save
+  8.>exit
+  
+.mldonkey的文件夹是隐藏的，在用户目录下。找下载好的电影有点不方便，把incoming连接到你的用户目录下就好了。当然你也可以自己修改默认下载路径。
+
+现在就可以在浏览器里输入：localhost:4080来设置和下载文件了。
+
+==mldonkey简单设置:==
+  enable_kademlia的选项为true――打开kad减少对服务器的依赖。
+  max_hard_upload_rate默认是10    （全局最大上传，根据自己情况设置）
+  max_hard_download_rate默认是50 （全局最大下载，根据自己情况设置）
+  mldonkey有两组两组带宽控制模式，通过点击Bandwidth toggle来更改带宽控制模式。
+
+=添加服务器列表：=
+  先删除原先的服务器列表下载地址。点击Options>Web infos找到server.met行然后点击前面的Remove
+  然后点击Add Url输入“server.met http://www.gruk.org/server.met”（不包括引号，MLdonkey的Serverlist里提供的服务器列表。）再点击前面的DL也就是DownLoad。
+
+=添加kad节点信息=
+  点击Options>Web infos>Add Url输入nodes.gzip http://ed2k.im/nodes.dat
+参考：https://forums.freebsd.org/viewtopic.php?f=39&t=227&p=265652&hilit=mldonkey#p265652
+===pdf软件===
+一个简单快速有点类似vim的PDF软件
+pkg安装：
+  #pkg install zathura-pdf-poppler
+ports安装：
+  #cd /usr/ports/graphics/zathura-pdf-poppler && make install clean
+
+===安装ftp客户端filezilla===
+很好用的一个FTP客户端
+pkg安装：
+  #pkg install filezilla
+ports安装：
+  #cd /usr/ports/ftp/filezilla && make BATCH=YES install clean
+
+===安装libreoffice===
+pkg安装
+  #pkg install zh_CN-libreoffice
+ports安装
+这东西太恐怖了ports安装时间超长，不过确实很好用。
+  #cd /usr/ports/editors/libreoffice && make LOCALIZED_LANG=zh-CN install clean
+
+===GIMP===
+专业的图像处理软件
+pkg安装
+  #pkg install gimp
+ports安装
+  #cd /usr/ports/graphics/gimp && make  install clean
+GIMP的中文手册
+pkg安装
+  #pkg install zh_CN-gimp-help-html
+ports安装
+  #cd /usr/ports/graphics/gimp-manual-html && make install clean

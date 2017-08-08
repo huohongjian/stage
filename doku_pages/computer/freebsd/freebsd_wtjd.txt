@@ -1,0 +1,329 @@
+====== Error: /etc/fstab: Read-only file system 错误解决办法 ======
+
+原因：mount成readonly了
+
+方法：
+  # mount -o remount, rw / 或
+  # mount -o rw /dev/ada0p2
+  
+
+
+
+
+http://www.tiecou.com/552p2.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    网络校时
+ ＃ntpdate time.windows.com
+（time服务器地址time.nist.gov 、chime.utoronto.ca 、ntp.pipex.net 、time.windows.com）
+
+    安装、更新源代码
+#csup -L 2 -h cvsup.freebsdchina.org /usr/share/examples/cvsup/standard-supfile
+
+     安装、更新doc文档
+#csup -L 2 -h cvsup.freebsdchina.org /usr/share/examples/cvsup/doc-sufile
+
+     安装、更新Ports Collection
+ #portsnap fetch extract
+（以后更新执行portsnap fetch update就可以了。参见HandBook：24.3 Portsnap： 一个 Ports Collection 更新工具，
+ 地址：http://cnsnap.cn.freebsd.org/doc ... ading-portsnap.html）
+
+    升级、编译、安装内核
+(对于桌面用户我觉得用GENERIC内核就很好了，当然如果你想感受下定制内核那就另当别论了。)
+参见/usr/src/Makefile文件。或者http://cnsnap.cn.freebsd.org/doc ... book/makeworld.html
+
+     给bsd打补丁(自动打补丁只能用于默认内核)
+ #freebsd-update
+ #freebsd-install
+
+设置本地化（中文）
+ 登录分类法（管理员级设置）
+ 在/etc/login.conf加入：
+chinese:Chinese Users Account:\
+         :charset=UTF-8:\
+         :lang=zh_CN.UTF-8:\
+         :tc=default:
+然后执行：
+ ＃cap_mkdb /etc/login.conf
+然后：
+ ＃pw user mod 用户名 -L chinese  （我习惯在安装系统的时候就建立一个用户所以这里之修改用户的登录类型就可以了。）
+ 查看
+ ＃pw user show 用户名
+XX:*:1001:1001:chinese:0:0:用户名:/home/用户名目录:/bin/sh
+
+ su －用户名
+$ locale
+ LANG=zh_CN.UTF-8
+ LC_CTYPE="zh_CN.UTF-8"
+ LC_COLLATE="zh_CN.UTF-8"
+ LC_TIME="zh_CN.UTF-8"
+ LC_NUMERIC="zh_CN.UTF-8"
+ LC_MONETARY="zh_CN.UTF-8"
+ LC_MESSAGES="zh_CN.UTF-8"
+ LC_ALL=
+设置成功
+
+    登录分类（用户级设置）
+ 在用户根目录文件.login_conf加入：
+me:\
+         :charset=zh_CN.UTF-8:\
+         :lang=zh_CN.UTF-8:\
+         :setenv=LC_ALL=zh_CN.UTF-8:\
+         :setenv=LC_COLLATE=zh_CN.UTF-8:\
+         :setenv=LC_CTYPE=zh_CN.UTF-8:
+
+     安装axel(多线程下载工具)
+ #cd /usr/ports/ftp/axel && make install clean
+在/etc/make.conf中加入FETCH_CMD=axel -a -n 2
+ #echo 'FETCH_CMD=axel -a -n 2 
+详细配置参见man手册
+ 我只是在安装非常大的软件，像xorg、gnome、openoffice的时候才使用。(如果你用脚本自动安装最好还是用FreeBSD默认的fetch。)
+
+     加载声卡驱动（我的声卡是板载alc883）
+ 在/boot/loader.conf 加入 snd_hda_load="YES"
+ #echo 'snd_hda_load="YES"'>> /boot/loader.conf
+（更详细的说明参见http://cnsnap.cn.freebsd.org/doc ... ok/sound-setup.html） 
+
+    安装配置xorg
+ #cd /usr/ports/x11/xorg && make BATCH=YES install clean
+生成xorg.conf.new配置文件并移动到/etc/X11/下
+#Xorg -configure
+ #mv xorg.conf.new /etc/X11/xorg.conf
+在/etc/rc.conf内加入hald_enable="YES" 和 dbus_enable="YES"
+ #echo 'hald_enable="YES"'>> /etc/rc.conf
+ #echo 'dbus_enable="YES"'>> /etc/rc.conf
+详细说明参见HandBook 配置X11 地址：http://cnsnap.cn.freebsd.org/doc ... dbook/x-config.html
+
+     安装文泉驿字库
+#cd /usr/ports/x11-fonts/wqy &&make install clean
+在/etc/X11/xorg.conf里面的Section "Files"小节加入：
+FontPath        "/usr/ports/lib/X11/fonts/wqy"
+
+     安装Linux二进制兼容模式 （安装nvidia显卡驱动所必须的）
+#kldload linux
+ #cd /usr/ports/emulators/linux_base-f10 && make BATCH=YES install distclean
+在/etc/rc.conf中增加 linux_enable="YES"
+ #echo 'linux_enable="YES"'>> /etc/rc.conf
+参见http://cnsnap.cn.freebsd.org/doc ... mu-lbc-install.html
+     
+     安装nvidia显卡驱动（我的是7600gs）
+#cd /usr/ports/x11/nvidia-driver && make BATCH=YES install clean
+在/boot/loader.conf中加入nvidia_load="YES"
+ #echo 'nvidia_load="YES"'>> /boot/loader.conf
+
+     安装nvidia显卡驱动自动配置工具
+#cd /usr/ports/x11/nvidia-xconfig/ && make install clean
+执行
+#rehash
+ #nvidia-xconfig --add-argb-glx-visuals
+ #nvidia-xconfig --composite
+ #nvidia-xconfig --depth=24
+上面三行是为了compiz-fusion所设置的，如果不装compiz-fusion执行nvidia-xconfig就可以了。
+(会在/etc/X11下生成新的xorg.conf文件并把旧的xorg.conf备份为org.conf.backup)
+
+     安装xfce4
+（小巧玲珑的桌面速度快）
+#cd /usr/ports/x11-wm/xfce4 && make BATCH=YES install clean （如果需要GDM就不要加BATCH＝YES这句，装的时候吧GDM前面的X打上就行了。）
+ 如果你想允许用户关闭或重启（指在xfce4下）计算机那么在/usr/local/etc/PolicyKit/PolicyKit.conf中加入：
+<match action="org.freedesktop.hal.power-management.shutdown">
+     <return result="yes"/>
+ </match>
+
+ <match action="org.freedesktop.hal.power-management.reboot">
+     <return result="yes"/>
+ </match>
+注意吧上面的加在两个<config>和</config>之间。
+ 再普通用户下执行
+% echo "/usr/local/bin/startxfce4" >> ~/.xinitrc
+以后startx就可以进桌面了。我有时候需要在非X下所以我没有装GDM。如果需要开机直接进入桌面就吧GDM装上就可以。
+
+    安装scim 拼音输入法
+#cd /usr/ports/chinese/scim-pinyin/ && make install clean
+在.xinitrc里加入(我用的是sh)
+ %echo 'export XMODIFIERS='@im=SCIM''>> ~/.xinitrc
+ %echo 'scim -d'>> ~/.xinitrc
+
+     安装firefox
+ #cd /usr/ports/www/firefox/
+ #make BATCH=YES install clean
+在／boot/loader.conf中加入sem_load="YES"
+ echo 'sem_load="YES"'>> /boot/loader.conf
+
+     安装firefox中文包
+#cd /usr/ports/www/firefox-i18n/
+ #make install clean
+
+     让firefox支持flash
+安装nspluginwrapper
+ #cd /usr/ports/www/nspluginwrapper
+ #make install clean
+
+安装linux-f10-flashplugin10
+ #cd /usr/ports/www/linux-f10-flashplugin10
+ #make install clean
+建一个符号链接
+# ln -s /usr/local/lib/npapi/linux-f10-flashplugin/libflashplayer.so \/usr/local/lib/browser_plugins/
+然后在用户下执行
+% nspluginwrapper -v -a -i
+在/etc/fstab中加入:
+linproc    /usr/compat/linux/proc  linprocfs   rw  0   0
+参见handbook：http://cnsnap.cn.freebsd.org/doc ... sktop-browsers.html
+如果平时不用flash还是建议不要装了。现在的这个版本占用资源还是有点高，有时候firefox会卡。
+
+    安装Ristretto
+ Xfce项目。一个轻巧的图像查看器。
+#cd /usr/ports/graphics/ristretto
+ #make install clean
+
+     安装Xfburn
+ Xfce项目。Xfburn是一个使用cdrtools(cdrecord、cdrdao、mkisofs)来烧制CD和DVD的前端烧录程序。
+#cd /usr/ports/sysutils/xfburn
+ #make install clean
+
+     安装xfce4-media
+ Xfce项目。Xfmedia 是一个简单易用的媒体播放器，基于 xine 引擎。GTK+ GUI 旨在播放与管理音频文件，但是，由于它是基于 xine 的，所以同样支持视频文件。
+ ＃xfce4-media: /usr/ports/multimedia/xfce4-media
+＃make install clean
+
+     安装audacious(音频播放器。如果你觉得xfce4-media不太适合你也可以装这个。)
+ #cd /usr/ports/multimedia/audacious
+ #make install clean
+     安装audacious-plugins（音频播放器插件。必须安装）
+#cd /usr/ports/multimedia/audacious-plugins
+ #make install clean
+
+    安装mplayer
+（这不用介绍了吧。全公能播放器几乎支持所有的视频格式。）
+cd /usr/ports/multimedia/mplayer
+ make WITH_LANG=zh_CN install clean
+ (如果你喜欢看搞清电影并且你的显卡支持VDPAU别忘了吧这个点上。)
+
+     安装galculator(计算器)
+ #cd /usr/ports/math/galculator
+ #make install clean
+
+     安装Thunderbird（邮件客户端）
+#cd /usr/ports/mail/thunderbird
+ #make BATCH=YES install clean
+
+     安装Thunderbire语言包
+#cd /usr/ports/mail/thunderbird-i18n
+ #make install clean
+
+     安装MLDonkey（电驴、BT）
+#cd /usr/ports/net-p2p/mldonkey
+ #make WITHOUT_GUI=yes WITHOUT_X11="YES" WITHOUT_TK="YES" install clean
+％ln -s ~/.mldonkey/incoming ~
+在/etc/rc.conf加入mlnet_enable="YES" 和 mlnet_user="用户名非root“
+%/usr/local/etc/rc.d/mlnet start (注意是%)
+1.%telnet 127.0.0.1 4000
+ 2.>auth admin ""
+ 3.>passwd 键入你想设置的密码
+4.>set allowed_ips "127.0.0.1 192.168.0.0/24" (根据你自己的情况设置)
+5.>save
+ 6.>exit
+（mldonkey需要一个非root用户来运行。我习惯在装系统的时候就建立一个wheel组的用户，所以这里我就不用在建立用户了。）
+ 具体情况可以参考http://forums.freebsd.org/showthread.php?t=227
+现在就可以在浏览器里输入：localhost:4080来设置和下载文件了。
+ 默认mldonkey的文件夹是隐藏的，在用户目录下。找下载好的电影有点不方便，把incoming连接到你的用户目录下就好了。当然你也可以自己修改默认下载路径。
+
+    mldonkey简单设置:
+enable_kademlia的选项为true――打开kad减少对服务器的依赖。
+max_hard_upload_rate默认是10    （全局最大上传，根据自己情况设置）
+max_hard_download_rate默认是50 （全局最大下载，根据自己情况设置）
+mldonkey有两组两组带宽控制模式，通过点击Bandwidth toggle来更改带宽控制模式。
+   
+     添加服务器列表：
+ 点击servers>Import Server.met输入http://ed2k.im/server.met(放心都是安全服务器列表)
+或者下载下来手工导入：servers "/home/username/server.met"
+
+     添加overnet启动用户列表：
+ov_load "/home/username/contact.dat"
+
+     添加kad节点信息
+ 下载地址：http://emulefans.com/emule-kad-node-dat/
+ kad_load "/home/username/nodes.dat"
+
+   添加firefox for mldonkey插件：
+ 下载地址：http://www.informatik.uni-oldenburg.de/~dyna/mldonkey/
+
+ OpenOffice.org
+ #cd /usr/ports/editors/openoffice.org-3 && make LOCALIZED_LANG=zh-CN install clean
+注意：在安装的时候会提示让你手工下载几个文件放在/usr/ports/distfiles/下。
+JDK US DST Timezone Update Tool这个文件需要在网站（http://java.sun.com/javase/downloads/index.jsp）注册才能下载。
+ 关键是版本和Makefile里的对不上，我下载的时候Makefile里的是tzupdater-1_3_29-2010f.zip可是网站上给的已经是JDK DST Timezone Update Tool - 1.3.31了，没办法有点小崩溃。
+freebsd.org的论坛上发现也有几个哥们儿遇到了这问题，他们给出的解决办法是取消TZUPDATE的默认选项。cd /usr/ports/java/diablo-jdk16 && make config 取消TZUPDATE前面的X。
+
+    安装compiz-fusion（桌面3D效果）
+cd /usr/ports/x11-wm/compiz-fusion
+ make BATCH=YES install clean
+创建个启动脚本start-compiz名并加入:
+ #! /bin/sh 
+ compiz --replace --sm-disable --ignore-desktop-hints ccp & 
+ emerald --replace & 
+给这个脚本执行权限 
+%chmod +x start-compiz 
+把这个脚本加入Session和启动以后进入Xfce4就自动启动compiz了。
+ 简单设置
+ 点开CompizConfig设置管理器>首选项>在后端选择GConf Configuration Backed (这样你以后选择的效果就可以即时生效了。)
+另外在CompizConfig里吧 最小化效果、窗口装饰、震颤窗口、移动窗口、调整窗口大小、应用程序切换条都起用了，这样基本的3d桌面就好了。还有很多效果看自己喜好吧。
+ 说明参见http://www.freebsd.org/doc/en/articles/compiz-fusion/article.html
+
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+ 以下是简单的自动安装脚本
+#!/bin/sh
+ #make DEPENDS_TARGET=package package 这个命令的意思是 打包一个ports并将依赖也一起打包
+#make BATCH=YES 这个命令的意思是 使用默认选项
+#把用ports安装的软件都打包到下面的目录
+#mkdir -p /usr/ports/packages/All/
+ #安装并打包
+#make BATCH=YES DEPENDS_TARGET=package package install clean
+
+ #安装xorg
+ cd /usr/ports/x11/xorg &&make BATCH=YES install clean
+ echo 'hald_enable="YES"'>> /etc/rc.conf
+ echo 'dbus_enable="YES"'>> /etc/rc.conf
+
+ #安装wqy
+ cd /usr/ports/x11-fonts/wqy/ && make BATCH=YES install clean
+
+ #安装Linux二进制兼容模式
+kldload linux
+ cd /usr/ports/emulators/linux_base-f10/ && make BATCH=YES install distclean
+ echo 'linux_enable="YES"'>> /etc/rc.conf
+
+ #安装nvidia显卡驱动
+cd /usr/ports/x11/nvidia-driver/ && make BATCH=YES install clean
+ echo 'nvidia_load="YES"'>> /boot/loader.conf
+
+ #安装nvidia显卡自动配置工具
+cd /usr/ports/x11/nvidia-xconfig/ && make install clean
+
+ #安装Xfce4
+ cd /usr/ports/x11-wm/xfce4/ && make BATCH=YES install clean
+
+ #安装scim
+＃cd /usr/ports/chinese/scim-pinyin/ && make BATCH=YES install clean
+
+ #安装firefox
+ cd /usr/ports/www/firefox/ && make BATCH=YES install clean
+ echo 'sem_load="YES"'>> /boot/loader.conf
+
+ #安装firefox中文包
+cd /usr/ports/www/firefox-i18n/ && make BATCH=YES install clean

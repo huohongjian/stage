@@ -1,0 +1,600 @@
+====== FreeBSD软件安装卸载工具--Ports和Packages详解 ======
+
+
+==== 1、如何只抓取 tarball？ ====
+
+
+如果只希望抓取 tarball 下来的话，仅需下 make fetch 即可。 如果是要抓取单一的 port，以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make fetch
+
+
+预设会将 joe 的 tarball 下载至 /usr/ports/distfiles/ 目录下。 如果是希望抓取安装此 ports 所有须要的其他 ports 的 tarball，以 systuils/portupgrade 为例的话，则：
+cd /usr/ports/systuils/portupgrade/
+make fetch-recursive
+
+
+预设会将此 ports 的 tarball 与所有须要的其他 ports 的 tarball，下载至 /usr/ports/distfiles/ 目录下。 如果是希望抓取全部所有 ports 的 tarball ，则：
+cd /usr/ports/
+make fetch
+
+
+则会所将全部所有 ports 的 tarball 下载至 /usr/ports/distfiles/ 目录下。 如果是希望抓取全部 ftp 下所有 ports 的 tarball ，则：
+cd /usr/ports/ftp/
+make fetch
+
+
+则会所将全部 ftp 下所有 ports 的 tarball 下载至 /usr/ports/distfiles/ 目录下。
+
+==== 2、如何仅做到解开 tarball的步骤？ ====
+
+
+有时候习惯自己 patch/修正 原始码的时候，很常用到这个功能。 以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make extract
+
+
+会将 tarball解开至 /usr/ports/editors/joe/work/ 目录下。
+
+==== 3、如何仅做到解开 tarball 并补上官方提供的 patch？ ====
+
+
+此方法与 2 有一些类似，不同於是先补上官方提供的 patch ，再行 patch 自己的修正。以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make patch
+
+
+会将 tarball解开至 /usr/ports/editors/joe/work/ 目录下，并已经 patch 上官方提供的 patch。
+==== 4、如何安装一个新的 port？ ====
+
+
+如果系统上未安装此软体，则可以选择安装一个新的 port。以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make install
+
+
+如此会在系统上安装一个新的 joe 软体。如果需要在安装完成後，一并清除编辑时期所留下来的暂存目录，则可叁考 FAQ 8 的方法，一起使用，如：
+cd /usr/ports/editors/joe/
+#make clean
+
+
+如果想要一次清掉所有 ports 产生的暂存资料，则只要回到 ports 的根目录执行即可：
+cd /usr/ports/
+#make clean
+
+
+==== 5、如何安装一个新的 port，并将打包(package)起来？ ====
+
+
+将安装完成的软体打包起来，有许多便利性：包括在丛集系统中，可供其它机器使用，或将未来此软体出问题可重新利用此 package 重新快速安装。以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+#make package
+
+
+如此会在系统上安装一个新的 joe 软体，并将此软体打包(package)起来。
+
+package 预设会在 /usr/ports/editors/joe/ 目录下，如果希望集中管理的话，建议做如下的步骤：
+mkdir -p /usr/ports/packages/All/
+
+
+以後打包的 packages 都会存放在此目录下，并且系统会自动做分类，以方便管理。如果需要在安装完成後，一并清除编辑 时期所留下来的暂存目录，则可叁考 FAQ 8 的方法，一起使用，如：
+cd /usr/ports/editors/joe/
+make package clean
+
+
+==== 6、如何打包一个 port，并将其所有相依的 ports 也打包起来？ ====
+
+
+因为 FAQ 5 只有对最终的 port 才进行打包，中间依赖的 ports 并没有一起打包，这会出现一个常遇到 的问题，就是如果编辑一个 port 需要依赖其它的 ports，那麽必须将其它 ports 也一起打包，否则安装 packages 会有相依赖其它 ports 的 packages 的问题。以 sysutils/portupgrade 为例的话，则：
+cd /usr/ports/sysutils/portupgrade/
+make DEPENDS_TARGET=package package
+
+
+如此会在对所有 portupgrade 所相依赖的 ports 一并打包，也包括自己本身。
+
+==== 7、如何对一个已经安装的 port 打包？ ====
+
+
+如果安装好一个套软，事前并未打包，事後想打包的话，则：以 editors/joe 为例的话
+cd /var/db/pkg/
+pkg_create -b joe-{版本号}
+
+
+会将已安装的 port 打包起来，放在 /var/db/pkg/ 目录下。
+
+==== 8、如何清理 ports 编辑期间所产生的暂存资料？ ====
+
+
+在编辑 port 的时候，会有编辑期间所需要的工作目录(work)，因此通常安装好一个套件後，会清除此暂存目录，以节省系 统磁碟空间。以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make clean
+
+
+如果是希望清除所有 ports 的暂存目录，则：
+cd /usr/ports/
+make clean
+
+
+如果是希望清除全部 ftp 下所有的暂存目录，则：
+cd /usr/ports/ftp/
+make clean
+
+
+==== 9、如何清理 ports 编辑期间所产生的暂存资料，以及其相对应的 tarball？ ====
+
+
+在 FAQ 8 中，仅只是清除编辑期间所需要的工作目录(work)，并没有将编译ports 时一并下载的 tarball 删除(相对应之 tarball 预设会存放在 /usr/ports/distfiles/)，如果欲把 tarball 一并删除，以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make distclean
+
+
+make distclean 的步骤包含了 make clean 的功能，也就是说除了会删除 tarball 外，还会一并M除编辑期间所需要的工作目录。
+
+如果是希望清除所有 ports 的暂存目录，及 tarball ，则：
+cd /usr/ports/
+make distclean
+
+
+如果是希望清除全部 ftp 下所有的暂存目录，及 tarball，则：
+cd /usr/ports/ftp/
+make distclean
+
+
+==== 10、如何在安装 ports 前查询所需依赖/相关的套件？ ====
+
+
+在安装 ports 前，可以查询所需依赖/相关的套件。以 mail/p5-Mail-SpamAssassin 为例的话，则：
+cd /usr/ports/mail/p5-Mail-SpamAssassin/
+make all-depends-list                   #显示所有相关的套件
+make pretty-print-build-depends-list    #显示编译期间所需要的套件
+make pretty-print-run-depends-list      #显示此套件要执行时所需要的套件
+
+
+==== 11、如何移除已安装的 ports？ ====
+
+
+以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make deinstall
+
+
+或是使用 pkg_delete
+cd /var/db/pkg/
+pkg_delete joe-{version}
+
+
+有时候套件之间的相依性会导致无法直接移除，如果要强制移除的话，则：
+cd /var/db/pkg/
+pkg_delete -f joe-{version}
+
+
+但很有可能会导致其它的套件执行起来出现问题。至於二者的差别，请叁考FAQ 43
+
+==== 12、如何一并移除所相依的 ports？ ====
+
+
+以 sysutils/portupgrade 为例的话，则：
+cd /usr/ports/sysutils/portupgrade/
+make deinstall-depends
+
+
+执行此步骤前，请注意是否会移除应该保护的套件。建议先叁考 FAQ 10 的方法来检查。
+
+或是使用 pkg_delete
+cd /var/db/pkg/
+pkg_delete -r portupgrade-{version}
+
+
+至於二者的差别，请叁考FAQ 43
+
+==== 13、如何重新安装已安装过的 ports？ ====
+
+
+重新安装的前提是，之前有安装过或目前已安装。以 editors/joe 为例的话，则：
+cd /usr/ports/editors/joe/
+make deinstall
+make clean
+make install 或 make reinstall
+
+
+==== 14、如何以关键字搜寻 ports？ ====
+
+
+如果要从全部的 ports collection 中找寻与关键字 "ldap" 有关的 ports，则：
+cd /usr/ports/
+make search key=ldap
+
+
+如果只要从与 ftp 相关的 ports 下找寻与关键字 "ldap" 有关的 ports，则：
+cd /usr/ports/ftp/
+make search key=ldap
+
+
+还有另一个用法，方法只是将 key 换成 name 。如果已经知道要搜寻 ports 的名称，或只想找名称相关的关键字 "ldap"， 则：
+cd /usr/ports/
+make search name=ldap
+
+
+如果只要从 ftp 相关的 ports 下找寻名称与关键字 "ldap" 有关的 ports，则：
+cd /usr/ports/ftp/
+make search name=ldap
+
+
+==== 15、如何升级已安装的 ports？ ====
+
+
+如果已经安装好套件，事後欲升级的话，必须先移除旧版本的 port，移除的方法请叁考FAQ 11、FAQ 12及FAQ 13；之後再安装 port，安装的方法请叁考FAQ 4或FAQ 5。
+
+以 editors/joe 为例，且以 FAQ 11 及 FAQ 4 的方法，则：
+cd /var/db/pkg/
+pkg_delete joe-{version}
+cd /usr/ports/editors/joe/
+make install
+
+
+或是
+cd /usr/ports/editors/joe/
+make clean
+make reinstall
+
+
+==== 16、如何查询目前系统安装了哪些套件？ ====
+
+
+查询目前系统已安装的全部套件：
+pkg_info
+==== 17、如何查询目前系统有没有安装这个关键字的套件？ ====
+
+
+此方法类似 FAQ 16 ：
+
+pkg_info | grep
+
+==== 18、如何查询某个档案是属於哪些套件？ ====
+
+
+如果想查询 /usr/local/bin/joe 是属於哪个套件的话，则：
+
+pkg_info -W /usr/local/bin/joe
+
+如果没有回传任何资讯的话，代表着这个档案是由 FreeBSD 内建的。
+
+==== 19、如何查询某个套件安装了哪些档案？ ====
+
+
+如果想查询目前系统所安装的 joe 包含了哪些档案，则：
+
+pkg_info -L /var/db/pkg/joe-{version}
+
+==== 20、如何安装旧版的 ports？ ====
+
+
+有时候会因为相依性，或是新版有问题，而会想装旧版本的套件。这里的方法是利用 CVS 的好处，回归到以前旧版本存在的日子，以安装旧版本的套件。首先，若我们要回复到某一个套件的版本时，需要去查询 FreeBSD ports CVS repository。最常见的就是 Freshports 网站、 FreeBSD 的 Mailing FreeBSD cvs 或是 FreeBSD ports cvsweb。
+
+查到该套件版本所依存的日子後，就修改 CVS tag。一般预设 ports 的 CVS tag 会写在 /usr/share/examples/cvsup/ports-supfile ，如要回朔到2002/10/05 号的话，则：
+
+# vi /usr/share/examples/cvsup/ports-supfile
+******************************************
+default date=2002.10.05.00.00.00 #将 date 改成当日
+
+然後按照一般 CVSup 的时候一样，执行 CVSup (make update)，此时的 ports collections 就会回到当时的情形，那麽该套件 旧版本也会出现在 ports collections 中，只要安装即可。
+
+如果仅是想把某部份的 ports 回朔，则必须加上额外的资讯，如仅希望把 lang/perl5.8 回朔，而得知此属於 lang 中的一支，则：
+
+# vi /usr/share/examples/cvsup/ports-supfile
+******************************************
+#ports-all #将 ports-all 标示起来
+ports-lang #加入这行
+
+最後，执行 CVSup，并安装即可。目前若希望单独回朔单一的 ports，则比较麻烦。
+
+==== 21、如何更新 ports Mk？ ====
+
+
+Mk (/usr/ports/Mk/) 是编译 ports 时所叁考的设定，有时若发生 ports collections 太新，而导致 Mk 的内容不符，此时 就是应该更新 Mk 的时候了。
+
+cd /usr/src/
+make update
+cd /usr/src/share/mk
+make install
+
+==== 22、如何解决安装 ports 时出现 sed -i 的错误？ ====
+
+
+因为 BSD style 的 sed ，也就是 BSD 本身自有的 sed ，与一些 ports 编译期间所执行的 sed 不一致，所以会导致一些语 法错误。此时先安装 sedinplace(textproc/sedinplace)，然後再安装原本无法安装的 ports：
+
+cd /usr/ports/???/???/
+make -DUSE_REINPLACE install
+
+==== 23、如何列出所有可以升级的 ports？ ====
+
+
+ports collection 的更新速度很快，在每次更新 ports collections 後，往往会出现比目前现在安装的套件还新的版本，可 以令系统自行整理并提供可升级套件的列表：
+
+pkg_version -c
+==== 24、如何得知 ports system 对某个 ports 所提供的编译叁数？ ====
+
+
+所有的 ports collections 中所提供的编译叁数都会在对应的 Makefile 档案内详述，如 sysutils/portupgrade 的话，则是位在 /usr/ports/sysutils/portupgrade/Makefile 档案下。可以对此档案浏览以得知编译时期可以下达的叁数，如对 sysutils/portupgrade 有提供 NOPORTDOCS，则：
+
+cd /usr/ports/sysutils/portupgrade/
+make -DNOPORTDOCS install # make NOPORTDOCS=yes install 亦同
+
+那麽安装此 ports 时，会将 NOPORTDOCS 所对应的相关叁数指定进去。有时候设定较人性化的 ports 会在安装前提供叁数供选择，但是其实大部份的ports 都没有提供，因此必须自行去搜寻可编 译的叁数，在此我提供的方式如下：
+
+cd /usr/ports/sysutils/portupgrade/
+grep defined Makefile
+
+如此几乎可以知道所有提供的可编译叁数，虽然有时会多出一些不相干的资料，不会这个确实是一个不错可叁考的方式。
+
+==== 25、如何手动加入编译 ports 的叁数？ ====
+
+
+在 FAQ 24 中的方法，是 ports collections 有提供的前提之下，有时候并不是所有该软体所支援的叁数 都会收纳在 ports collections 中，因此有时候会需要手动加入编译的叁数。如 ftp/pure-ftpd 中，如果不想把 inetd 的支援编入的选项，并没有被 ports collections 所纳入，因此必须手动加上这个 编译叁数，如下：
+
+cd /usr/ports/ftp/pure-ftpd/
+make CONFIGURE_ARGS+="--without-inetd" install
+
+==== 26、如何指定 ports 的安装路径？ ====
+
+
+预设 ports collecions 已安排安装的路径 (/usr/local/)，如果不想将套件安装在预设路径的话，可以手动指定安装路径。 以 editors/joe 为例，则：
+
+cd /usr/ports/editors/joe/
+make PREFIX=/usr install
+
+那麽 joe 就会将档案对应在 /usr 目录下，而不是预设的 /usr/local 目录下。
+
+==== 27、安装 ports 出现 FORCEPKGREGISTER 的错误讯息 ====
+
+
+(原文乱码)
+
+==== 28、安装 ports 出现 Shared object libintl.so.X not found 的错误讯息 ====
+
+
+(原文乱码)
+
+==== 29、如何安装 packages？ ====
+
+
+目前 FreeBSD 的 packages 是由 .tgz 所打包。如果想安装一个 packages ，可使用 pkg_add，如安装一个 joe 的 tgz：
+
+pkg_add joe-{version}.tgz
+
+==== 30、如何强制安装 packages？ ====
+
+
+由於有些 packages 会有与其他 packages 相依性的关系，所以必须先行安装那些 packages 才能正常安装。 如果须要强制安装 packages ，可以不须安装那些有相依性 packages ，但要注意的是强制安装的结果可能会导致执行或运作的不正常。强制安装 packages 的指令如下，如强制安装一个 joe 的 tgz：
+
+pkg_add -f joe-{version}.tgz
+==== 31、如何查询 packages 与其他 packages 之间的相依性？ ====
+
+由於有些 packages 会有与其他 packages 相依性的关系，所以必须先行安装那些 packages 才能正常安装。 查询 packages 与其他 packages 之间的相依性的指令如下，如查询与 portupgrade 相依的其他 packages：
+
+pkg_info -r portupgrade-{version}.tgz
+
+==== 32、如何远端安装 packages？ ====
+
+
+有两种设定方式，首先是 PACKAGEROOT，如：
+
+setenv PACKAGEROOT ftp://ftp.cn.freebsd.org #设定 PACKAGEROOT 为 ftp.cn.freebsd.org 站台
+
+另一种方式是设定 PACKAGESITE，好处是若该站台的 packages 仓储并不是符合官方的设定或你想自己指定一个路径。以 ftp.cn.freebsd.org i386 的 current pakcages 为例：
+
+setenv PACKAGESITE ftp://ftp.cn.freebsd.org/pub/FreeBSD/ports/i386/packages-current/Latest/
+
+两种方式选择其中一种皆可，接下来的步骤都一样。往後要安装 packages 的时候，如 portupgrade 的话，则：
+
+pkg_add -r portupgrade
+
+则系统会自动於 ftp.cn.freebsd.org 抓取所有与 portupgrade 相依的 packages 并安装。
+
+==== 33、如何更新 INDEX 对照表？ ====
+
+
+4.x 的 INDEX 位於 /usr/ports/INDEX，5.x 位於 /usr/ports/INDEX-5。
+
+INDEX 是对照 ports 所有相依等资讯的对照表，若长期未更新的话，会导致 ports 对照失败。官方有定期更新 INDEX，如果 想自行更新的话，则：
+
+cd /usr/ports/
+make index
+
+==== 34、如何更新 INDEX HTML？ ====
+
+
+FreeBSD 提供了用网页的方式来观看 ports collection，即可使用 lynx、w3m、links 或其它可浏览网页的程式来查阅。制作全部 ports collection 的方式如下：
+
+cd /usr/ports/
+make readmes
+
+如果是仅须要做目前目录下的资讯，或单一更新某一分类下的资讯，如 /usr/ports/ftp/ 的话，则：
+
+cd /usr/ports/ftp/
+make readme
+
+则仅会更新 /usr/ports/ftp/ 这个目录的资讯，其上与其下的目录皆不会更动到。 执行成功後，会在相对应的目录下产生 README.html 的档案。
+
+==== 35、如何针对某些 ports 不做 CVSup？ ====
+
+
+若 ports 底下的某些分类完全用不到，则可以在 CVSup 时，不做更新，以节省网路频宽与时间。
+
+# vi /usr/sup/refuse
+******************************************
+ports/french
+ports/german
+ports/hebrew
+ports/hungarian
+ports/japanese
+
+那麽则上述目录下的档案皆不会更新。
+
+如果是想要某些单一的 ports 不做同步，例如想保留旧版不做同步，或新版出现问题时。
+
+# vi /usr/sup/refuse
+******************************************
+ports/lang/perl5.8
+
+那麽 ports/lang/perl5.8 这个 ports 不会做 CVSup 同步。
+
+这些设定方法支援万用字元。
+
+# vi /usr/sup/refuse
+******************************************
+ports/lang/perl*
+ports/po*
+
+==== 36、如何使用 CVSup 同步 ports collections？ ====
+
+
+请叁考 gslin 的 用 CVSup 去更新你的 source tree 以及 ports tree。
+
+==== 37、安装 ports 出现 port is outdated 的错误讯息 ====
+
+
+例如安装 imap-uw 时，出现以下内容：
+
+Your installation of the cclient port is outdated. Please delete it before continuing.
+
+表示因为相对应，且已安装好的 cclient 这个软体过於老旧，建议先升级这个软体再行安装 imap-uw。因此只要先升级 cclient 後，再安装即可。
+
+# cd /usr/ports/mail/cclient/
+# make reinstall 或 # make deinstall && make install
+# cd /usr/ports/mail/imap-uw/
+# make install
+
+==== 38、安装 ports 出现 OpenSSL vulnerabilities 的错误讯息 ====
+
+
+在安装有些套件时，如果有相依於 OpenSSL 时，且判断系统目前使用的 OpenSSL 版本有漏洞问题时，会出现如下的讯息：
+
+Dependency warning: used OpenSSL version contains known
+vulnerabilities Please update or define either WITH_OPENSSL_BASE or
+WITH_OPENSSL_PORT
+
+一般建议的解决方法有二种。
+
+第一种：升级系统(需含系统内建之 OpenSSL 一并升级)，再安装该套件可以先查询目前系统所用之 OpenSSL 的版本：
+
+openssl version -v
+
+升级系统可叁考 FNP: upgrade core system 或 FNP: upgrade major system。升级完系统後，再进行一次 OpenSSL 版本之确认。然後再安装该套件，这讯息就不会出现了。
+
+第二种：使该套件相依於 ports tree 中的 OpenSSL 这种方法会安装 ports tree 中新版本的 OpenSSL，然後相依於此新版本的 OpenSSL，而不是系统本身内建的 OpenSSL。只要安装套件时，加入 WITHOPENSSLPORT 的叁数，即会安装 ports tree 中的 OpenSSL，并且该套件也会相依於此。方法如下：
+
+make -DWITH_OPENSSL_PORT install
+
+这里不建议用叁数 WITHOPENSSLBASE，因为这表示安装套件时，是相依於原本系统中可能有漏洞的 OpenSSL，这样会导致安全性的问题。
+
+==== 39、如何在 FreeBSD 上模拟 Linux 的环境？ ====
+
+
+最新最完整的资料在官方的 Handbook 上。
+
+简单来说，FreeBSD 核心必须支援，且必须安装 Linux Runtime Libraries，最後做一些设定。
+
+如果要执行 Linux ELF Binaries，可以先查询目前 FreeBSD 是否已经支援 Linux ELF。
+
+brandelf -l
+
+看是否有 Linux 的字样，如果没的话，请回头检查是否哪一步骤没有做到。然後检查执行档是否为 Linux ELF Binaries。
+
+brandelf execution-binary-filename
+
+如果是 Linux ELF Binaries，则正常执行即可。如果显示结果不是 Linux ELF Binaries，但是自己确定是 Linux ELF Binaries的话，则只要更改一下 ELF 的格式即可。
+
+brandelf -t Linux execution-binary-filename
+
+然後再检查一次是否已经修正为正确的格式。
+
+==== 40、如何在 FreeBSD 上安装 Linux rpm？ ====
+
+
+请确定已经成功在 FreeBSD 上模拟 Linux 的环境，请叁考 FAQ 39。安装 rpm 的方式如下：
+
+rpm --ignoreos --root /compat/linux --dbpath /var/lib/rpm/ -Uvh xxx.rpm
+
+==== 41、安装 ports 时，原本应该出现的清单选项不见了 ====
+
+
+这是由於系统会纪录曾安装过 ports 的当时所选择的清单选项，因此有时会因为安装时出了问题，或是再一次安装时，就不会出现清单可以选择。如何让清单选项重新出现呢？
+
+make clean
+make showconfig # 显示设定的内容
+make rmconfig # 清除设定的内容
+make config
+
+之前设定 ports 的选项预设会纪录在 /var/db/ports/{ports_name}/options 内容中。如要查看之前 python 有选择的清单选项：
+
+cat /var/db/ports/python/options
+
+==== 42、如何检查是否有安装重覆的 ports/packages？ ====
+
+
+随着时间的演进，不同时间安装的软体会有不同版本的释出，而且不同软体相依的版本号也不同，所以往往会造成同一个软体安装过多版本的情形发生。
+
+这里我必须声明的是，虽然套件名称相同，可是可能没办法上下相容，因此造成有些软体必须依赖比较旧的版本，而有些软体必须依赖比较新的版本，如果有这种情形发生的话，那麽二个版本的存在是正常的。
+
+否则的话，我们会建议移除旧版的套件，将所有相依於此套件改为相依於新版的。也就是说，移除旧版的套件，然後将原本相依於旧版的套件，改为相依於新 版的套件。注意，我强调的是新旧版套件是相容的。因为这种做法有点危险，因此不提供做法，请使用更水阶的套件管理工具，如 portupgrade 来完成。
+
+检查是否有安装重覆的 ports/packages 的方法如下：
+
+pkg_info | sort | sed -e 's/-[0-9].*$//' | uniq -c | grep -v '^[[:space:]]*1'
+
+如果有一行是显示" 3 libtool"，则表示目前系统有安装三种不同版本的 libtool 套件。接下来可以检查这三种版本是否可以相容：
+
+cd /usr/ports/
+make search name=libtool
+
+如果发现分别有三种 ports 来代表这三种不同版本的 libtool，就表示他们彼此不相容，必须保留三者，否则可能会发生相依问题。假设如下：
+
+/usr/ports/devel/libtool13
+/usr/ports/devel/libtool14
+/usr/ports/devel/libtool15
+
+反之，如果发现只有一种 ports 来代表这种不同版本的套件，则表示目前系统安装的三种版本是相容的，只要修改原本相容於其它二种版本所有的套件，并指向欲保留的那个版本，然後移除其它二种即可。如发现系统目前有安装三种不同版本的 gettext：
+
+cd /usr/ports/
+make search name=gettext
+
+然後检查的结果如下：
+
+/usr/ports/devel/gettext
+
+则将所有相依於 gettext 旧版本的其它套件都改为相依於新版的 gettext，然後再移除系统中旧版的 gettext 即可。
+
+==== 43、"make deinstall' 与 "pkg_delete' 有什麽不同？ ====
+
+
+简单来说，"make deinstall' 会移除该 port，并且不会叁照其相依/相关的 ports。
+
+"pkgdelete' 在移除该 port 前，会叁照其相依/相关的 ports，并且 "pkgdelete' 有支援 wild card，如要移除所有 p 开头的 ports，则：
+
+cd /var/db/pkg/
+pkg_delete p*
+
+要注意的是，如果使用 "make deinstall'，则最好确定系统目前所安装的版本，与 ports collection 中显示的版本符合，否则有可能会出现非预期性错误；而 "pkg_delete' 是因为直接删除系统中所安装的版本，所以没有此问题。
+
+因此，换句话说，当系统所安装的版本符合 ports collections 中的版本，则可以使用 "make deinstall' 或 "pkgdelete'，否则的话最好用 "pkgdelete'。
+
+与 "make deinstall' 相关的资讯：FAQ 11、FAQ 12及FAQ 13。与 "pkg_delete' 相关的资讯：FAQ 11、FAQ 12及FAQ 15。
+
+==== 44、安装 ports 出现 local modification time does not match remote 的错误讯息 ====
+
+
+这通常表示你已经下载了这个档案在 /usr/ports/distfiles 的对应目录中，但是它并不是 port collections 所期望下载的。通常的解决方法是在 /usr/ports/distfiles 的对应目录中移除此档案，再重新抓取。
+
+例如是安装 joe 时出现如下的错误讯息：
+
+fetch: joe2.8.tar.Z: local modification time does not match remote
+
+则将 joe2.8.tar.Z 於 /usr/ports/distfiles 中移除：
+
+cd /usr/ports/editors/joe/
+make distclean
+
+最後再重新安装即可。
+
+

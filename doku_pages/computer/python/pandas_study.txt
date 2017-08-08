@@ -1,0 +1,372 @@
+
+
+[pandas学习笔记整理1]--基础篇
+
+2014-12-11 14:05:39CSDN-a_31415926-点击数:1030
+.
+  
+
+
+
+
+
+ 
+本文是在基于python数据分析和kaggle教程的实践基础上记录的pandas使用心得和体会。
+
+
+
+
+0 文章主要针对的数据源，在excel中显示是这个数据
+
+
+
+
+
+
+
+0 excel读取写入-----------------------------------------------------------------------
+df=pd.read_csv('data/xxx.csv'); 
+df.to_csv('result.csv', index=False, header=[‘year’,'state']) #默认填写路径即可，如果不想添加索引（就是one two three这个），如果只想输出year和state这两个字段的数据，那么就如代码所示操作。
+
+
+
+
+
+1 Series
+
+pandas有一种一维数据结构Series，类似字典，但是比字典更为强大。具有索引，具有键值对应关系，能够排序，切片sliece等等操作。
+
+可以在list或dict字典的基础上构建出Series对象。
+
+a=Series([2,1,3,54,3])  #将list转换为Series
+b=Series([a:2,b:1,c:3,d:54,e:3])  #将dict转换为Series
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
+
+2 dataframe
+
+dataframe是pandas一种很重要的数据结构，可以将数据按照excel那样的方式呈现给大家，方便各种操纵。
+
+从csv数据读取出来的dataframe对象df如下所示。
+
+
+
+
+
+
+
+2.1  dataframe元数据的描述-----------------------------------------------------------------------
+
+dataframe有一些能够描述自己的函数，有代码有真相。
+df.describe()
+
+
+df.info()
+
+
+df.dtypes
+
+df['Age'].hist()
+
+
+
+
+
+
+
+
+
+
+
+2.2 dataframe字段操作-----------------------------------------------------------------------
+
+选择dataframe的字段有下面两种操作。
+
+df.pop    #类似类的自有变量
+df['pop']   #类似字典
+需要注意的是，只有df.['pop']=5这种方式，才能够为df的字段的值进行赋值，另一种无效。
+
+
+
+删除特定字段，可以如下操作
+df.drop(['Age','Survived'])
+
+
+通过df.T可以进行dataframe的转置
+
+
+
+
+
+2.3 dataframe筛选和掩膜操作操作-----------------------------------------------------------------------
+df['Age'].isnull()  返回的是个true或false的Series对象
+
+
+
+利用上述操作返回的掩码对象，可以筛选出我们需要的特定数据
+
+df[df['pop'].isnull()]
+
+
+
+
+
+
+2.4 dataframe类型转换-----------------------------------------------------------------------
+df.astype(int)
+
+
+
+
+
+
+
+
+2.5 dataframe和Series的数据结构构建--------------------------------------------------------------
+只规定一维的话，默认将每个维度看作一column，可以在index对另一个维度的索引进行规定(当然如果对column排序有要求，也可以按照column进行重排序reindex操作)
+data = {'state': ['Ohio', 'Ohio', 'Ohio', 'Nevada', 'Nevada'],
+'year': [2000, 2001, 2002, 2001, 2002],
+'pop': [1.5, 1.7, 3.6, NaN, 2.9]}
+frame = DataFrame(data, columns=['year', 'state', 'pop', 'debt'],
+index=['one', 'two', 'three', 'four', 'five'])
+请注意这种创建方法，字典的key值一定是frame的列索引column index
+
+
+如果是二维字典的话，那么将最外层的规定为columnID，内层的为rowID
+data = {'state': {1:'Ohio', 2:'Ohio', 3:'Ohio', 4:'Nevada', 5:'Nevada'},
+'year': {1:2000, 2:2001, 3:2002, 4:2001, 5:2002},
+'pop': {1:1.5, 2:1.7, 3:3.6, 4:2.4, 5:2.9}}
+frame = DataFrame(data, columns=['year', 'state', 'pop', 'debt'],
+index=['one', 'two', 'three', 'four', 'five'])
+外层字典的键是列索引，内层键是row索引
+
+如果一维都不规定，那么则将data看作np.array对象,而在index和columns函数中对rowID和columns分别进行规定
+
+
+
+dataframe和Series的归根的结构特征
+pd.Series({'a':2,'b':1,'c':3,'d':54,'e':3})
+pd.Series([2,1,3,54,3],index=['a','b','c','d','e'])
+dataframe(Series(),index=[],columns=[])
+
+除却值外
+dataframe有两个维度
+Series只有一个维度
+
+
+
+
+
+
+
+2.6 dataframe索引index------------------------------------------
+几种index索引种类
+Index
+Int64Index
+MultiIndex
+DatatimeIndex
+PeriodIndex
+
+df.columns和df.index 都是一种索引
+
+reindex重索引
+df.reindex(['e','d','c','b','a']) #按照这个索引进行重新排序
+df.reindex(['e','d','c','b','a'],method='ffill') #没有这个索引的，自动根据前个索引的值进行填充
+df.reindex(['e','d','c','b','a'],fill_value=0) #没有这个索引的，自动赋值为0
+
+
+
+
+
+
+
+2.7  dataframe函数操作---------------------------------------------
+元组能够操作的函数，在dataframe里一样能够操作
+f=lambda x:x.max()-x.min()
+df.apply(f)
+f=lambda x:'%.2f' %x
+df.apply(f)
+
+排序操作-------------------------------------
+
+dataframe可以按照index和columns两种索引对dataframe进行排序
+sort_index()按照索引排序
+df.sort_index() #按照rowID进行排序，默认升序
+df.sore_index(axis=1,ascending=False) #按照columnID进行排序，设定为降序
+
+
+order()按照值排序
+dataframe的按值排序，其实是按照某列，或者联合多列中的大小值给所有的row排序
+也就是说以某个列的值，代表各个row之间的值进行排序
+df.order(by=['a'])
+df.order(by=['a','b'])
+
+rank排序
+df.rank() 默认在各个column里面进行排序
+df.rank(axis=1)默认在各个row里面进行排序
+
+汇总操作-------------------------------------
+df
+    one  two
+a   1.4  NaN
+b   7.1  -4.5
+c   NaN  NaN
+d   0.74 -1.3
+df.sum()按照列进行加和，计算各个column的和
+df.sum(axis=1) #跟matlab和Octave一样
+df.mean() #和sum一样原理
+df.idxmax() 会返回各个列索引内最大的值  
+output:  one  b
+         two  d
+df.idxmin() 会返回各个列索引内最小的值
+output:  a  
+         two  d
+
+
+
+
+相关系数操作-------------------------------------
+两个series协方差
+s1.corr(s2)相关系数
+s1.cov(s2)协方差
+
+dataframe的协方差和相关系数，计算的就是两个或多个column之间的相关参数
+df.corr()协方差
+df.cov()相关系数
+df.corr(df['a'])计算所有列和某个列的相关系数
+
+
+唯一性操作-------------------------------------
+s1.unique()
+pd.value_count(s1,sort=False) #进行map-reduce运算
+df.apply(pd.value_counts,fillna(0)) #也是对各个列进行操作，然后没有出现的key的次数赋值为0
+
+
+
+2.8  dataframe和series的对齐操作align-----------------------------------------------
+
+
+dataframe之间加和对齐
+是二维的操作，在row和col上都有对齐操作，没有重叠的项都为NaN
+
+series之间的加和对齐
+是一维的操作，对于菲重叠的index项，也赋值为NaN
+
+dataframe和series的加和操作
+s=pd.DataFrame(np.arange(9).reshape(3,3),index=['New York','beijing', 'Tian Jin'],columns=['b','d','e'] )
+series2=pd.Series(range(3),index=['b','e','f'])
+因为dataframe是二维的，而Series是一维的对象，那么二维和一维操作如何运算呢？
+我们默认将Series看作一个row行对象，然后dataframe有多少个行，那么我们就复制多少个值为Series的row对象，然后跟dataframe进行相减运算。
+没有重叠的列column的时候，就按NaN处置。
+
+
+
+
+
+
+3 清理数据-------------------------------------------------------------------
+df[df.isnull()]
+df[df.notnull()]
+df.dropna()将所有含有nan项的row删除
+df.dropna(axis=1,thresh=3) 将在列的方向上三个为NaN的项删除
+df.dropna(how='ALL')将全部项都是nan的row删除
+填充值
+df.fillna(0)
+df.fillna({1:0,2:0.5}) 对第一列nan值赋0，第二列赋值0.5
+df.fillna(method='ffill') 在列方向上以前一个值作为值赋给NaN
+
+
+4 一些定式发现-------------------------------------------------------------------------------------------
+默认是以column为单位进行操作
+比如pd.dataframe(data)   pd.dataframe(dict)
+比如df.rank()
+比如pd.sort_index()
+比如df.sum()
+都需要设定axis=1或者指定index才能够进行亚row级别的操作
+也就是说我们认知的时候，先认知的是column字段，然后是各个row
+
+
+
+
+两级访问元素
+s['a',2]
+s[:,2]
+df=s.unstack()
+s=df.stack()
+
+
+
+
+
+
+
+
+
+
+
+Python日期和字符串的互转  
+博客分类： python
+ 
+python .
+
+
+原文地址：http://hi.baidu.com/qinghua9/blog/item/cf9fafccd71e661900e92870.html
+
+
+
+
+
+
+用的分别是time和datetime函数
+
+ 
+
+import time,datetime
+
+# date to str
+print time.strftime("%Y-%m-%d %X", time.localtime())
+
+#str to date
+t = time.strptime("2009 - 08 - 08", "%Y - %m - %d")
+y,m,d = t[0:3]
+print datetime.datetime(y,m,d)
+
+输出当前时间：
+2009-09-02 23:51:01
+2009-08-08 00:00:00
+
+ 
+
+符：
+
+%a 英文星期简写
+%A 英文星期的完全
+%b 英文月份的简写
+%B 英文月份的完全
+%c 显示本地日期时间
+%d 日期，取1-31
+%H 小时， 0-23
+%I 小时， 0-12 
+%m 月， 01 -12
+%M 分钟，1-59
+%j 年中当天的天数
+%w 显示今天是星期几
+%W 第几周
+%x 当天日期
+%X 本地的当天时间
+%y 年份 00-99间
+%Y 年份的完整拼写
+
+

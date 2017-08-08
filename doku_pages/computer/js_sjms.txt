@@ -1,0 +1,7 @@
+====== Javascript 设计模式 ======
+----
+  * [[js_sjms_base      |设计模式基础]]
+  * [[js_singleton      |单例模式]]
+  * [[js_sjms_strategy  |策略模式]]
+  * [[js_proxy          |代理模式]]
+  * [[js_listen_trigger |发布-订阅模式]]

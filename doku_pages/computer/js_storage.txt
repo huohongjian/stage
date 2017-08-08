@@ -1,0 +1,898 @@
+====== 本地存储 ======
+
+本地存储分为两种：
+  * sessionStorage。session是指用户在浏览某个网站时，从进入网站到浏览器关闭所经过的这段时间。sessionStorage为临时存储。
+  * localStorage。将数据保存在客户端的硬件设备上。localStorage为永久保存。
+示例：
+<file html storage.html>
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset='utf-8'>
+    <script type='text/javascript' src='script.js'></script>
+    </head>
+    <body>
+        <h1>Web Storage示例</h1>
+        <p id='msg'></p>
+        <input type='text' id='input'>
+        <input type='button' value='保存数据' onclick="saveStorage('input');">
+        <input type='button' value='读取数据' onclick="loadStorage('input');">
+    </body>
+    </html>
+</file>
+
+<file javascript script.js>
+    //sessionStorage示例
+    function saveStorage(id){
+        var target = document.getElementById(id);
+        var str = target.value;
+        sessionStorage.setItem("message", str);
+        // 或 sessionStorage.message = str;
+    }
+    function loadStorage(id){
+        var target = document.getElementById(id);
+        var msg = sessionStorage.getItem('message');
+        // 或 msg = sessionStorage.message;
+        target.innerHTML = msg;
+    }
+    
+    // localStorage示例
+    function saveStorage(id){
+        var target = document.getElementById(id);
+        var str = target.value;
+        localStorage.setItem('message', str);
+        //或 localStorage.message = str;
+    }
+    function loadStorage(id){
+        var target = document.getElementById(id);
+        var msg = localStorage.getItem('message');
+        //或 msg = localStorage.message;
+        target.innerHTML = str;
+    }
+</file>
+
+====== 判断浏览器是否支持本地存储 ======
+
+  if(window.localStorage){
+     alert('This browser supports localStorage');
+  }else{
+     alert('This browser does NOT support localStorage');
+  }
+
+ 
+====== localStorage使用方法 ======
+
+  * localStorage. length;    返回现在已经存储的变量数目
+  * localStorage. key(n);    返回第n个变量的键值(key)
+  * localStorage.getItem(key);      和localStorage.key一样，取得键值为key的变量的值
+  * localStorage.setItem(key, val);     和localStorage.key = val一样，设置键值key的变量值
+  * localStorage.removeItem(key);     删除键值为key的变量
+  * localStorage.clear();   清空所有变量 
+
+用法很多，可以当成是一个对象方式使用…… 
+
+  * localStorage.a = 1;              设置a为"1"
+  * localStorage["a"] = "FakeMr";    设置a为"FakeMr"，自动覆盖上面的值。
+ 
+需要注意的是，HTML5本地存储只能存字符串，任何格式存储的时候都会被自动转为字符串，所以读取的时候，需要自己进行类型的转换。（个人比较喜欢：JSON.parse/JSON.stringify结合使用 ） 
+
+====== 拓展：IE6/7解决方案 ======
+
+<file javascript solute.js>
+if(!window.localStorage && /MSIE/.test(navigator.userAgent)){  
+    if(!window.UserData) {  
+        window.UserData = function(file_name) {  
+            if(!file_name) file_name="user_data_default";  
+            var dom = document.createElement('input');  
+            dom.type = "hidden";  
+            dom.addBehavior ("#default#userData");  
+            document.body.appendChild(dom);  
+            dom.save(file_name);  
+            this.file_name = file_name;  
+            this.dom = dom;  
+            return this;  
+        };  
+        window.UserData.prototype = {  
+            setItem:function(k, v) {  
+                this.dom.setAttribute(k,v);  
+                this.dom.save(this.file_name);  
+            },  
+            getItem:function(k){  
+                this.dom.load(this.file_name);  
+                return this.dom.getAttribute(k);  
+            },  
+            removeItem:function(k){  
+                this.dom.removeAttribute(k);  
+                this.dom.save(this.file_name);  
+            },  
+            clear:function() {  
+               this.dom.load(this.file_name);  
+               var now = new Date();  
+               now = new Date(now.getTime()-1);  
+               this.dom.expires = now.toUTCString();  
+               this.dom.save(this.file_name);  
+            }  
+        };  
+    }  
+    window.localStorage = new window.UserData("local_storage");  
+}
+</file>
+
+====== 简单Web留言本 ======
+
+<file html main.html>
+<html>
+<head>
+<meta charset='utf-8'>
+<script type='text/javascript' src='script.js'></script>
+</head>
+<body>
+    <h1>简单Web留言本</h1>
+    <textarea id='meno' cols='60' rows='10'></textarea><br>
+    <input type='button' value='追加' onclick="saveStorage('meno');">
+    <input type='button' value='初始化' onclick="clearStorage('msg');">
+    <hr>
+    <p id='msg'></p>
+</body>
+</html>
+</file>
+
+<file javascript script.js>
+function saveStorage(id){
+    var data = document.getElementById(id).value;
+    var time = new Date().getTime();
+    localStorage.setItem(time, data);
+    alert('saved ok!');
+    loadStorage('msg');
+}
+function loadStorage(id){
+    var result = '<table border="1">';
+    for(var i=0; I<localStorage.length; I++){
+        var key = localStorage.key(i);
+        var value = localStorage.getItem(key);
+        var date = new Date();
+        date.setTime(key);
+        var datestr = date.toGMTString();
+        result += '<tr><td>' + value + '</td><td>' + datestr + '</td></tr>';
+    }
+    result += '<table>';
+    var target = document.getElementById(id);
+    target.innerHTML = result;
+}
+function clearStorage(){
+    localStorage.clear();
+    alert('cleared ok!');
+    loadStorage('msg');
+}
+</file>
+
+====== indexedD数据库 ======
+
+在HTML5中，新增一种被称为"indexedDB"的数据库，该数据库是一种存储在客户端本地的NoSQL数据库，目前Chrome11，Firefox4, IE10以上版本的浏览器提供支持。
+===== indexedDB数据库连接 =====
+
+indexedDB数据是一种存储在客户端本地的NoSQL数据库，要使用数据库，要进行预定义，下面代码可在各浏览器中运行：
+  window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+  window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+  window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+  window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+连接数据库代码如下：
+<file javascript db.js>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<script>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+    
+    function connectDatabase(){
+        var dbName = 'indexedDBText';  // 数据库名
+        var dbVersion = 20120630;      // 版本号,长整型数值
+        var idb;
+        var dbConnect = indexedDB.open(dbName, dbVersion);  // 返回一个IDBOpenDBRequest对象
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;     // e.target.result为一个IDBDatabase对象，代表连接成功的数据库对象
+            alert('database connect is ok!');
+        };
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+    }
+</script>
+</head>
+<body>
+    <input type='button' value='连接数据库' onclick='connectDatabase()'/>
+</body>
+</html>
+</file>
+  
+===== 数据库版本更新 =====
+
+在使用indexedDB数据库时，所有对于数据的操作都在一个事务内部执行。，事务分为三种：
+  * 只读事务：READ_ONLY
+  * 读写事务：READ_WRITE
+  * 版本更新事务：VRESION_CHANGE
+对于创建对象仓库与索引的操作，只能在版本更新事务内部进行，因为在indexedDB API中不允许数据库中的对象仓库（相当于表）在同一个版本中发生变化，所以在创建或删除对象仓库时，必须要使用版本号来更新数据库的版本，以避免重复修改数据库结构。示例如下：
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>更新数据库的版本</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+
+    function VersionUpdate(){
+        var dbName = 'indexedDBTest';
+        var dbVersion = 20120630;
+        var idb;
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+        };
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+        dbConnect.onupgradeneeded = function(e){
+            idb = e.target.result;
+            var tx = e.target.transaction;  // 此处代表版本更新事务
+            var oldVersion = e.oldVersion;
+            var newVersion = e.newVersion;
+            // 此处执行创建对象仓库等处理
+        };
+    }
+</script>
+</head>
+<body>
+    <input type='button' value='数据库版本更新' onclick='VersionUpdate();'/>
+</body>
+</html>
+</file>
+
+上述代码事，监听数据库连接的请求对象onupgradeneeded事件，当连接数据库时发现指定的版本号大于数据库当前版本号时，触发该事件，当该事件被触发时，一个数据库的版本更新事务已经被开启，同时数据库的版本号已经被自动更新完毕。
+
+===== 创建对象仓库 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>创建对象仓库</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+
+    function CreateObjectStore(){
+        var dbName = 'indexedDBTest';
+        var dbVersion = 20120630;
+        var idb;
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+        };
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+        dbConnect.onupgradeneeded = function(e){
+            idb = e.target.result;
+            var tx = e.target.transaction;  // 此处代表版本更新事务
+            var name = 'Users';
+            var optionalParameters = {
+                keyPath: 'userId',
+                autoIncrement: false
+            };
+            var store = idb.createObjectStore(name, optionalParameters);
+            alert('对象仓库创建成功!');
+        };
+    }
+</script>
+</head>
+<body>
+    <input type='button' value='创建对象仓库' onclick='CreateObjectStore();'/>
+</body>
+</html>
+</file>
+
+===== 创建索引 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>创建索引</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+
+    function CreateIndex(){
+        var dbName = 'indexedDBTest';
+        var dbVersion = 20120630;
+        var idb;
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+        };
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+        dbConnect.onupgradeneeded = function(e){
+            idb = e.target.result;
+            var tx = e.target.transaction;  // 此处代表版本更新事务
+            var name = 'Users1';
+            var optionalParameters = {
+                keyPath: 'userId',
+                autoIncrement: false
+            };
+            var store = idb.createObjectStore(name, optionalParameters);
+            alert('对象仓库创建成功!');
+            var name = 'userNameIndex';
+            var keyPath = 'userName';
+            var optionalParameters = {
+                unique: false,
+                multiEntry: false
+            };
+            var idx = store.createIndex(name, keyPath, optionalParameters);
+            alert('索引创建成功!');
+        };
+    }
+</script>
+</head>
+<body>
+    <input type='button' value='创建索引' onclick='CreateIndex();'/>
+</body>
+</html>
+</file>
+
+===== 索引的multiEntry属性值 =====
+
+当该属性值为true,如果数据记录的索引属性值为一个数组，可以将该数组中的每一个元素添加在索引中，如果该属性值为false,则必须将该数组作为一个整体添加在索引中，默认值为false。例如：某篇文章组成的记录对象，属性值如下：
+  { id: 12,
+    title: '标题',
+    body:  '正文',
+    tags:  ['HTML', 'Javascript', 'PHP']
+  }
+如果将tags属性创建为一个索引，并且将该索引的multiEntry值设定为true,那么无论使用'HTML', 'Javascript', 'PHP'对tags属性进行检索，都可以检索出该条记录，如果将该索引的multiEntry值设定为false,则必须使用"['HTML', 'Javascript', 'PHP']"才能检查出该条记录。
+
+===== 使用事务 =====
+
+在数据库连接成功后，可以使用如下方法来开启只读事务与读写事务：
+  var storeNames = ['Users'];
+  var mode = IDBTransaction.READ_ONLY; //或 var mode = IDBTransaction.READ_WRITE;
+  var tx = idb.transaction(storeNames, mode);
+transaction方法有两个参数，第一个参数值可以由一些对象仓库名组成的一个字符串数组，用于定义事务的作用范围，也可以只指定一个对象仓库。第二个参数省略时，默认为只读事务。
+  var tx = idb.transaction('Users', IDBTransaction.READ_ONLY);
+如果不想限定事务的操作范围，可以使用数据库的objcetStoreNames属性值：
+  var tx = idb.transaction(idb.objectStoreNames, IDBTransaction.READ_ONLY);
+但是这种做法将对事务在运行时的性能产生很大的不利影响，还是应该正确指定事务所作用范围以及事务所读写模式。
+
+在indexedDB API中，用于开启事务所transaction方法必须被书写到某一个函数中，而且该事务将在函数结束时被自动提交，在需要显式调用事务的abort方法来中止事务，例如：
+  var tx = idb.transactione('Users', IDBTransaction.READ_WRITE);
+  tx.abort();  //中止事务
+可以通过监听事务对象的oncomplete事件及onabort事件并定义事件处理函数来定义事务结束或中止时所要执行的处理。
+
+===== 保存数据 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>向indexedDB数据库的对象仓库中保存数据</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+ 
+    function SaveData(){
+        var dbName = 'indexedDBTest';
+        var dbVersion = 20120630;
+        var idb;
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+            // 开启事务
+            var tx = idb.transaction(['Users'], IDBTransaction.READ_WRITE);
+            var store = tx.objcetStore('Users');
+            var value = {
+                userId: 1,
+                username: '张三',
+                address:  '住址1'
+            };
+            var req = store.put(value);
+            req.onsuccess = function(e){
+                alert('data save success.');
+            };
+            req.onerror = function(){
+                alert('data save failed.');
+            };
+        };
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+    }
+</script>
+</head>
+<body>
+    <input type='button' value='保存数据' onclick='SaveData();'/>
+</body>
+</html>
+</file>
+根据对象仓库的主键是内联主键还是外部主键，主键是否被指定为自增主键，对象仓库的put方法的参数值的指定方法也各不相同。
+主键为自增、内联主键时不需要指定主键值：
+  store.put({userName: 'hhj', address: 'gnl'});
+主键为内联、非自增主键时需要指定主键值：
+  store.put({userId: 1, username: 'hhj', address: 'gnl'});
+主键为外部主键时需要另行指定主键值：
+  store.put({username: 'hhj', address: 'gnl'}, 1);
+另外，在indexedDB API中，对象仓库还有一个add方法，该方法类似于put方法，区别在于当使用put方法保存数据时，如果指定的主键值在对象仓库中已存在，那么该主键所在数据被更新为使用put方法所保存的数据，而在使用add方法保存数据时，如果指定的主键值在对象仓库中已存在，那么保存失败。
+
+===== 获取数据 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>从indexedDB数据库的对象仓库中获取数据</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+ 
+    function GetData(){
+        var dbName = 'indexedDBTest';
+        var dbVersion = 20120630;
+        var idb;
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+            // 开启事务
+            var tx = idb.transaction(['Users'], IDBTransaction.READ_WRITE);
+            var store = tx.objcetStore('Users');
+            var req = store.get(1);  // 参数为获取数据的主键值。
+            req.onsuccess = function(e){
+                if(this.result === undefined){
+                    alert('没有符合条件的数据');
+                } else {
+                    alert('获取数据成功，用户名为' + this.result.userName);
+                }
+            };
+            req.onerror = function(){
+                alert('get data failed.');
+            };
+        };
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+    }
+</script>
+</head>
+<body>
+    <input type='button' value='获取数据' onclick='GetData();'/>
+</body>
+</html>
+</file>
+如果对象仓库中存在由数据记录的其他属性组成的索引，则可以根据该索引的属性来获取数据，例如：
+  var tx = idb.transaction(['Users'], IDBTransaction.READ_ONLY);
+  var store = tx.objectStore('Users');
+  var idx = store.index('userNameIndex');
+  
+  var req = idx.get('hhj');
+  req.onsuccess = function(e){
+      if(this.result === undefined){
+          alert('没有符合条件的数据');
+      } else {
+         alert('获取数据成功，用户名为' + this.result.userName);
+      }
+  };
+  req.onerror = function(){
+      alert('get data failed.');
+  };
+如果没有使用索引的unique属性值将索引定义为唯一索引，那么在对象仓库中可能存在多条符合条件的数据，而使用索引的get方法将只能获取到第一条符合条件的记录。
+
+===== 根据主键值检索数据 =====
+
+通过对象仓库或索引的get方法，只能获取到一条数据，在需要通过某个检索条件来检索一批数据时，需要使用游标。
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>根据数据记录的主键值检索数据</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+
+    var dbName = 'indexedDBTest';
+    var dbVersion = 20120630;
+    var idb;
+    
+    function window_onload(){
+        document.getElementById('btnSaveData').disabled = true;
+        document.getElementById('btnSearchData').disabled = true;
+    }
+    
+    function ConnectDataBase(){
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+            alert('数据库连接成功!');
+            document.getElementById('btnSaveData').disabled = false;
+        }
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+    }
+    
+    function SaveData(){
+        // 开启事务
+        var tx = idb.transaction(['Users'], IDBTransaction.READ_WRITE);
+        tx.oncomplete = function(){
+            alert('数据保存成功!');
+            document.getElementById('btnSearchData').disabled = false;
+            
+        };
+        tx.onabort = function(){
+            alert('数据保存失败!');
+        };
+        
+        var store = tx.objcetStore('Users');
+        var value = {
+            userId: 1,
+            username: '张三',
+            address: '住址1'
+        }
+        store.put(value);
+        var value = {
+            userId: 2,
+            username: '李四',
+            address: '住址2'
+        }
+        store.put(value);
+        var value = {
+            userId: 3,
+            username: '王五',
+            address: '住址3'
+        }
+        store.put(value);
+    }
+    
+    function SearchData(){
+        // 开启只读事务
+        var tx = idb.transaction(['Users'], IDBTransaction.READ_ONLY);
+        var store = tx.objectStore('Users');
+        var range = IDBKeyRange.bound(1,3);
+        var direction = IDBCursor.NEXT;
+        var req = store.openCursor(range, direction);
+        req.onsuccess = function(){
+            var cursor = this.result;
+            if(cursor){
+                alert('检索到一条数据，用户名为' + cursor.value.userName);
+                cursor.continue();
+            } else {
+                alert('检索完毕');
+            }
+        };
+        req.onerror = function(){
+            alert('检索失败');
+        };
+    }
+</script>
+</head>
+<body onload='window_onload()'>
+    <input type='button' value='连接数据库' onclick='ConnectDataBase();' id='btnConnectDataBase'/>
+    <input type='button' value='保存数据' onclick='SaveData()' id='btnSaveData' />
+    <input type='button' value='检索数据' onclick='SearchData()' id='btnSearchData' />
+</body>
+</html>
+</file>
+
+openCursor方法有两个参数，其中第一个参数为一个IDBKeyRange对象，该对象的创建方法有以下几种：
+  var range = IDBKeyRange.bound(lower, upper, lowerOpen, upperOpen);
+lower:开始的主键值，upper：结束的主键值，lowerOpen:为false时，包括lower;为true时，不包括lower; upperOpen:同lowerOpen
+  var range = IDBKeyRange.only(value);
+该方法返回一个由一条数据的主键值组成的IDBKeyRange集合对象。
+  var range = IDBKeyRange.lowerBound(lower, lowerOpen);
+该方法返回一组主键值大于（或大于等于）lower的集合对象。
+  var range = IDBKeyRange.upperBound(upper, upperOpen);
+该方法返回一组主键值小于（或小于等于）upper的集合对象。
+
+另外，在使用对象仓库的openCursor方法时，可以利用IDBKeyRange集合对象的lower属性值获取IDBKeyRange集合中的最小主键值；upper属性获取最大主键值；lowerOpen属性值判断集合中是否包含最小主键值；upperOpen属性值判断是否包含最大主键值。
+
+openCursor方法中的第二个参数derection用于指定游标的读取方向，为一个常量值：
+  * IDBCursor.NEXT 游标中数据按主键值升序排序，主键值相等的数据均被读取到游标中
+  * IDBCursor.NEXT_NO_DUPLICATE 游标中数据按主键值升序排序，主键值相等时只读取第一条数据
+  * IDBCursor.PREV 游标中数据按主键值降序排序，主键值相等的数据均被读取到游标中
+  * IDBCursor.PREV_NO_DUPLICATE 游标中数据按主键值降序排序，主键值相等时只读取第一条数据
+
+如果存在符合检索条件的数据，那么请求对象的result值为一个IDBCursorWithValue对象，该对象的key属性值中保存了游标中当前指向的数据记录的主键值，该对象的value为一个对象，代表该数据记录。
+
+当存在符合检索条件的数据时，可通过IDBCursorWithValue对象的update方法更新该条数据，代码如下：
+  cursor.update({
+      userId: cursor.key,
+      username: 'test',
+      address: 'test'
+  });
+可通过IDBCursorWithValue对象的delete方法删除该条数据：
+  cursor.delete();
+当存在符合检索条件的数据时，可通过IDBCursorWithValue对象的continue方法读取游标中的下一条记录：
+  cursor.continue();
+
+===== 根据索引属性值检索数据 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>根据索引属性值检索数据</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+
+    var dbName = 'indexedDBTest';
+    var dbVersion = 20120630;
+    var idb;
+    
+    function window_onload(){
+        document.getElementById('btnSaveData').disabled = true;
+        document.getElementById('btnSearchData').disabled = true;
+    }
+    
+    function ConnectDataBase(){
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+            alert('数据库连接成功!');
+            document.getElementById('btnSaveData').disabled = false;
+        }
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+    }
+    
+    function SaveData(){
+        // 开启事务
+        var tx = idb.transaction(['Users'], IDBTransaction.READ_WRITE);
+        tx.oncomplete = function(){
+            alert('数据保存成功!');
+            document.getElementById('btnSearchData').disabled = false;
+            
+        };
+        tx.onabort = function(){
+            alert('数据保存失败!');
+        };
+        
+        var store = tx.objcetStore('Users');
+        var value = {
+            userId: 1,
+            username: '用户A',
+            address: '住址1'
+        }
+        store.put(value);
+        var value = {
+            userId: 2,
+            username: '用户B',
+            address: '住址2'
+        }
+        store.put(value);
+        var value = {
+            userId: 3,
+            username: '用户C',
+            address: '住址3'
+        }
+        store.put(value);
+    }
+    
+    function SearchData(){
+        // 开启只读事务
+        var tx = idb.transaction(['Users'], IDBTransaction.READ_ONLY);
+        var store = tx.objectStore('Users');
+        var idx = stor.index('userNameIndex');
+        var range = IDBKeyRange.bound('用户A', '用户C');
+        var direction = IDBCursor.NEXT;
+        var req = store.openCursor(range, direction);
+        req.onsuccess = function(){
+            var cursor = this.result;
+            if(cursor){
+                alert('检索到一条数据，用户名为' + cursor.value.userName);
+                cursor.continue();
+            } else {
+                alert('检索完毕');
+            }
+        };
+        req.onerror = function(){
+            alert('检索失败');
+        };
+    }
+</script>
+</head>
+<body onload='window_onload()'>
+    <input type='button' value='连接数据库' onclick='ConnectDataBase();' id='btnConnectDataBase'/>
+    <input type='button' value='保存数据' onclick='SaveData()' id='btnSaveData' />
+    <input type='button' value='检索数据' onclick='SearchData()' id='btnSearchData' />
+</body>
+</html>
+</file>
+
+===== 复合索引 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>创建并使用复合索引</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+
+    var dbName = 'indexedDBTest';
+    var dbVersion = 20120630;
+    var idb;
+    
+    function window_onload(){
+        document.getElementById('btnSaveData').disabled = true;
+        document.getElementById('btnSearchData').disabled = true;
+    }
+    
+    function ConnectDataBase(){
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+            alert('数据库连接成功!');
+            document.getElementById('btnSaveData').disabled = false;
+        }
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+        dbConnect.onupgradeneeded = function(e){
+            idb = e.target.result;
+            var tx = e.target.transaction;
+            var name = 'Users2';
+            var optionalParameters = {
+                keyPath: 'userId',
+                autoIncrement: false
+            };
+            var store = idb.createObjectStore(name, optionalParameters);
+            alert('对象仓库创建成功');
+            var name = 'userNameAddressIndex';
+            var keyPath = ['userName', 'address'];
+            var optionalParameters = {
+                unique: false,
+                multiEntry: false
+            };
+            var idx = store.createIndex(name, keyPath, optionalParameters);
+            alert('索引创建成功');
+        };
+    }
+    
+    function SaveData(){
+        // 开启事务
+        var tx = idb.transaction(['Users2'], IDBTransaction.READ_WRITE);
+        tx.oncomplete = function(){
+            alert('数据保存成功!');
+            document.getElementById('btnSearchData').disabled = false;
+            
+        };
+        tx.onabort = function(){
+            alert('数据保存失败!');
+        };
+        
+        var store = tx.objcetStore('Users2');
+        var value = {
+            userId: 1,
+            username: '用户A',
+            address: '住址1'
+        }
+        store.put(value);
+        var value = {
+            userId: 2,
+            username: '用户B',
+            address: '住址2'
+        }
+        store.put(value);
+        var value = {
+            userId: 3,
+            username: '用户C',
+            address: '住址3'
+        }
+        store.put(value);
+    }
+    
+    function SearchData(){
+        // 开启只读事务
+        var tx = idb.transaction(['Users2'], IDBTransaction.READ_ONLY);
+        var store = tx.objectStore('Users2');
+        var idx = stor.index('userNameAddressIndex');
+        
+        var req = idx.get(['用户A', '住址1']);
+        req.onsuccess = function(){
+            if(this.result === undefined){
+                alert('没有符合条件的数据');
+            } else {
+                alert('获取数据成功，主键为' + this.result.userId);
+            }
+        };
+        req.onerror = function(){
+            alert('检索失败');
+        };
+    }
+</script>
+</head>
+<body onload='window_onload()'>
+    <input type='button' value='连接数据库' onclick='ConnectDataBase();' id='btnConnectDataBase'/>
+    <input type='button' value='保存数据' onclick='SaveData()' id='btnSaveData' />
+    <input type='button' value='检索数据' onclick='SearchData()' id='btnSearchData' />
+</body>
+</html>
+</file>
+
+===== 统计对象仓库中的数据量 =====
+
+<file html main.html>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8'>
+<title>统计数据条数</title>
+<script type='text/javascript'>
+    window.indexedDB = window.indexedDB || window.webkitIndexedDB || window.mozIndexedDB || window.msIndexedDB;
+    window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction;
+    window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange;
+    window.IDBCursor = window.IDBCursor || window.webkitIDBCursor || window.msIDBCursor;
+
+    var dbName = 'indexedDBTest';
+    var dbVersion = 20120630;
+    var idb;
+
+    function Count(){
+        var dbConnect = indexedDB.open(dbName, dbVersion);
+        dbConnect.onsuccess = function(e){
+            idb = e.target.result;
+            alert('数据库连接成功!');
+            // 开启事务
+            var tx = idb.transaction(['Users'], IDBTransaction.READ_WRITE);
+            var store = tx.objcetStore('Users');
+            var req = store.count();
+            req.onsuccess = function(){
+                alert('对象仓库中共有' + this.result + '条记录');
+            };
+        }
+        dbConnect.onerror = function(e){
+            alert('database connect failed!');
+        };
+    }
+</script>
+</head>
+<body onload='window_onload()'>
+    <input type='button' value='统计数据条数' onclick='Count();' />
+</body>
+</html>
+</file>
+
+
+
+
+
+

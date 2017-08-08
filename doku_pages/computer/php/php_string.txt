@@ -1,0 +1,171 @@
+====== 字符串 ======
+
+===== 定界符定义方式 =====
+
+  $string = <<< flag
+      字符串
+  flag;
+结束标识符必须从行的第一列开始。定界符与双引号的使用效果相同，定界符也可以直接输出变量的值，同时也支持使用各种转义字符。唯一的区别是双引号在定界符中不需要转义。如果需要处理大量内容，同时双不希望频繁使用各种转义军事委员会，此时使用定界符定义字符串最合适。
+
+
+===== 截取与拼接 =====
+
+  string substr( string $str, int $start [, int $length] );
+  拼接符：'.'
+
+===== 转义与还原 =====
+
+  string addslashes( string $str );
+  string stripslashes( string $str );
+
+===== 显示与格式化 =====
+
+==== echo() print() ====
+
+  void echo(string);
+  int print(string); 永远返回1
+
+==== printf() sprint() ====
+
+printf()可以直接将格式化后的字符串显示输出，而sprint()把格式化的字符串写入一个变量中，再通过echo显示输入。
+  int printf( string $format [, mixed $arg1 [, mixed $arg2...]] );
+  strig sprint( string $format [, mixed $arg1 [, mixed $arg2...]] );
+format:指定要输出显示的字符串格式。该格式由普通字符和一些以%开头的特殊字符共同构成。
+  参数值       参数说明
+   %b    表示整型数据，以二进制形式输出
+   %c    表示整型数据，以ASCII码形式输出
+   %d    表示整型数据，以有符号形式输出
+   %u    表示整型数据，以无符号形式输出
+   %o    表示整型数据，以八进制形式输出
+   %x    表示整型数据，以十六进制形式输入，并且字母字符为小写形式
+   %X    表示整型数据，以二进制形式输入，并且字母字符为大写形式
+   %f    表示浮点型数据   %.2f 两位小数
+   %s    表示字符串
+
+==== nl2br() ====
+
+将字符串中的换行符'\n'转换为'<br />'，然后显示出来。
+  string nl2br( string $str [, bool $is_xhtml] )
+$is_xhtml:指定是否使用与XHTML兼容的换行符，该参数的默认值为true.
+
+==== wordwrap() ====
+
+按照指定的长度对字符串进行转行处理。
+  string wordwrap( string $str [, int $width [, string $break [, bool $cut]]] );
+  $str:   指定要进行换行的字符串
+  $width: 指定最大行宽度，默认值为75
+  $break: 指定作为分隔符使用的字符，默认值为'\n'
+  $cut:   指定是否对大于指定宽度的单词进行换行，默认值为false
+
+==== 大小写转换函数 ====
+
+  string strtolower( string $str )
+  string strtoupper( string $str )
+  string ucfirst( string $str) 首字符大写
+  string ucwords( string $str) 首字母大写
+
+==== md5() ====
+
+  string md5( string $str [, bool $raw_output] )
+$raw_output:默认值为false,返回一个32位的十六进制字符串。如为true，返回16位的二进制数。
+
+===== 长度与数目 =====
+
+  int strlen( string $str )
+注意:汉字的UTF-8编码格式的长度是3。
+
+
+统计一个指定的子字符串在所提供的字符串中有多少个。
+  int substr_count( string $haystack, string $needle [, int $offset [, int $length]] )
+  $haystack: 指定要检查的字符串
+  $needle:   指定的子字符串
+  $offset:   指定在字符串中何处开始搜索，默认值为0
+  $length:   指定搜索的长度
+
+统计某个单词出现的数目。
+  mixed str_word_count( string $str [, int $format [, string $charlist]] )
+  $format: 指定返回的模式。0 默认值，返回找到的单词数目
+                         1 返回一个数组，键名从0开始，值为实际的单词
+                         2 返回一个数组，键名是单词在字符串中的位置，值为实际单词
+  $charlist: 指定被认定为单词的特殊字符。
+
+===== 检索 =====
+
+==== strstr() ====
+
+查找子字符串，该函数返回的结果为子字符串第一次出现后的所有内容。
+  string strstr( string $haystack, string $needle )
+  $needle: 指定查找的子字符串，如为数字，则会匹配该数字ASCII码值的字符。
+strstr()区分大小写。如不区分大小写，可用stristr()。strstr()从字符串首次出现的位置开始查找，要想从字符串中最后一次出现的位置开始查找，可以使用strrchr()，该函数区分大小写。
+
+==== strops() ====
+
+返回查找字符串中第一次出现的位置。
+  int strpos( string $haystack, mixed $needle [, int $offset] )
+strops()区分大小写。若不需区分大小写，可使用stripos()。
+
+===== 替换 =====
+
+==== substr_replace() ====
+
+用于指定字符串中的部分字符串进行替换。
+  string substr_replace( string $str, string $replacement, int $start [, int $length] )
+$length: 指定返回的字符串长度，默认是整个字符串。正数表示起始位置从字符串的开头开始；负数表示起始位置从字符串的结尾开始；0表示'插入'，而非'替代'。
+
+==== str_ireplace() ====
+
+使用新的子字符串替换原始字符串中被指定要替换的字符串。
+  mixed str_ireplace( mixed $search, mixed $replace, mixed $subject [, int &$count] )
+  $subject: 指定将要查找的范围
+  &$count:  指定执行字符串替换的次数
+注意：本函数不区分大小写。
+
+===== 切分与合并 =====
+
+==== explode() ====
+
+用指定分隔符把字符串切分成数组。
+  array explode( string $separator, string $str [, int $limit] )
+  $sepatator: 如为''，返回false; 如找不到，返回包含$str单个元素的数组
+  $limit: 返回数组中最多最多$limit个元素，而最后的元素将包含字符串的剩余部分
+
+==== str_split() ====
+
+将一个字符串分割成等长度的多个字符串。
+  array str_split( string $str [, int $split_lenght] )
+  $split_length: 指定每个数组的长度 ，默认值为1。
+  
+==== implode() ====
+
+将数组的元素连接成一个字符串。
+  string implode( string $glue, array $poeces )
+  $glue: 指定数组元素之间放置的内容，默认为空格。
+join()是implode()的别名，二者用法完全相同。
+
+===== 比较 =====
+
+比较操作符'=='，比较函数strcmp()。
+  int strcmp( string $str1, string $str2 ）
+可以对输入的两个字符串按照字节的ASCII码值从两个字符串的首字母开始比较，如果相等则地入下一个字节的比较，直到结束比较。如果返回值为0，则表字字符串相等；如果返回值小于0，则表示字符串str1小于str2;如果大于0，则str1大于str2。strcmp()区分大小写，要想不区分大小写，可以使用strcasecmp()。
+
+  int strncmp( string $str, string $str2, int $len )
+  $len: 指定每个字符串用于比较的字符个数。
+
+===== 字符串与HTML转换 =====
+
+==== htmlentities() ====
+
+将所有的字符都转换成HTML字符串：
+  string htmlentities( string $str [, int $quote_style [, string $charset]] )
+$quote_style: 选择如果处理字符串中的引号：
+  ENT_COMPAT    转换双引号，忽略单引号，它是默认值
+  ENT_NOQUOTES  忽略双引号和单引号
+  ENT_QUOTES    转换双引号和单引号
+$charset:指定转换所使用的字符集，默认为ISO-8859-1，指定字符集可以避免转换中文字符出现乱码问题。
+
+==== strip_tags() ====
+
+删除字符串中的HTML标签。
+  string strip_tags( string $str [, string $allowable_tags] )
+$allowable_tags: 放入该列表中的HTML标签将保留，其他的则全部删除。默认将所有HTML标签都删除。
+

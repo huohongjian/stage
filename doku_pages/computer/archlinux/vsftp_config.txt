@@ -1,0 +1,769 @@
+vsftp配置详解 
+
+ 
+ 
+来源: ChinaUnix博客 　日期： 2006.05.22 17:19　(共有条评论) 我要评论 
+  
+vsftp配置详解 
+ 这里是对vsftp配置文件的详细解释，主要参考了《RedHat8.0网络服务》一书中《使用vsftpd架设FTP服务器》一节的内容。 
+
+ 声明：以 下内容基于Smartraining工作室Osmond 编著的《RedHat 8.0 网络服务》一书中 《使用vsftpd架 设FTP服务器》 一节。为适应debian有大幅删改，原作者联系方法：
+osmond68@163.com
+
+一、vsftpd简介 
+ 在稳定性方面：vsftpd可以在单机（非集群）上支持4000个以上的并发用户同时连接。据
+ftp.redhat.com
+的数据，vsftpd可以支持15000个并发用户。 
+ 除了安全、高速、稳定之外，vsftpd还具有如下的特性： 
+ 支持基于IP的虚拟FTP服务器 
+ 支持虚拟用户 
+ 支持PAM或xinetd / tcp_wrappers的认证方式 
+ 支持两种运行方式：独立和Xinetd 
+支持每个虚拟用具有独立的配置 
+ 支持带宽限制等 
+vsftpd的配置文件有三个，分别是： 
+/etc/vsftpd.conf 
+ /etc/vsftpd.ftpusers 
+ /etc/vsftpd.user_list 
+其中，/etc/vsftpd.conf是主配置文件。/etc/vsftpd.ftpusers中指定了哪些用户不能访问FTP服务器。
+/etc/vsftpd.user_list中指定的用户默认情况下（即在/etc/vsftpd.conf中设置了userlist_deny=
+ YES）不 能访问FTP服务
+ 器，当在/etc/vsftpd.conf中设置了userlist_deny=NO时，仅仅允许/etc/vsftpd.user_list中指定的用
+ 户访问FTP服务器。 
+ 二、vsftpd的默认主配置文件 
+vsftpd的默认主配置文件的内容如下： 
+//允许匿名登录 
+anonymous_enable=YES 
+ //允许本地用户登录 
+local_enable=YES 
+ //开放本地用户的写权限 
+write_enable=YES 
+ //设置本地用户的文件生成掩码为022，默认值为077 
+ local_umask=022 
+ //当切换到目录时，显示该目录下的.message隐含文件的内容 
+//这是由于默认情况下有message_file=.message的 设置 
+dirmessage_enable=YES 
+ //激活上传和下载日志 
+xferlog_enable=YES 
+ //启用FTP数据端口的连接请求 
+connect_from_port_20=YES 
+ //使用标准的ftpd xferlog日志格式 
+xferlog_std_format=YES 
+ //设置PAM认证服务的配置文件名称，该文件存放 在/etc/pam.d/目录下 
+#pam_service_name=vsftpd 
+三、进一步配置vsftpd 
+ 1.允许匿名用户上传 
+ 为了使匿名用户能够上传，需要在/etc/vsftpd中激活两个配置选项，分别是： 
+anon_upload_enable=YES 
+ //允许匿名用户上传 
+anon_mkdir_write_enable=YES 
+ //开 启匿名用户的写和创建目录的权限 
+ 若要以上两项设置生效，同时还要求： 
+write_enable=YES 
+ //匿名用户对文件系统的上传目录具有写权限 
+ 添加如下的配置语句： 
+anon_world_readable_only=NO 
+ //上面的配置语句用于放开匿名用户的浏览权限 
+ 创建匿名上传目录： 
+mkdir /var/ftp/incoming 
+修改上传目录的权限： 
+chmod o+w /var/ftp/incoming/ 
+重新启动vsftpd. 
+ 2.启用ASCII传输方式 
+ 默认情况下，vsftpd为了安全，禁止了ASCII传输方式。虽然在ftp客户软件中可以使用asc命
+ 令，但是传输文件时仍然使用二进制传输方式。可以分别启用上传和下载的ASCII传输方式，方法是编辑/etc/vsftpd配置文件，将如下两
+ 行前的#去掉即可 启用: 
+ #ascii_upload_enable=YES 
+ #ascii_download_enable=YES 
+ 3.设置连接服务器后的欢迎信息 
+ 为了使用户连接服务器后显示信息，vsftpd提供了两个选项，分别是： 
+ftpd_banner 
+ banner_file 
+例如：可以设置如下的ftpd_banner选项的值： 
+ftpd_banner=Welcome to Smartraining FTP service. 
+即：用户连接服务器后显示信息“Welcome to Smartraining FTP service.”。 
+ 也可以设置如下的banner_file选项的值： 
+banner_file=/var/vsftpd_banner_file 
+即：用户连接服务器后显示文件/var/vsftpd_banner_file中的信息。 
+ 注意：（1）如果设置了ftpd_banner的值，将覆盖vsftpd默认的服务器连接后的信息。 
+ （2）如果ftpd_banner和banner_file同时设置，那么banner_file将覆盖ftpd_banner的设置。 
+4．配置基本的性能和安全选项 
+//设置空闲的用户会话的中断时间 
+ 例如下面的配置： 
+idle_session_timeout=600 
+将在用户会话空闲10分钟后被中断。 
+//设置空闲的数据连接的的中断时间 
+ 例如下面的配置： 
+data_connection_timeout=120 
+将在数据连接空闲2分钟后被中断。 
+//设置客户端空闲时的自动中断和激活连接的时间 
+ 例如下面的配置： 
+accept_timeout=60 
+ connect_timeout=60 
+将使客户端空闲1分钟后自动中断连接，并在中断1分钟后自动激活连接 
+//设置最大传输速率限制 
+ 例如下面的配置： 
+local_max_rate=50000 
+ anon_max_rate=30000 
+将使本地用户的最大传输速率为50kbytes / sec，匿名用户的 传输速率为30 kbytes / sec。 
+//设置客户端连接时的端口范围 
+ 例如下面的配置： 
+pasv_min_port=50000 
+ pasv_max_port=60000 
+将使客户端连接时的端口范围在50000和60000之间。这提高了系统的安全性。 
+//设置chroot 
+在 默认配置中，本地用户可以切换到自家目录以外的目录进行浏览，并在权限许可的范围内进行下载和上传。这样的设置对于一个FTP服务器来说是不安全的。如果希望用户登录后不能切换到自家目录以外的目录，则需要设置chroot选项，涉及如下选项： 
+chroot_local_user 
+ chroot_list_enable 
+ chroot_list_file 
+有两种设置chroot的方法： 
+ （1）设置对所有的本地用户执行chroot（即活动范围限制在自家目录)只要将chroot_local_user的值设 为YES即可， 即： 
+chroot_local_user=YES 
+（2）设置指定的用户执行chroot需要如下的设置： 
+chroot_local_user=NO 
+ chroot_list_enable=YES 
+ chroot_list_file= /etc/vsftpd.chroot_list 
+这样，只有/etc/vsftpd.chroot_list文件中指定的用户才执行chroot。 
+ 注意 ：上面所提及的文件/etc/vsftpd.chroot_list和下面将要提及的文件 /etc/vsftpd.user_list的格式要求均为每个 用户名占一行。 
+5．配置基于本地用户的访问控制 
+ 要配置基于本地用户的访问控制，可以通过修改vsftpd的主配置文件/etc/vsftpd.conf来进行， 有两种限制方法： 
+1）限制指定的本地用户不能访问，而其他本地用户可访问 
+ 例如下面的设置： 
+userlist_enable= YES 
+ userlist_deny=YES 
+ userlist_file= /etc/vsftpd.user_list 
+使文件/etc/vsftpd.user_list中 指定的本地用户不能访问FTP服务器，而其他本地用户可访问FTP服务器。 
+2）限制指定的本地用户可以访问，而其他本地用户不可访问 
+ 例如下面的设置： 
+userlist_enable= YES 
+ userlist_deny= NO 
+ userlist_file= /etc/vsftpd.user_list 
+使文件/etc/vsftpd.user_list中 指定的本地用户可以访问FTP服务器，而其他本地用户不可以访问FTP服务器。 
+ 注意：对于userlist_enable可以这样理解： 
+ 如
+ 果userlist_enable=YES，表示vsftpd将从userlist_file选项给出的文件名中装载一个含有用户名的清单。然后再读取
+userlist_deny的值来确定vsftpd.user_list中的用户是否允许访问FTP服
+ 务器。如果用户不能访问，将在输入用户口令前被拒绝。 
+6．配置基于主机的访问控制 
+ 由于vsftpd有两种运行方式，即：由inetd启动和独立启动。
+ 这两种运行方式的主机访问控制配置是不同的，下面介绍的是由xinetd启动的vsftpd的主机访问控制的配置。显然，要配置这种主机访问控制，需要修
+ 改配置文件/etc/xinetd.d/vsftpd。 
+1）只允许指定的主机访问 
+ 在配置文件/etc/xinetd.d/vsftpd的｛｝中添加如下的配置语句： 
+only_from  
+例如：only_from 192.168.1.0 
+表示只允许192.168.1.0网段内的主机访问。 
+2）指定不能访问的主机 
+ 在配置文件/etc/xinetd.d/vsftpd的｛｝中添加如下的配置语句： 
+no_access  
+例如：no_access 192.168.1.0 
+表示只有192.168.1.0网段内的主机不能访问。 
+ 关于主机表的书写形式，见下表： 
+ 访问控制表时主机表的书写语法 
+ 选项值 含义 
+Hostname 可解析的主机名 
+IP Address 十进制表示的IP地址 
+Net_name 在/etc/networks中定义的网络名 
+x.x.x.0 x.x.0.0 x.0.0.0 0.0.0.0 0作为通配符看待。如：191.72.61.0匹配从191.72.61.0到191.72.61.255的所有IP地址。0.0.0.0表示匹配所有的IP地址 
+x.x.x.{a,b,.} x.x.{a,b,.} x.{a,b,.} 指定主机表。如：191.72.61.{1,3,123}表示包含地址191.72.61.1、191.72.61.2和191.72.61.123 
+ IPAddress/netmask 定义要匹配的网络或子网。如：172.19.16/20匹配从172.19.16.0到172.19.31.255 
+ 3）配置每个客户机的最大连结数 
+//在置文件/etc/xinetd.d/vsftpd的｛｝中添加如下的配置语句： 
+per_source = 数值 
+ 例如：per_source = 5表示每个客户机的最大连接数为5。 
+4）配置服务器总的并发连接数 
+ 在配置文件/etc/xinetd.d/vsftpd的｛｝中添加如下的配置语句： 
+instances = 数值 
+ 例如：instances = 200 表示FTP服务器总共支持的最高连接数为200。 
+5）配置访问时间限制 
+ 在配置文件/etc/xinetd.d/vsftpd的｛｝中添加如下的配置语句： 
+access_time = hour:min-hour:min 
+例如：access_time = 18:00-23:59 表示只有在下午6点到午夜0点之前才能访问此FTP服务器； 
+ 又如：access_time = 8:30-11:30 13:00-18:00 表示只有在上午8点半到11点半和下午1点到下午6点才能访问此FTP服务器。 
+6）指定连接失败时显示的信息 
+ 在配置文件/etc/xinetd.d/vsftpd的 ｛｝中添加如下的配置语句： 
+banner_fail =文件名 
+ 例如：banner_fail = /etc/vsftpd.busy_banner 表示当连接失败时显示文件/etc/vsftpd.busy_banner中的内容。 
+ 可以用下面的命令生成文件/etc/vsftpd.busy_banner： 
+echo "421 Server busy, please try later."> /etc/vsftpd.busy_banner 
+下面内容是基于xinetd的，因为debian用的是inetd，所以懒得修改了:( 
+四、使用vsftpd配置高安全级别的匿名服务器 
+ 高安全级别匿名FTP服务器的配置要求: 
+仅仅允许匿名用户访问 
+ 不允许本地用户访问 
+ 关闭所有写权限 
+ 不允许匿名用户上传 
+ 设置客户端连接时的端口范围 
+ 设置匿名用户的最大传输速率限制 
+ 设置空闲的数据连接的中断时间 
+ 设置客户端空闲时的自动中断和激活连接的时间 
+ 配置每个主机的最大连接数 
+ 配置总的并发连接数 
+ 配置禁止访问的主机 
+ 配置安全日志 
+vsftpd推荐使用这种近乎于偏执的安全 配置，如果用户只想架设匿名FTP下载服务器，出于安全性的考虑，请参考使用这种谨慎配置。 
+ 这种安全匿名服务器的配置，可以从vsftpd的源代码树中获得，具体操作步骤如下： 
+ 进入vsftp源代码树的EXAMPLE/INTERNET_SITE目录复制默认配置文件： 
+# cd /usr/local/src/vsftpd-1.1.3/EXAMPLE/INTERNET_SITE 
+ # cp vsftpd.conf /etc 
+ # cp vsftpd.xinetd /etc/xinetd.d/vsftpd 
+ //修改主配置文件/etc/vsftpd.conf，添加一 个连接后的信息 
+# cat >>/etc/vsftpd.conf  ftpd_banner=This FTP server is anonymous only. 
+ > ! 
+ //显示主配置文件的内容如下： 
+# cat /etc/vsftpd.conf 
+ # Access rights 
+ anonymous_enable=YES 
+ local_enable=NO 
+ write_enable=NO 
+ anon_upload_enable=NO 
+ anon_mkdir_write_enable=NO 
+ anon_other_write_enable=NO 
+ # Security 
+ anon_world_readable_only=YES 
+ connect_from_port_20=YES 
+ hide_ids=YES 
+ pasv_min_port=50000 
+ pasv_max_port=60000 
+ # Features 
+ xferlog_enable=YES 
+ ls_recurse_enable=NO 
+ ascii_download_enable=NO 
+ async_abor_enable=YES 
+ # Performance 
+ one_process_model=YES 
+ idle_session_timeout=120 
+ data_connection_timeout=300 
+ accept_timeout=60 
+ connect_timeout=60 
+ anon_max_rate=50000 
+ ftpd_banner=This FTP server is anonymous only. 
+ //接下来查看/etc/xinetd.d/vsftpd 
+ # cat /etc/xinetd.d/vsftpd 
+ service ftp 
+ { 
+ disable = no 
+ socket_type = stream 
+ wait = no 
+ user = root 
+ server = /usr/local/sbin/vsftpd 
+ per_source = 5 
+ instances = 200 
+ no_access = 192.168.1.3 
+ banner_fail = /etc/vsftpd.busy_banner 
+ log_on_success += PID HOST DURATION 
+ log_on_failure += HOST 
+ } 
+ //重新启动xinetd 
+ # service xinetd restart 
+ //配置结束 
+ 五、配置基于IP的虚拟FTP服务器 
+vsftpd支持基于IP的虚拟FTP服务器配置。其主要配置步骤为： 
+ 配置虚拟IP地址 
+ 建立虚拟FTP的服务器目录并设置适当的权限 
+ 建立虚拟FTP的服务器的xinetd配置文件 
+ 建立虚拟FTP的服务器的主配置文件 
+ 注意：虚拟FTP的服务器要有单独的xinetd配置文件和单独的主配置文件， 这两个文件不能与原配置文件重名。 
+
+
+ 具体操作过程如下： 
+
+
+1.查看本机现有的IP地址 
+# ifconfig |grep -1 eth0 
+ eth0 Link encap:Ethernet HWaddr 00:50:56:C7:22:DF 
+ inet addr:192.168.1.222 Bcast:192.168.1.255 Mask:255.255.255.0 
+ //可以看出本机的第一个网络接口eth0的IP为192.168.1.222 
+ 2.配置一个虚拟网络接口eth0:1 
+ # ifconfig eth0:1 192.168.1.234 up 
+ # ifconfig |grep -1 eth0:1 
+ eth0:1 Link encap:Ethernet HWaddr 00:50:56:C7:22:DF 
+ inet addr:192.168.1.234 Bcast:192.168.1.255 Mask:255.255.255.0 
+ //可以看出本机的虚拟网络接口eth0:1的IP为192.168.1.234 
+
+
+ 3.建立虚拟FTP的服务器目录 
+# mkdir -p /var/ftp2/pub 
+ //确保目录具有如下的权限 
+# ll -d /var/ftp2 
+ drwxr-xr-x 3 root root 4096 3月12 03:00 /var/ftp2 
+ # ll -d /var/ftp2/pub 
+ drwxr-xr-x 2 root root 4096 3月12 03:00 /var/ftp2/pub 
+
+
+ 4.创建此虚拟服务器的匿名用户所映射的本地用户ftp2 
+ # useradd -d /var/ftp2 -M ftp2 
+
+
+ 5.更改现有的配置文件/etc/xinetd.d/vsftpd 
+ # vi /etc/xinetd.d/vsftpd 
+ // 在此文件的｛｝中添加如下的配置语句： 
+// bind = 192.168.1.222 
+ // 将原FTP服务绑定到eth0接口，之后保存退出vi 
+
+
+ 6.生成并修改新的虚拟FTP服务器的配置文件/etc/xinetd.d/vsftpd2 
+ # cp /etc/xinetd.d/vsftpd /etc/xinetd.d/vsftpd2 
+ //更改新的配置文件/etc/xinetd.d/vsftpd2 
+ # vi /etc/xinetd.d/vsftpd2 
+ //在此文件的｛｝中添加如下的配置语句： 
+bind = 192.168.1.234 
+ //将虚拟FTP服务绑定到eth0:1接口 
+//另外添加如下的配置语句： 
+server_args = /etc/vsftpd_site2.conf 
+ //使vsftpd读取虚拟FTP服务器的主配置文件，之后保存退出vi 
+
+
+ 7.生成并修改虚拟FTP服务器的主配置文件/etc/vsftpd_site2.conf 
+ # cp /etc/vsftpd.conf /etc/vsftpd_site2.conf 
+ //修改新的主配置文件 
+# vi /etc/vsftpd_site2.conf 
+ //将如下的配置语句行： 
+ftpd_banner=This FTP server is anonymous only. 
+ //修改为： 
+ftpd_banner=This is the alternative FTP site. 
+ //添加如下的配置语句： 
+ftp_username=ftp2 
+ //使此虚拟服务器的匿名用户映射到本地用户ftp2 
+ //这样匿名用户登录后才能进入本地用户ftp2的/var/ftp2目录 
+//修改后，保存退出vi 
+ # 
+ 8.重新启动xinetd 
+ # service xinetd restart 
+ # 
+ //配置结束 
+
+
+ 六、配置独立运行的vsftpd 
+
+
+显然，这种启动方式将不再需要/etc/xinetd.d下面的配置文件。要配置独立运行的vsftpd很简单，只需要在前面的 
+
+ 主配置文件的基础上添加如下的配置即可: 
+设置listen=YES 
+指明vsftpd以独立运行方式启动。 
+ 为了实现访问控制，需要添加如下的配置项： 
+ 设置max_clients=200 
+指明服务器总的并发连接数 
+ 设置max_per_ip=4 
+指明每个客户机的最大连接数。 
+
+
+ 具体操作步骤如下： 
+
+
+//复制一个新的主配置文件 
+# cp /etc/vsftpd.conf /etc/vsftpd.standalone.conf 
+ //编辑新的配置文件/etc/vsftpd.standalone.conf 
+ # vi /etc/vsftpd.standalone.conf 
+ //在文件开始处插入下面的行 
+listen=YES 
+ max_clients=200 
+ max_per_ip=4 
+ //并将下面的配置语句 
+ftpd_banner=This FTP server is anonymous only. 
+ //改为： 
+ftpd_banner=This FTP server is anonymous only, and vsftpd in "standalone" mode. 
+ //(注意：要写在一行里) 
+ //退出vi 
+ //将由xinetd启动的配置停用 
+# vi /etc/xinetd.d/vsftpd 
+ //将disable = no 
+ //设为disable = yes 
+ //保存后退出vi 
+
+
+ # vi /etc/xinetd.d/vsftpd2 
+ //将disable = no 
+ //设为disable = yes 
+ //保存后退出vi 
+ //重新启动xinetd 
+ # service xinetd restart 
+ //启动独立运行的vsftpd守护进程 
+# /usr/local/sbin/vsftpd /etc/vsftpd.standalone.conf & 
+
+
+
+七、配置独立运行的vsftpd在非标准端口下提供服务 
+ 为了配置独立运行的vsftpd在非标准端口下提供服务需要添加listen_port配置语句。具体操作步骤如下： 
+
+
+//修改独立运行的主配置文件，添加listen_port配置语句: 
+ # echo listen_port=10021>> /etc/vsftpd.standalone.conf 
+ //重新启动vsftpd守护进程 
+# killall vsftpd 
+ # /usr/local/sbin/vsftpd /etc/vsftpd.standalone.conf & 
+
+
+独立启动和xinetd启动的vsftpd服务器配置和启动的比较 
+
+
+
+
+ 独立启动 
+
+xinetd启动 
+
+
+ 所需的配置文件 
+
+ 主配置文件 
+
+ 主配置文件 
+
+xinetd配置文件 
+
+
+ 配置 
+
+listen 
+
+
+
+
+
+
+ listen_address 
+
+
+
+ bind 
+
+
+ listen_port 
+
+
+
+
+
+
+ max_per_ip 
+
+
+
+ per_source 
+
+
+ max_clients 
+
+
+
+ instances 
+
+
+
+
+
+
+ only_from和no_access 
+
+
+
+
+
+
+ access_time 
+
+
+
+
+
+
+ server_args 
+
+
+启动 
+
+ 将配置文件作为参数运行 
+
+ 启动xinetd 
+
+
+
+
+
+
+八、用vsftpd配置独立运行的虚拟FTP服务器 
+ 为了配置独立运行的虚拟FTP服务器需要使用listen_address配置语句。以上面的配置为基础进行下面的配置，具 
+
+ 体步骤如下： 
+
+
+//修改原独立运 行的服务器配置文件 
+# vi /etc/vsftpd.standalone.conf 
+ //添加listen_address=192.168.1.222的配置行 
+//将原FTP服务绑定到eth0接口。之后用:wq退出vi 
+
+
+ //由xinetd运行的虚拟服务器的配置文件创 建一个新的配置文件 
+# cp /etc/vsftpd_site2.conf /etc/vsftpd.standalone2.conf 
+ //修改新的配置文件 
+# vi /etc/vsftpd.standalone2.conf 
+ //在文件开始处插入下面的行 
+listen=YES 
+ listen_address=192.168.1.234 将虚拟服务器绑定到eth0:1接口 
+max_clients=200 
+ max_per_ip=4 
+ //并将下面的配置语句 
+ftpd_banner=This is the alternative FTP site. 
+ //改为： 
+ftpd_banner=This is the alternative FTP site, and vsftpd in "standalone" mode. 
+ //用:wq退出vi 
+
+
+ //让原FTP服务器重新读取配置文件 
+/usr/local/sbin/vsftpd /etc/vsftpd.standalone.conf 
+ # kill -HUP `pidof vsftpd` 
+ //启动新的虚拟FTP服务器 
+# /usr/local/sbin/vsftpd /etc/vsftpd.standalone2.conf & 
+
+
+
+九、配置虚拟用户的FTP服务器 
+
+
+ 该部分讲述虚拟用户（virtual users）的FTP服务器的配置。虚拟用户只能访问为其 提供的FTP服 务，而不能像本地 
+
+ 的实用户那样登录系统访问系统的其他资源。若要某用户对FTP服务器站内具有写权限但不允许访问系统的其他 
+
+ 资源，则该用户应该使用虚拟用户才能提高系统的安全性。 
+
+
+ 传统的FTP服务器采用如下的方法实现虚拟用户： 
+ 在本地建立普通用户账号并设置密码 
+ 将其登录shell设为不可登录 
+ 由passwd/shadow口令系统进行认证 
+vsftpd的虚拟用户 采用了不与系统账户口令文件合二为一的方法，也就是说，为了认证这些虚拟用户vsftpd使用单 
+
+ 独的口令库文件（pam_userdb），由可插拔认证模块（PAM）进行认证。使用这种方式更加安全，并且配置更灵 
+
+ 活。 
+
+ 比较vsftpd中的三类用户: 
+vsftp中有三类用户，即：本地用户、虚拟用户和匿名用 户。下面将这三类用户进行比较，见下表。 
+
+
+ 比较vsftpd中的三类用户 
+
+
+
+
+
+ 本地用户 
+
+ 虚拟用户 
+
+ 匿名用户 
+
+
+ 用户名 
+
+ 本地用户名 
+
+ 虚拟用户口令库中指定的用户名 
+
+Anonymous或ftp 
+
+
+登录用户名 
+
+ 本地用户名 
+
+ 虚拟用户口令库中所有用户名 
+
+Anonymous或ftp 
+
+
+用户口令 
+
+ 本地用户的口令 
+
+ 虚拟用户口令库中指定的口令 
+
+Email地址 
+
+
+ 口令的认证方式 
+
+ 由基于passwd/shadow的口令系统认证 
+
+DB口令库由PAM进行认证 
+
+ 由vsftpd认证 
+
+
+ 登录映射的本地用户名 
+
+ 本地用户名 
+
+guest_username所指定的本地 用户，默认为空 
+
+ftp_username所指定的本地用 户，默认为ftp 
+
+
+登录后进入 
+
+ 的目录 
+
+ 本地用户的 
+
+ 自家目录 
+
+guest_username所指定的本地 用户的自家目录 
+
+ftp_username所指定的本地用户 的自家目录，默认为/var/ftp 
+
+
+对登录后的目录是否可浏览 
+
+ 可以 
+
+anon_world_readable_only=NO时可以 
+
+anon_world_readable_only=NO时可以 
+
+
+ 对登录后的目录是否可上传 
+
+write_enable=YES时可以 
+
+write_enable=YES，同时anon_upload_enable=YES时可以 
+
+write_enable=YES，同时anon_upload_enable=YES时可以 
+
+
+ 对登录后的目录是否可创建目录 
+
+write_enable=YES时可以 
+
+write_enable=YES，同时anon_mkdir_write_enable=YES时可以 
+
+write_enable=YES，同时anon_mkdir_write_enable=YES时可以 
+
+
+ 对登录后的目录是否可改名和删除 
+
+write_enable=YES时可以 
+
+write_enable=YES，同时anon_other_write_enable=YES时可以 
+
+write_enable=YES，同anon_other_write_enable= 
+
+ YES时可以 
+
+
+ 是否有用户 
+
+ 自家目录 
+
+ 有 
+
+ 无 
+
+ 无 
+ 是否能切换到登录目录以外的目录 
+chroot_local_user=NO时 能，其值为YES时不能 
+ 不能，即设置chroot_local_user=YES 
+不能激活此类用户的命令 
+local_enable=YES 
+ guest_enable=YES 
+ anonymous_enable=YES 
+为了配置虚拟用户的FTP服务器，其主要配置步骤为：
+ 生成虚拟用户口令库文件
+ 配置生成vsftpd的认证文件
+ 建立虚拟用户所要访问的目录并设置相应权限 
+ 建立配置文件 
+ 下面以独立运行的vsftpd为例进行配置，具体的操作过程 如下： 
+//生成虚拟用户口令库文件，以mysql数据库为例： 
+//修改口令库 文件的权限 
+# chmod 600 /etc/vsftpd_login.db 
+ //编辑生成虚拟用户所 需的PAM配置文件： 
+# vi /etc/pam.d/ftp 
+ //插入如下两行
+auth required /lib/security/pam_userdb.so db=/etc/vsftpd_login 
+ account required /lib/security/pam_userdb.so db=/etc/vsftpd_login 
+ //保存后退出vi 
+ //用户也可以用下面的命令从源代码分发包中复制此文件 
+// cd /usr/local/src/vsftpd-1.1.3/EXAMPLE/ 
+ // cp VIRTUAL_USERS/vsftpd.pam /etc/pam.d/ftp 
+ //建立虚拟用户所要访问的目录并设置仅virtual用户访问的权限 
+# useradd -d /home/ftpsite virtual 
+ # chmod 700 /home/ftpsite/ 
+ //生成主配置文件 
+# vi /etc/vsftpd.standalone.vu.conf 
+ //在此文件中插入下面的配置语句 
+listen=YES 
+ anonymous_enable=NO 
+ local_enable=YES 
+ write_enable=NO 
+ anon_upload_enable=NO 
+ anon_mkdir_write_enable=NO
+ anon_other_write_enable=NO 
+ chroot_local_user=YES 
+ guest_enable=YES 启用虚拟用户 
+guest_username=virtual 将虚拟用户映射为本地virtual用户 
+//这样虚拟用户登录后才能进入本地用户virtual的目录/home/ftpsite/ 
+ pasv_min_port=30000 
+ pasv_max_port=30999 
+ ftpd_banner=This FTP server is virtual user only. 
+ pam_service_name=ftp 指定PAM配置文件为
+ftp.vu
+
+ //插入完毕，保存退出。 
+//下面先关闭原来的服务，而后启动新的服务 
+# killall vsftpd 
+ # /usr/local/sbin/vsftpd /etc/vsftpd.standalone.vu.conf & 
+ //配置结束 
+ 注意：配置文件中anon_world_readable_only的默认值为YES。这样的设置是最安全的，是建议的配置，即虚拟用户不能浏览目录中的内容。若要虚拟用户口令库中的用户都能看到登录目录的内容，应该在配置文件 
+/etc/vsftpd.standalone.vu.conf中添加配置语句anon_world_readable_only=NO 
+配置好后，新的口令库中的所有用户就都可以登录此FTP服务器了。 
+ 对不同的虚拟用户进行不同权限的配置 
+ 对于配置本地组中各用户访问FTP服务器的不同权限，可将某文件归属于希望 具有读写（包括列文件目录、上
+ 传、下载）权限的用户，而对该组中其他用户则可设置对该文件只具有只读（包括列文件目录、下载）权限。 这是借助在本地文件系
+ 统上分配权限来实现的，但是若要让两个用户同时都具有读写权限，则用这种方法就不能实现了。 
+vsftpd支持对不同的虚拟用户进行不同配置的方式。例如，vsftpd可以实现如下的配置： 
+ 虚拟用户valid具有浏览目录、上传和下载的权限 
+ 虚拟用户dede具有浏览目录、上传、下载、文件改 名和删除的权限 
+ 虚拟用户tom和fred具有浏览目录和下载的权限 
+ 下面以简单的虚拟用户FTP服务器的配置为基础进行说明，具体配置步骤为： 
+//首先编辑配置文件/etc/vsftpd.standalone.vu.conf 
+ //激活对不同的虚拟用户进行不同权限配置的配置语句 
+# vi /etc/vsftpd.standalone.vu.conf 
+ //在文件中添加如下的配置行 
+user_config_dir=/etc/vsftpd_user_conf 
+ //指定不同虚拟用户配置文件的存放路径 
+//添加后保存退出vi 
+ //接下来创建此目录 
+# mkdir /etc/vsftpd_user_conf 
+ //下面分别创建虚拟用户tom和fred的配置文件 
+//开放tom和fred的读权限 
+#echo "anon_world_readable_only=NO">/etc/vsftpd_user_conf/tom 
+ #echo "anon_world_readable_only=NO">/etc/vsftpd_user_conf/fred 
+ //下面分别创建虚拟用户valid和dede的配置文件 
+//开放valid和dede的读写权限 
+# cat  anon_world_readable_only=NO 
+ > write_enable=YES 
+ > anon_upload_enable=YES 
+ > ! 
+ # cp /etc/vsftpd_user_conf/valid /etc/vsftpd_user_conf/dede 
+ # echo “anon_other_write_enable=YES”>>/etc/vsftpd_user_conf/dede 
+ //经过以上的设置虚拟用户valid能浏览、下载和上传 
+//而虚拟用户dede除此之外还具有文件改名和删除文件 的权限 
+//下面让守护进程vsftpd重新读取配置文件/etc/vsftpd.standalone.vu.conf 
+ /usr/local/sbin/vsftpd /etc/vsftpd.standalone.vu.conf 
+ # kill -HUP `pidof vsftpd` 
+ # 
+ //配置结束，测试略。 
+ 重点：当一个虚拟用户登录FTP服务器时，vsftpd的守护进程首先查看主配置文件 的权限配置，然后再用此用户 
+ 单独的配置文件中的配置覆盖主配置文件中的配置。vsftpd的这种配置机制，类似于Apache配置中的 
+httpd.conf和.htaccess。只不过前者是针对不同虚拟用户的，而后者是针对不同目录的。因此在对不同虚 
+ 拟用户进行配置时要注意： 
+ （1）在主配置文件中设置最低的权限，这些设 置对虚拟用户口令库中的所有用户均生效； 
+ （2）分别在不同的虚拟用户的配置文件中开放此虚拟用户应该具有的权限。 
+ 注意：上面讲述的虚拟用户FTP服务器的配置是基于独立运行的vsftpd守护进程讲解的。也可以配置为基于 
+xinetd启动的FTP服务器，同时也可以将虚拟用户的FTP服务器配置为基于IP的虚拟FTP服务器
+                
+                 
+                 
+
+本文来自ChinaUnix博客，如果查看原文请点：http://blog.chinaunix.net/u/15200/showart_116413.html  
