@@ -1,0 +1,177 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>TemplateFuncs short doku</title>
+<meta name="content-language" content="de">
+<style type="text/css">
+body {font-family: arial, sans-serif; font-size: 15px;}
+h1, h2, h3 {color: #720; padding-top: 24px;}
+h4, h5, h6 {font-size: 16px;}
+div#main {width: 950px; padding: 20px;}
+p {line-height: 1.6em;}
+p.code {font-family: Courier New; border: 1px solid #999; background: #eed; padding: 8px 12px;}
+span.code {font-family: Courier New;}
+td {border: 1px solid; padding: 8px 12px;}
+li {line-height: 1.4em; padding-top: 5px; padding-bottom: 5px;}
+a:link, a:visited {color: #249;}
+a:hover {color: #c60;}
+</style>
+</head>
+
+<body>
+<!-- utf-8 check: äöüß -->
+
+<div id="main">
+<p style="font-size: 24px;"><a href="http://translate.google.de/" target="_blank">Google translator &raquo;</a></p>
+<p>(Opens in a new window - öffnet in einem neuen Fenster)</p><hr>
+<h1>Short Documentation Addon "TemplateFuncs"</h1>
+
+<h3>About TemplateFuncs</h3>
+<p>TemplateFuncs is an Addon for CMSimple Templates. TemplateFuncs provides several useful functions for CMSimple templates.</p>
+<hr>
+
+
+
+
+<h2>1. System Requirements</h2>
+<p>TemplateFuncs requires a working installation of CMSimple_XH 1.2 utf-8 or higher.</p>
+<p><b>Recommended is <a href="http://www.cmsimple.org">CMSimple 4.0</a> or higher.</b></p>
+<hr>
+
+
+
+
+<h2>2. Installation</h2>
+<ol>
+    <li>Download the zip-file and unzip it with a suitable program.</li>
+	<li>Upload the folder "templatefuncs" to the folder of the template.</li>
+</ol>
+
+<p>Now the file "templatefuncs.php" has to be included in the template.htm (on top, above the Doctype Declaration):</p>
+
+<p class="code">&lt;?php include_once($pth['folder']['template'] . 'templatefuncs/templatefuncs.php');?&gt;<br>
+&lt;!DOCTYPE html&gt;<br>
+...
+</p>
+
+<hr>
+
+
+
+
+<h2>3. The functions</h2>
+
+
+
+<h3>3.1. The function "changing Newsboxes"</h3>
+
+<p>The newsbox function shows consecutively numbered CMSimple pages in a newsbox. The variantly shown CMSimple pages should begin with the name (normally "News"); followed by consecutive numbering. Example:</p>
+
+<ul>
+<li>News1001</li>
+<li>News1002</li>
+<li>News1003</li>
+</ul>
+
+<p>You can create consecutively numbered newsbox-pages as many you want. Later in this document I refer to News1001 - News1003. The large numbers are chosen, to avoid conflicts with existing newsboxes on the page.</p>
+
+<p>The change of NewsBoxes will happen with every page view, regardless of whether a new page is called or by reload the current page.</p>
+
+<h4>Usage in template.htm</h4>
+
+<p>News boxes usually are called in the template (template.htm); inserted where the news box shall appear.</p>
+
+<h5>Ordered change</h5>
+
+<p>The following function-call shows the pages News1001 - News1003 successive:</p>
+
+<p class="code">&lt;?php echo tf_newsboxes('News',1001,1003); ?&gt;</p>
+
+<h4>Random change</h3>
+
+<p>The following function-call shows the pages News1001 - News1003, changing in random order:</p>
+
+<p class="code">&lt;?php echo tf_newsboxes('News',1001,1003,'random'); ?&gt;</p>
+
+
+
+
+<h3>3.2. The function "changing images"</h3>
+
+<p>This function allows changing images or background images via inline CSS in the template.htm. The image change will happen with every page view, regardless of whether a new page is called, or the current page is reloaded.</p>
+
+<p>The images are located in a subfolder of the folder "templatefuncs", for example "templatefuncs/bgheader/" for changing background images in the header.</p>
+
+<p>Simply upload your image files into the folder "templatefuncs/bgheader/", and they will be included in the image change. If you want to remove an image, just delete it. The function "changing images" automatically recognizes the images in the folder.</p>
+
+<p>The folder where the image files are located, must be specified in the function call:</p>
+
+<p class="code">&lt;?php echo tf_images('bgheader'); ?&gt;</p>
+
+<p>Example for changing background images in the header:</p>
+
+<p class="code">&lt;div id="header" style="background: #fff url(<span style="color: #900;">&lt;?php echo tf_images('bgheader');?&gt;</span>) no-repeat;"&gt;<br>
+...<br>
+&lt;/div&gt;
+</p>
+
+<h4>Random change</h4>
+
+<p>For random change, add the optional parameter "random" to the function call:</p>
+
+<p class="code">&lt;?php echo tf_images('bgheader','random'); ?&gt;</p>
+
+
+
+
+<h3>3.3. The functions for "special Links with Icons"</h3>
+
+<p>With these functions, you can show special CMSimple-links with small images (icons).</p>
+
+<p class="code">
+&lt;?php echo tf_homelink('homelink.gif'); ?&gt;<br>
+&lt;?php echo tf_printlink('printlink.gif'); ?&gt;<br>
+&lt;?php echo tf_mailformlink('mailformlink.gif'); ?&gt;<br>
+&lt;?php echo tf_sitemaplink('sitemaplink.gif'); ?&gt;<br>
+&lt;?php echo tf_previouspage('prev.gif'); ?&gt;<br>
+&lt;?php echo tf_nextpage('next.gif'); ?&gt;<br>
+&lt;?php echo tf_top('top.gif'); ?&gt;<br>
+</p>
+
+<p>The icons are located in the folder "templatefuncs/icons/". The file name and the filetype you have to specify in the function call (filenname.gif, filenname.png ...)</p>
+
+<p>The icons you can style with the following CSS classes in the stylesheet.css of the template (e.g. spaces between the icons):</p>
+
+<p class="code">
+img.tf_homelink_icon {margin-right: 16px;}<br>
+img.tf_printlink_icon {margin-right: 16px;}<br>
+img.tf_mailformlink_icon {margin-right: 16px;}<br>
+img.tf_sitemaplink_icon {margin-right: 16px;}<br>
+img.tf_prev_icon {margin: 0 16px;}<br>
+img.tf_next_icon {margin: 0 16px;}<br>
+img.tf_top_icon {margin: 0 16px;}<br>
+</p>
+
+
+
+
+<h3>3.4. The function openMenu()</h3>
+
+<p>With this function, you can create an opened menu. You optionally can specify two parameters, for menulevel "min, max":</p>
+
+<p class="code">
+&lt;?php echo openMenu(1,2); ?&gt;<br>
+</p>
+
+<p>Normally a simple function call is enough, menulevels as specified in the Configuration:</p>
+
+<p class="code">
+&lt;?php echo openMenu(); ?&gt;<br>
+</p>
+
+
+<br><br><br><br><br>
+</div>
+</body>
+</html>

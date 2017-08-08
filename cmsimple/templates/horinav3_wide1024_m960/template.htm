@@ -1,0 +1,154 @@
+<?php include_once($pth['folder']['template'] . 'templatefuncs/templatefuncs.php');?>
+<!DOCTYPE html>
+
+<html>
+<head>
+<?php echo head();?>
+<meta name="viewport" content="width=960, initial-scale=1.0, user-scalable=1">
+</head>
+
+<body id="tplge_body" <?php echo onload();?>>
+<!-- utf-8 check: äöü -->
+<div id="TOP"></div>
+
+
+<!-- HEADER -->
+
+	<div id="tplge_header">
+	<div id="tplge_headerin" style="background: url(<?php echo tf_images('bgheader');?>) bottom center no-repeat;">
+
+		<div class="tplge_header_left">
+<h1><?php echo sitename();?></h1>
+<?php echo searchbox();?>
+			<div id="tplge_icons">
+<?php echo tf_homelink('homelink.gif'); ?>
+<?php echo tf_printlink('printlink.gif'); ?>
+<?php echo tf_mailformlink('mailformlink.gif'); ?>
+<?php echo tf_sitemaplink('sitemaplink.gif'); ?>
+			</div>
+		</div>
+
+		<div class="tplge_header_right">
+<?php echo newsbox('HeaderNewsbox'); ?>
+		</div>
+<div style="clear: both;"></div>
+	</div>
+	<div style="clear: both;"></div>
+	</div>
+	<div style="clear: both;"></div>
+
+
+<!-- HORIZONTAL TOC1 -->
+
+	<div id="tplge_toc1">
+	<div id="tplge_toc1in">
+
+<table>
+<tr>
+<td style="padding: 0; margin: 0;">
+<?php echo toc(1);?>
+</td>
+</tr>
+</table>
+
+	<div style="clear: both;"></div>
+	</div>
+	<div style="clear: both;"></div>
+	</div>
+	<div style="clear: both;"></div>
+
+
+<!-- ANFANG MAIN AREA / BEGIN MAIN AREA -->
+
+	<div id="tplge_main">
+	<div id="tplge_mainin">
+
+
+<!-- ANFANG SIDEBAR NAVIGATION / BEGIN SIDEBAR NAVIGATION -->
+
+		<div id="tplge_sidebarNav">
+		<div class="tplge_inner">
+<?php echo toc(2,3);?>
+<?php echo newsbox('News01');?>
+			<div id="subnav">
+<ul>
+<li><?php echo sitemaplink();?></li>
+<li><?php echo printlink();?></li>
+<li><?php echo mailformlink();?></li>
+</ul>
+<?php echo newsbox('Subnav');?>
+			</div>
+<?php //echo '<p class="tplge_lastupdate">' . lastupdate() . '</p>';?>
+		</div>
+		<div style="clear: both;"></div>
+		</div>
+
+
+<!-- ANFANG INHALT / BEGIN CONTENT -->
+
+		<div id="tplge_content">
+		<div class="tplge_inner">
+			<div class="tplge_langmenu_container">
+<?php echo languagemenu();?>
+			</div>
+<?php echo editmenu();?>
+<?php echo content();?>
+<?php echo submenu();?>
+
+
+<!-- vor-hoch-zurueck / prev-top-next -->
+
+			<div id="tplge_prevnext">
+			<div class="tplge_inner">
+<span><?php echo tf_previouspage('prev.gif');?></span>
+<span><?php echo tf_top('top.gif');?></span>
+<span><?php echo tf_nextpage('next.gif');?></span>
+
+			<div style="clear: both;"></div>
+			</div>
+			<div style="clear: both;"></div>
+			</div>
+			<div style="clear: both;"></div>
+	
+
+<!-- ENDE INHALT / END CONTENT -->
+
+		</div>
+		<div style="clear: both;"></div>
+		</div>
+		<div style="clear: both;"></div>
+
+
+<!-- END MAIN AREA -->
+
+	</div>
+	</div>
+	<div style="clear: both;"></div>
+
+
+<!-- FOOTER LINKS -->
+
+<div id="tplge_notes">
+
+<p>
+<span><a href="../codiad/" target="_blank">Codiad</a></span> | 
+<span>Powered by <a href="http://www.cmsimple.org/" target="_blank">CMSimple</a></span>|
+
+<!-- Dieser Link darf nicht geloescht werden, wenn Sie dieses Template kostenlos nutzen - http://www.ge-webdesign.de -->
+<span>Template: <a href="http://www.ge-webdesign.de/" target="_blank">ge-webdesign.de</a></span>|
+
+<?php 
+if($adm && !$edit)
+{
+echo '<span><a href="http://validator.w3.org/check?uri=referer">html</a></span>|
+<span><a href="http://jigsaw.w3.org/css-validator/check/referer">css</a></span>|';
+}
+?>
+
+<span><?php echo loginlink();?></span>
+</p>
+
+<div style="clear: both;"></div>
+</div>
+</body>
+</html>

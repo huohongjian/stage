@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+
+<head>
+<?php echo head();?>
+</head>
+
+<body id="tp_body" <?php echo onload();?>>
+<!-- utf-8 check: äöü -->
+
+<?php 
+include('templug/functions/tp_functions.php'); 
+foreach ($dirs_tpids as $tp_num => $tp_rec)
+{
+	include('templug/data/config_' . $tp_rec . '.php');
+}
+?>
+
+<div id="TOP">&nbsp;</div>
+
+
+<!-- ANFANG MAIN / BEGIN MAIN -->
+
+<div id="tp_main">
+<div id="tp_mainin">
+
+
+<!-- HEADER -->
+
+		<div id="tp_header">
+		<div id="tp_headerin">
+<h1><?php echo templug_site_title();?></h1>
+<div style="clear: both;"></div>
+		</div>
+<div style="clear: both;"></div>
+		</div>
+<div style="clear: both;"></div>
+
+
+<!-- LOCATOR -->
+
+<?php echo templug_locator(); ?>
+<div style="clear: both;"></div>
+
+
+<!-- SIDEBAR / SIDEBAR -->
+
+	<div id="tp_nav">
+	<div id="tp_navin">
+
+
+<!-- menu / toc -->
+
+		<div id="tp_toc">
+		<div id="tp_tocin">
+<?php echo templug_search(); ?>
+
+<?php echo toc();?>
+<ul class="subnav">
+<li><?php echo templug_printlink();?></li>
+<li><?php echo templug_sitemaplink();?></li>
+<li><?php echo mailformlink();?></li>
+</ul>
+
+<div style="clear: both;"></div>
+		</div>
+<div style="clear: both;"></div>
+		</div>
+<div style="clear: both;"></div>
+
+
+<!-- subnav -->
+
+<?php echo templug_subnav(); ?>
+<div style="clear: both;"></div>
+
+
+<!-- last update -->
+
+<?php echo templug_lastupdate(); ?>
+<div style="clear: both;"></div>
+
+
+<!-- ENDE SIDEBAR / END SIDEBAR -->
+
+<div style="clear: both;"></div>
+	</div>
+<div style="clear: both;"></div>
+	</div>
+
+
+<!-- INHALT / CONTENT -->
+
+	<div id="tp_content">
+	<div id="tp_contentin">
+
+		<div style="text-align: right;">
+<?php echo languagemenu() . "\n";?>
+		</div>
+
+<?php echo editmenu();?>
+<?php echo content();?>
+
+
+<!-- submenu -->
+
+<?php echo templug_submenu(); ?>
+
+
+<!-- prev / top / next -->
+
+<?php echo templug_pagenav(); ?>
+
+	</div>
+<div style="clear: both;"></div>
+	</div>
+
+
+<!-- NEWSBEREICH / NEWS AREA -->
+
+<div id="tp_newsarea">
+<div id="tp_newsareain">
+<?php echo templug_newsbox01(); ?>
+<?php echo templug_newsbox02(); ?>
+<?php echo templug_newsbox03(); ?>
+<div style="clear: both;"></div>
+</div>
+<div style="clear: both;"></div>
+</div>
+<div style="clear: both;"></div>
+
+
+<!-- ENDE MAIN / END MAIN --> 
+
+<div style="clear: both;"></div>
+</div>
+<div style="clear: both;"></div>
+</div>
+<div style="clear: both;"></div>
+
+
+<!-- FUSSLINKS / FOOTER LINKS -->
+
+<div id="tp_footer">
+<div id="tp_footerin">
+<p>
+<?php echo templug_validlinks(); ?>
+<?php echo templug_loginlink(); ?>
+</p>
+<div style="clear: both;"></div>
+</div>
+</div>
+
+</body>
+</html>

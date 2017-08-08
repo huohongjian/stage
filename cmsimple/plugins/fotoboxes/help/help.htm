@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>FotoBoxes Kurzdoku</title>
+<meta name="content-language" content="de">
+<style type="text/css">
+body {font-family: arial, sans-serif; font-size: 15px;}
+h1, h2 {font-size: 24px; color: #720;}
+h3 {font-size: 20px; color: #000;}
+div#main {width: 950px; padding: 20px;}
+p {line-height: 24px;}
+p.code {font-family: Courier New; border: 1px solid #999; background: #e6e6e0; padding: 8px 12px;}
+span.code {font-family: Courier New;}
+td {border: 1px solid; padding: 8px 12px;}
+li {padding-top: 5px; padding-bottom: 5px;}
+a:link, a:visited {color: #249;}
+a:hover {color: #c60;}
+</style>
+</head>
+
+<body>
+<!-- utf-8 check: äöüß -->
+
+<div id="main">
+<p style="font-size: 24px;"><a href="http://translate.google.de/" target="_blank">Google translator &raquo;</a></p>
+<p>(Opens in a new window - öffnet in einem neuen Fenster)</p><hr>
+<h1>Kurz-Dokumentation Plugin "FotoBoxes"</h1>
+<p><b><i>Version FotoBoxes 2.1</i></b> - released 04/2014</p>
+
+<h3>Einsatz als "SlideBox"</h3>
+<p>Mit FotoBoxes können Sie Bildwechsel mit 17 verschiedenen Übergangseffekten erzeugen. Mit Hilfe eines übersichtlichen Administrationsbereiches (Backend) können Sie viele umfangreiche Einstellungen für jede einzelne Galerie vornehmen. So können verschiedene Galerien (auch auf der gleichen Seite) unterschiedlich gestaltet werden.</p>
+
+<p>Jedem Bild kann ein Link zugeordnet werden. Denkbarer Einsatz: Wechselnde Werbebanner mit unterschiedlichen Links für jedes Banner.</p>
+
+<p><b>Und das beste:</b> Es ist keine JavaScrip Bibliothek wie jQuery oder MooTools und kein Flash notwendig!</p>
+
+<p>Die Bilder sollten Sie vor dem Upload vorbereiten, alle Bilder einer Galerie sollten die gleichen Abmessungen haben.</p>
+
+<h3>Einsatz als "ThumbsBox"</h3>
+<p>Eine Galerie kann auch als sogenannte "ThumbsBox" dargestellt werden. Die Navigation erfolgt dann über kleine Vorschaubilder (Thumbnails) unter dem Hauptbild. Die Anzahl der Vorschaubilder in einer Reihe können Sie im Backend festlegen, FotoBoxes passt die Grösse der Vorschaubilder automatisch an.</p>
+
+<p>Das grosse Bild kann in einer Lightbox geöffnet werden. Dazu muss eine Lightbox installiert sein, das ist z. B. der Fall, wenn Sie das Plugin FotoGalerie istalliert und dessen Lightbox global aktiviert haben.</p>
+
+<p>Die Bilder sollten Sie vor dem Upload vorbereiten, alle Bilder einer Galerie sollten das gleiche Seitenverhältnis haben.</p>
+
+<h3>Einsatz als "ThumbsBoxJS (JavaScript)"</h3>
+<p>Seit Version 1.2 gibt es auch eine "ThumbsBoxJS". Bei dieser Box werden die Bilder per JavaScript gewechselt.</p>
+
+<p><b>Vorteil:</b> Die Seite wird nicht neu geladen, die ThumbsBox bleibt, wo sie ist und der Bildwechsel ist schneller.</p>
+
+<p><b>Nachteile:</b> Die Funktion "Lightbox" ist nicht verfügbar und die Bildbeschreibungen der einzelnen Bilder werden nicht angezeigt. Es wird immer der Galeriename angezeigt.</p>
+
+<p>Für alles andere nimmt die ThumbsBoxJS die Einstellungen der normalen ThumbsBox.</p>
+
+<h3>Weitere Slider Scripte</h3>
+<p>Seit Anfang 2014 stehen 2 weitere Slider Scripte zur Verfügung, der "FlexSlider" (jQuery) und das eigene Slider Script "MiniSlider". Beide Scripte sind responsiv, d. h. die Slider passen sich dem zur Verfügung stehenden Platz an.</p>
+
+
+<hr>
+
+<h2>1. Systemvoraussetzungen</h2>
+<p>Voraussetzung ist eine funktionierende Installation von CMSimple 4.0 oder höher.</p>
+<p><b>Empfohlen wird CMSimple 4.4 oder höher.</b></p>
+<hr>
+
+<h2>2. Installation</h2>
+<ol>
+    <li>zip-Datei herunterladen und mit einem geeigneten Programm entpacken</li>
+    <li>
+		<ul>
+		<li>Laden Sie die komplette Ordner-Struktur des Verzeichnisses "CMSimpleRoot" (die Verzeichnisse "plugins" und "userfiles") in das Installationsverzeichnis von CMSimple hoch.</li>
+		<li>Ihr ftp Programm wird merken, dass es diese Verzeichnisse bereits gibt, und Sie fragen, ob Sie das wirklich tun wollen. Beantworten Sie diese Frage einfach mit "ja", "ok" oder was immer Ihr ftp Programm anbietet.</li>
+		<li>Bei einem Update laden Sie einfach das Verzeichnis "userfiles" nicht mit hoch.</li>
+		</ul>
+	</li>
+    <li>Vergeben mit Ihrem ftp-Programm die erforderlichen Lese- und Schreibrechte für Ordner und Dateien.</li>
+</ol>
+<hr>
+
+<h2>3. Datei- und Ordnerrechte</h2>
+<p>Damit das Programm funktioniert und arbeiten kann (bzw. administrierbar ist), müssen für bestimmte Dateien und Ordner bestimmte Schreib- und Leserechte vergeben werden.</p>
+
+<h3>Dateien: chmod 666</h3>
+<ul>
+    <li><span style="font-family: Courier New;">./plugins/fotoboxes/languages/<b>alle Dateien</b></span></li>
+    <li><span style="font-family: Courier New;">./plugins/fotoboxes/config/<strong>config.php</strong></span></li>
+    <li><span style="font-family: Courier New;">./plugins/fotoboxes/css/<strong>stylesheet.css</strong></span></li>
+	<li><span style="font-family: Courier New;">./userfiles/plugins/fotoboxes/die_galerie/<strong>data.php</strong></span></li>
+</ul>
+
+<h3>Ordner: chmod 777</h3>
+<ul>
+	<li><span style="font-family: Courier New;">./plugins/fotoboxes/<b>languages</b>/</span></li>
+	<li><span style="font-family: Courier New;">./userfiles/plugins/<b>fotoboxes</b>/</span></li>
+    <li><span style="font-family: Courier New;">./userfiles/plugins/fotoboxes/<b>Alle Ordner</b></span></li>
+</ul>
+<hr>
+
+
+
+<h2>4. Plugin-Aufrufe</h2>
+
+<p>Fügen Sie einen der folgenden Plugin-Aufrufe in Ihre CMSimple Seite ein, an der Stelle, an der die Galerie zu sehen sein soll:</p>
+
+
+
+<h3>4.1 SlideBox</h3>
+
+<p class="code">{{{PLUGIN:FotoBoxSlide('Galerie_Name','width','height');}}}</p>
+<ul>
+<li><b>Galerie_Name: </b>Der Name des Verzeichnisses, in dem die Bilder und die data.php liegen.</li>
+<li><b>width: </b>Die Breite der Bilder in px (ohne "px") - sollte der Breite der Bilder entsprechen</li>
+<li><b>height: </b>Die Höhe der Bilder in px (ohne "px") - sollte der Höhe der Bilder entsprechen</li>
+</ul>
+
+
+
+<h3>4.2 ThumbsBox</h3>
+<p class="code">{{{PLUGIN:FotoBoxThumbs('Galerie_Name','width');}}}</p>
+<ul>
+<li><b>Galerie_Name: </b>Der Name des Verzeichnisses, in dem die Bilder und die data.php liegen.</li>
+<li><b>width: </b>Die Breite der Bilder in px (ohne "px") - sollte der Breite der Bilder entsprechen</li>
+</ul>
+
+
+
+<h3>4.3 ThumbsBoxJS</h3>
+<p class="code">{{{PLUGIN:FotoBoxThumbsJS('Galerie_Name','width');}}}</p>
+<ul>
+<li><b>Galerie_Name: </b>Der Name des Verzeichnisses, in dem die Bilder und die data.php liegen.</li>
+<li><b>width: </b>Die Breite der Bilder in px (ohne "px") - sollte der Breite der Bilder entsprechen</li>
+</ul>
+
+
+
+<h3>4.4 FlexSlider</h3>
+<p>Wenn bei den Bilddaten ein Link für ein Bild eingetragen ist, öffnet dieser Link bei Klick auf das Bild. Damit ist der FlexSlider das ideale Werkzeug für wechselnde Werbebanner.</p>
+<p class="code">{{{PLUGIN:FotoBoxFS('Galerie_Name','max_width','Effekt','Bildtitel');}}}</p>
+<ul>
+<li><b>Galerie_Name: </b>Der Name des Verzeichnisses, in dem die Bilder und die data.php liegen.</li>
+<li><b>max_width (optional): </b>Die maximale Breite der Box in px (z. B. "360px") - sollte der Breite der Bilder entsprechen.<br>Standard: 640px</li>
+<li><b>Effekt (optional): </b>"fade" (Überblendung) oder "slide" (Einschub)<br>Standard: fade</li>
+<li><b>Bildtitel (optional): </b>"title" zeigt den Bildtitel / die Bildbeschreibung an. Ist keine Bildbeschreibung vorhanden, wird der Dateiname angezeigt.<br>Standard: leer</li>
+</ul>
+
+
+
+<h3>4.5 MiniSlider</h3>
+<p>Der MiniSlider ist eine SlideBox mit einer Toolbar.</p>
+<p>Beim Aufruf der Seite ist der MiniSlider inaktiv und kann mittels der Toolbar aktiviert und bedient werden.</p>
+<p style="color: #900;">Im Bilderverzeichnis für einen MiniSlider sollte ein Bild mit dem Namen aaa_bg.jpg enthalten sein. Dieses Bild sollte die gleichen Abmessungen wie die anderen Bilder haben und dient als Vorschaubild für die Galerie.</p>
+<p class="code">{{{PLUGIN:FotoBoxMS('Galerie_Name','max_width','Effekt','Bildlink');}}}</p>
+<ul>
+<li><b>Galerie_Name: </b>Der Name des Verzeichnisses, in dem die Bilder und die data.php liegen.</li>
+<li><b>max_width (optional): </b>Die maximale Breite der Box in px (z. B. "360px") - sollte der Breite der Bilder entsprechen (optional)<br>Standard: 640px</li>
+<li><b>Effekt (optional): </b>"fade" (Überblendung) oder "slide" (Einschub)<br>Standard: fade</li>
+<li><b>Bildlink (optional): </b>"imagelink": Klick auf das aktuelle Bild öffnet das Bild in Originalgrösse. Wenn Shutter Mobile aktiv ist, öffnet eine Slideshow in einer Lightbox.<br>
+Standard: leer</li>
+</ul>
+
+
+
+<h3>4.6 MiniSlider Automatic</h3>
+<p>Der MiniSlider Automatic hat keine Toolbar und startet automatisch. Bei "mouseover" wird die Slideshow unterbrochen (angehalten), ein Klick ruft das nächste Bild auf und "mouseout" startet die Slideshow wieder.</p>
+<p style="color: #900;">Im Bilderverzeichnis für einen MiniSlider sollte ein Bild mit dem Namen aaa_bg.jpg enthalten sein. Dieses Bild sollte die gleichen Abmessungen wie die anderen Bilder haben und dient als Hintergrund für die Galerie.</p>
+<p class="code">{{{PLUGIN:FotoBoxMSA('Galerie_Name','max_width','Effekt','Bildtitel','Zähler');}}}</p>
+<ul>
+<li><b>Galerie_Name: </b>Der Name des Verzeichnisses, in dem die Bilder und die data.php liegen.</li>
+<li><b>max_width (optional): </b>Die maximale Breite der Box in px (z. B. "360px") - sollte der Breite der Bilder entsprechen (optional)<br>Standard: 640px</li>
+<li><b>Effekt (optional): </b>"fade" (Überblendung) oder "slide" (Einschub)<br>Standard: fade</li>
+<li><b>Bildtitel (optional): </b>"title" zeigt den Bildtitel / die Bildbeschreibung an. Ist keine Bildbeschreibung vorhanden, wird der Dateiname angezeigt.<br>Standard: leer</li>
+<li><b>Zähler (optional): </b>"count" zeigt die aktuelle Bildnummer und die Gesamtzahl der Bilder an (z. B. Bild 1 / 5).<br>Standard: leer</li>
+</ul>
+
+
+
+<h3>4.7 Hinweise:</h3>
+<p>Die Pluginaufrufe sollten entweder nur mit dem Galerienamen oder mit <b>ALLEN</b> optionalen Parametern erfolgen. Die optionalen Parameter können leer gelassen werden, in diesem Fall greift die Standard Einstellung.</p>
+<p>Die optionalen Parameter können aber auch "von hinten" weggelassen werden.</p>
+<p>Da die Editoren gerne automatisch ein &lt;p&gt; ... &lt;/p&gt; um den Plugin Aufruf setzen, empfiehlt es sich, den Plugin Aufruf in ein &lt;div&gt; ... &lt;/div&gt; zu packen, damit die Seite validiert.</p>
+<p><span style="color: #c60; font-weight: 700;">Hinweis: Bitte fügen Sie den Plugin Aufruf immer in der Quelltext Ansicht ein.</span></p>
+
+
+
+<p><b>Demo Galerien:</b></p>
+<p>Im Download sind mehrere Demo Galerien enthalten. Die können Sie wie folgt aufrufen:</p>
+
+<div style="background: #f6f6f6; border: 1px solid #999; padding: 6px 16px; margin-bottom: 24px;">
+<p><b>SlideBox:</b></p>
+<p class="code">{{{PLUGIN:FotoBoxSlide('example_dark','360','270');}}}</p>
+<p><b>ThumbsBox:</b></p>
+<p class="code">{{{PLUGIN:FotoBoxThumbs('example_light','360');}}}</p>
+<p><b>ThumbsBoxJS:</b></p>
+<p class="code">{{{PLUGIN:FotoBoxThumbsJS('example_dark','360');}}}</p>
+<p><b>MiniSlider:</b></p>
+<p class="code">{{{PLUGIN:FotoBoxMS('example_minislider');}}}</p>
+<p><b>MiniSlider Automatic:</b></p>
+<p class="code">{{{PLUGIN:FotoBoxMSA('example_minislider','360px','slide','title','count');}}}</p>
+
+
+</div>
+
+
+
+<h2>5. Konfiguration</h2>
+<p>Die einzige globale Konfigurationsmöglichkeit von FotoBoxes ist der Pfad zu den Galerie Daten. Der sollte nicht geändert werden (nur für Experten).</p>
+<p>Alle anderen Konfigurationsmöglichkeiten finden Sie im Plugin Backend unter "Galerien bearbeiten".</p>
+
+<h2>6. Galerien anlegen und bearbeiten</h2>
+
+<h3>6.1 Standard FotoBox anlegen</h3>
+<ol>
+<li>Legen Sie ein Verzeichnis mit dem gewünschten Galerie Namen im Verzeichnis <span class="code">./userfiles/plugins/fotoboxes/</span> an (keine Umlaute, Leerstellen oder Sonderzeichen).</li>
+<li>Erteilen Sie dem Verzeichnis <span class="code">./userfiles/plugins/fotoboxes/<b>Die_Galerie</b></span> Schreibrechte (chmod 777).</li>
+<li>Laden Sie die vorbereiteten Bilder in das Verzeichnis hoch.</li>
+<li style="color: #900;"><b>MiniSlider:</b> Im Bilderverzeichnis für einen MiniSlider sollte ein Bild mit dem Namen aaa_bg.jpg enthalten sein. Dieses Bild sollte die gleichen Abmessungen wie die anderen Bilder haben und dient als Vorschaubild für die Galerie.</li>
+<li style="color: #900;"><b>MiniSlider:</b> Wenn ein MiniSlider eigene Navigationsbuttons verwenden soll, legen Sie einfach im Datenverzeichnis einen Ordner "buttons" an und hinterlegen Sie da die gif Dateien prev.gif, next.gif, start.gif und stop.gif.</li>
+<li>Laden Sie aus einer der Beispiel Galerien die Datei "data.php" in das Verzeichnis <span class="code">./userfiles/plugins/fotoboxes/Die_Galerie/</span> hoch.</li>
+<li>Erteilen Sie für die Datei "data.php" Schreibrechte (chmod 666).</li>
+<li>Gehen Sie zu "Galerien bearbeiten", wählen Sie die neue Galerie, führen Sie Ihre Modifikationen durch und speichern Sie die Galerie ab, die data.php wird nun neu geschrieben.</li>
+</ol>
+
+<h3>6.2 FotoBox konfigurieren</h3>
+
+<p>Wenn Sie in CMSimple eingeloggt sind, finden Sie im Admin Menü den Menüpunkt "Plugins". Wählen Sie hier "fotoboxes".</p>
+<p>Jetzt öffnet sich das Plugin-Menü, wählen Sie hier "Galerien bearbeiten".</p>
+<p>Mittels der Selectbox oben links können Sie die Galerie auswählen, die bearbeitet werden soll.</p>
+<p>Unter "Galerie bearbeiten" können Sie für jede einzelne Galerie individuelle (von der Standard Konfiguration abweichende) Werte einstellen, so kann jede FotoBox anders aussehen und anders ausgerichtet sein.</p>
+<p>Ganz unten finden Sie die Bilder, die in der ausgewählten FotoBox angezeigt werden. Hier können Sie für jedes Bild einen kurzen Beschreibungstext eingeben.</p>
+
+<h2>7. Der Datenpfad in Zweitsprachen und Subsites</h2>
+<p>In den Kopiervorlagen von CMSimple (<span class="code">2lang</span>, <span class="code">2site</span> und <span class="code">2site2lang</span>) ist kein Ordner <span class="code">userfiles</span> enthalten.</p>
+<p>In diesem Fall arbeitet FotoBoxes auch in Zweitsprachen und Subsites mit dem userfiles Ordner des Installationsverzeichnisses von CMSimple.</p>
+<p>Wenn Sie im Verzeichnis der Zweitsprache oder der Subsite einen Unterordner <span class="code">userfiles</span> mit den Unterordnern <span class="code">plugins/fotoboxes/</span> anlegen, dann arbeitet FotoBoxes in Zweitsprachen und Subsites mit den Galerien in diesen Ordnern.</p>
+
+<h2>8. Verwendung in CoAuthors</h2>
+<p>FotoBoxes funktioniert auch unter CoAuthors, das heisst, das Plugin kann in Installationen von CMSimpleCoAuthors oder in CoAuthors-Subsites (Verwendung der Kopiervorlage <span class="code">2author</span>) verwendet und in die Hauptseite eingebunden werden.</p>
+
+<h2>Einschränkungen und Hinweise</h2>
+<p>Es ist nicht möglich, ein und die selbe Galerie auf einer Seite mehrmals als SlideBox oder mehrmals als ThumbsBox  anzuzeigen, auch nicht im Template oder in einer Newsbox. Eine Galerie kann aber auf einer Seite einmal als SlideBox, einmal als ThumbsBox, einmal als FlexSlider und einmal als MiniSlider angezeigt werden.</p>
+<p>Alle Bilder müssen die gleichen Abmessungen (für eine SlideBox) oder das gleiche Seitenverhältnis (für eine ThumbsBox) haben. Wenn Sie in einer Querformat Galerie ein Bild im Hochformat anzeigen wollen, bereiten Sie das Bild entsprechend vor, indem Sie ein Bild in den normalen Abmessungen erzeugen und das gewünschte Bild hineinkopieren:</p>
+<img src="bild3.jpg" alt="">
+
+</div>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8">
+<title>TemplateFuncs Kurzdoku</title>
+<meta name="content-language" content="de">
+<style type="text/css">
+body {font-family: arial, sans-serif; font-size: 15px;}
+h1, h2, h3 {color: #720; padding-top: 24px;}
+h4, h5, h6 {font-size: 16px;}
+div#main {width: 950px; padding: 20px;}
+p {line-height: 1.6em;}
+p.code {font-family: Courier New; border: 1px solid #999; background: #eed; padding: 8px 12px;}
+span.code {font-family: Courier New;}
+td {border: 1px solid; padding: 8px 12px;}
+li {line-height: 1.4em; padding-top: 5px; padding-bottom: 5px;}
+a:link, a:visited {color: #249;}
+a:hover {color: #c60;}
+</style>
+</head>
+
+<body>
+<!-- utf-8 check: äöüß -->
+
+<div id="main">
+<p style="font-size: 24px;"><a href="http://translate.google.de/" target="_blank">Google translator &raquo;</a></p>
+<p>(Opens in a new window - öffnet in einem neuen Fenster)</p><hr>
+<h1>Kurz-Dokumentation Addon "TemplateFuncs"</h1>
+
+<h3>Einsatzbereiche</h3>
+<p>TemplateFuncs ist ein Addon für CMSimple Templates. TemplateFuncs wird einfach in den Ordner des Templates eingefügt und stellt verschiedene nützliche Funktionen für Templates bereit.</p>
+<hr>
+
+
+
+
+<h2>1. Systemvoraussetzungen</h2>
+<p>Voraussetzung ist eine funktionierende Installation von CMSimple_XH 1.2 utf-8 oder höher.</p>
+<p><b>Empfohlen wird <a href="http://www.cmsimple.org">CMSimple 4.0</a> oder höher.</b></p>
+<hr>
+
+
+
+
+<h2>2. Installation</h2>
+<ol>
+	<li>zip-Datei herunterladen und mit einem geeigneten Programm entpacken</li>
+	<li>Laden Sie den Ordner "templatefuncs" in das Verzeichnis des Templates hoch.</li>
+</ol>
+
+<p>Nun muss noch die Datei "templatefuncs.php" in die template.htm eingebunden werden (ganz oben, noch vor der Doctype Declaration):</p>
+
+<p class="code">&lt;?php include_once($pth['folder']['template'] . 'templatefuncs/templatefuncs.php');?&gt;<br>
+&lt;!DOCTYPE html&gt;<br>
+...
+</p>
+
+<hr>
+
+
+
+
+<h2>3. Die Funktionen</h2>
+
+
+
+<h3>3.1. Die Funktion "wechselnde Newsboxen"</h3>
+
+<p>Die Newsbox Funktion zeigt in einer Newsbox fortlaufend nummerierte CMSimple-Seiten an, die mit dem Namen der Newsbox-Seite beginnen (in der Regel "News"), gefolgt von einer fortlaufenden Nummerierung. Beispiel:</p>
+
+<ul>
+<li>News1001</li>
+<li>News1002</li>
+<li>News1003</li>
+</ul>
+
+<p>Sie können beliebig viele fortlaufend nummerierte Newsbox Seiten anlegen, im weiteren Verlauf dieser Dokumentation beziehe ich mich jedoch auf News1001 - News1003. Mit den grossen Zahlen sollen Konflikte mit bereits bestehenden Newsboxen auf der Seite vermieden werden.</p>
+
+<p>Der Wechsel der Newsboxen erfolgt mit jedem Seitenaufruf, egal ob eine neue Seite aufgerufen wird oder ein Reload der aktuellen Seite erfolgt.</p>
+
+<h4>Verwendung im Template</h4>
+
+<p>Newsboxen werden normalerweise im Template (template.htm) eingefügt, an der Stelle, wo die Newsbox erscheinen soll.</p>
+
+<h5>Geordneter, fortlaufender Wechsel</h5>
+
+<p>Der folgende Addon Aufruf zeigt die Newsbox Seiten News1001 - News1003 nacheinander im Wechsel an:</p>
+
+<p class="code">&lt;?php echo tf_newsboxes('News',1001,1003); ?&gt;</p>
+
+<h4>Zufälliger Wechsel</h3>
+
+<p>Der folgende Addon Aufruf zeigt die Newsbox Seiten News1001 - News1003 im zufälligen Wechsel (random) an:</p>
+
+<p class="code">&lt;?php echo tf_newsboxes('News',1001,1003,'random'); ?&gt;</p>
+
+<p>So können beliebig viele verschiedene Newsboxen abwechselnd, fortlaufend oder zufällig, angezeigt werden.</p>
+
+
+
+
+<h3>3.2. Die Funktion "wechselnde Bilder"</h3>
+
+<p>Mit dieser Funktion können wechselnde Bilder oder Hintergrundbilder (per inline CSS in der template.htm) im Template angezeigt werden. Der Bildwechsel erfolgt mit jedem Seitenaufruf, egal ob eine neue Seite aufgerufen wird oder ein Reload der aktuellen Seite erfolgt.</p>
+
+<p>Die Bilder liegen in in einem Unterordner des Ordners "templatefuncs", z. B. "templatefuncs/bgheader/" für wechselnde Hintergrundbilder im Header.</p>
+
+<p>Laden Sie einfach Ihre Bilddateien in den Ordner "templatefuncs/bgheader/" hoch, und sie werden in den Bildwechsel mit einbezogen. Wenn Sie ein Bild entfernen wollen, löschen Sie es einfach. Die Funktion "wechselnde Bilder" ermittelt selbstständig die Anzahl der Bilder im Ordner.</p>
+
+<p>Der Ordner, in dem die Bilder liegen, muss im Funktionsaufruf angegeben werden:</p>
+
+<p class="code">&lt;?php echo tf_images('bgheader'); ?&gt;</p>
+
+<p>Hier ein Beispiel für wechselnde Hintergrundbilder im Header:</p>
+
+<p class="code">&lt;div id="header" style="background: #fff url(<span style="color: #900;">&lt;?php echo tf_images('bgheader');?&gt;</span>) no-repeat;"&gt;<br>
+...<br>
+&lt;/div&gt;
+</p>
+
+<h4>Zufallswiedergabe (random)</h4>
+
+<p>Für die Zufallswiedergabe fügen Sie den optionalen Parameter "random" zum Funktionsaufruf hinzu:</p>
+
+<p class="code">&lt;?php echo tf_images('bgheader','random'); ?&gt;</p>
+
+
+
+
+<h3>3.3. Die Funktionen für "special Links mit Icons"</h3>
+
+<p>Mit diesen Funktionen können spezielle CMSimple-Links mit Miniaturbildern (Icons) eingebunden werden.</p>
+
+<p class="code">
+&lt;?php echo tf_homelink('homelink.gif'); ?&gt;<br>
+&lt;?php echo tf_printlink('printlink.gif'); ?&gt;<br>
+&lt;?php echo tf_mailformlink('mailformlink.gif'); ?&gt;<br>
+&lt;?php echo tf_sitemaplink('sitemaplink.gif'); ?&gt;<br>
+&lt;?php echo tf_previouspage('prev.gif'); ?&gt;<br>
+&lt;?php echo tf_nextpage('next.gif'); ?&gt;<br>
+&lt;?php echo tf_top('top.gif'); ?&gt;<br>
+</p>
+
+<p>Die Icons liegen im Verzeichnis "templatefuncs/icons/". Der Dateiname und das Dateiformat müssen im Funktionsaufruf angegeben werden (dateiname.gif, dateiname.png usw.)</p>
+
+<p>Die Icons können mit folgenden CSS Klassen in der stylesheet.css des Templates gestaltet werden (z. B. Abstände herstellen):</p>
+
+<p class="code">
+img.tf_homelink_icon {margin-right: 16px;}<br>
+img.tf_printlink_icon {margin-right: 16px;}<br>
+img.tf_mailformlink_icon {margin-right: 16px;}<br>
+img.tf_sitemaplink_icon {margin-right: 16px;}<br>
+img.tf_prev_icon {margin: 0 16px;}<br>
+img.tf_next_icon {margin: 0 16px;}<br>
+img.tf_top_icon {margin: 0 16px;}<br>
+</p>
+
+
+
+
+<h3>3.4. Die Funktion openMenu()</h3>
+
+<p>Mit dieser Funktion können Sie ein aufgeklapptes Menu erzeugen. Es können optional 2 Parameter angegeben werden, für menulevel "min, max":</p>
+
+<p class="code">
+&lt;?php echo openMenu(1,2); ?&gt;<br>
+</p>
+
+<p>Im Normalfall reicht aber der einfache Aufruf, menulevel wie in der Konfiguration festgelegt:</p>
+
+<p class="code">
+&lt;?php echo openMenu(); ?&gt;<br>
+</p>
+
+
+<br><br><br><br><br>
+</div>
+</body>
+</html>

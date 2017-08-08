@@ -1,0 +1,331 @@
+/* global */
+.fotoboxes_container {
+float: none;
+margin: 0 auto;
+} 
+
+.fotoboxes_container img {
+position:absolute; 
+border:none; 
+display:none;
+}
+
+.fotoboxes_container a.imgLink {
+z-index:2; 
+display:none; 
+position:absolute; 
+top:0px; 
+left:0px; 
+border:0; 
+padding:0; 
+margin:0; 
+width:100%; 
+height:100%;
+}
+
+#FotoBoxAdminSlide h4, #FotoBoxAdminThumbs h4 {
+color: #222;
+font-size: 24px;
+padding: 0 0 12px 0;
+margin: 0;
+}
+
+#FotoBoxMain input.text {
+background: #fff;
+color: #222;
+}
+
+#FotoBoxMain textarea {
+background: #fff;
+color: #222;
+}
+
+#FotoBoxThumbsThumbs img {
+width: 76px;
+}
+
+#FotoBoxAdminSlide {
+background: #fff;
+color: #333;
+border: 1px solid #999;
+padding: 12px 20px 20px 20px;
+margin: 8px 0;
+}
+
+#FotoBoxAdminThumbs {
+background: #ddd;
+color: #000;
+border: 1px solid #666;
+padding: 12px 20px 20px 20px;
+margin: 8px 0;
+}
+
+
+/* Caption styles */
+div.mc-caption-bg, div.mc-caption-bg2 {
+position:absolute;
+width:100%;
+height:auto;
+padding:0;
+right:0px; /*if the caption needs to be aligned from right, specify by right instead of left. i.e. right:20px;*/
+bottom:0px;/*if the caption needs to be aligned from top, specify by top instead of bottom. i.e. top:150px;*/
+z-index:3;
+overflow:hidden;
+font-size: 0;
+}
+
+div.mc-caption-bg {
+background-color:#000;
+}
+
+div.mc-caption {
+font-family: arial, sans-serif;
+font-size: 15px;
+color:#ccc;
+z-index:4;
+padding:6px 12px;/*Adding a padding-left or padding-right here will make the caption area wider than its background. Sometimes you may need to define its width again here to keep it the same width as its background area (div.mc-caption-bg).*/
+text-align: center;
+}
+
+div.mc-caption a {
+color:#fff;
+text-decoration: underline;
+}
+
+div.mc-caption a:hover {
+color:#f90;
+}
+
+
+/* ------ built-in navigation bullets wrapper ------*/
+div.navBulletsWrapper {
+top: -24px; /* Its position is relative to the #slider */
+background:#ccc;
+text-align: center;
+position:relative;
+z-index:5;
+cursor:pointer;
+margin: 0 auto;
+}
+
+/* each bullet */
+div.navBulletsWrapper div 
+{
+width:11px; 
+height:11px;
+background:transparent url(bullet.png) no-repeat 0 0;
+float:left;
+overflow:hidden;
+vertical-align:middle;
+cursor:pointer;
+margin-right:11px;/* distance between each bullet*/
+position:relative;/*IE6 hack*/
+}
+
+div.navBulletsWrapper div.active {
+background-position:0 -11px;
+}
+
+div.navBulletsWrapper {visibility: hidden;}
+
+
+/* 
+########################### 
+     FotoBoxThumbs
+###########################
+*/
+
+.fbThumbsShortDesc {
+text-align: center; 
+padding: 0; 
+margin: 6px 0 12px 0;
+}
+
+
+/* 
+########################### 
+     FlexSlider fade
+###########################
+*/
+
+/* Browser Resets
+*********************************/
+.fotoBoxesFS .flex-container a:active,
+.fotoBoxesFS .fade a:active,
+.fotoBoxesFS .slide a:active,
+.fotoBoxesFS .flex-container a:focus,
+.fotoBoxesFS .fade a:focus  {outline: none;}
+.fotoBoxesFS .slide a:focus  {outline: none;}
+.fotoBoxesFS .slides,
+.fotoBoxesFS .flex-control-nav,
+.fotoBoxesFS .flex-direction-nav {margin: 0; padding: 0; list-style: none;}
+
+/* Template Resets added by GE */
+.fotoBoxesFS .fade ul {margin: 0; padding: 0;}
+.fotoBoxesFS .fade li {margin: 0; padding: 0 5px;}
+.fotoBoxesFS .fade .slides li {margin: 0; padding: 0;}
+.fotoBoxesFS .slide ul {margin: 0; padding: 0;}
+.fotoBoxesFS .slide li {margin: 0; padding: 0 5px;}
+.fotoBoxesFS .slide .slides li {margin: 0; padding: 0;}
+
+
+/* fade Necessary Styles
+*********************************/
+.fotoBoxesFS .fade {padding: 0;}
+.fotoBoxesFS .fade .slides > li {display: none; -webkit-backface-visibility: hidden;} /* Hide the slides before the JS is loaded. Avoids image jumping */
+.fotoBoxesFS .fade .slides img {width: 100%; display: block;}
+
+/* Clearfix for the .slides element */
+.fotoBoxesFS div.fade ul.slides:after {content: " "; display: block; clear: both; visibility: hidden; line-height: 0; height: 0;}
+.fotoBoxesFS div.slide ul.slides:after {content: " "; display: block; clear: both; visibility: hidden; line-height: 0; height: 0;}
+.fotoBoxesFS html[xmlns] .slides {display: block;}
+.fotoBoxesFS * html .slides {height: 1%;}
+
+/* slide Necessary Styles
+*********************************/
+.fotoBoxesFS .slide {padding: 0;}
+.fotoBoxesFS .slide .slides > li {display: none; -webkit-backface-visibility: hidden;} /* Hide the slides before the JS is loaded. Avoids image jumping */
+.fotoBoxesFS .slide .slides img {width: 100%; display: block;}
+
+/* No JavaScript Fallback */
+/* If you are not using another script, such as Modernizr, make sure you
+ * include js that eliminates this class on page load */
+.fotoBoxesFS .no-js .slides > li:first-child {display: block;}
+
+/* FlexSlider FotoBoxes Theme
+*********************************/
+.fotoBoxesFS {width: 100%; text-align: center;}
+.fotoBoxesFS .fade {position: relative;}
+.fotoBoxesFS .slide {position: relative;}
+.fotoBoxesFS .flex-next:hover, .fotoBoxesFS .flex-prev:hover { opacity: 1; color: #c60;}
+
+/* Arrow Nav */
+.fotoBoxesFS .flex-direction-nav a { display: block; width: 20px; height: 40px; margin: 0; position: absolute; bottom: -14px; z-index: 10; /* overflow: hidden; */ opacity: 0; cursor: pointer; color: #666; -webkit-transition: all .3s ease; -moz-transition: all .3s ease; transition: all .3s ease;  border: 0px solid #666;}
+.fotoBoxesFS .flex-direction-nav a:before  {font-family: courier new, monospace; font-weight: 900; font-size: 1.6em; display: inline-block; content: '<';}
+.fotoBoxesFS .flex-direction-nav a.flex-next:before  {content: '>'; font-weight: 900;}
+.fotoBoxesFS .flex-direction-nav .flex-prev { opacity: 1; left: 10px;}
+.fotoBoxesFS .flex-direction-nav .flex-next { opacity: 1; right: 10px;}
+
+/* Bullit Nav */
+.fotoBoxesFS .flex-control-nav {text-align: center; padding: 9px 40px 6px 40px; border: 0px solid #666;}
+.fotoBoxesFS .flex-control-nav li {margin: 0; display: inline-block;}
+.fotoBoxesFS .flex-control-paging li a {width: 11px; height: 11px; display: block; background: #999; cursor: pointer; text-indent: -9999px; border-radius: 6px; box-shadow: inset -2px -2px 3px #444; }
+.fotoBoxesFS .flex-control-paging li a:hover {background: #f90;}
+.fotoBoxesFS .flex-control-paging li a.flex-active {cursor: default; background: #9cf;}
+
+/* Images Description */
+.fotoBoxesFS .flex-caption {padding: 6px 12px; margin: 0; display: block; font-family: arial, sans-serif; font-size: 14px; text-align: center; color: #888; border-top: 1px solid #666;}
+
+
+
+/* 
+########################### 
+         miniSlider 
+###########################
+*/
+
+div.miniSliderContainer, 
+div.miniSliderContainer p {
+margin: 0; 
+padding: 0;
+}
+
+div.miniSliderContainerInner a:link {color: #ccc!important;}
+div.miniSliderContainerInner a:visited {color: #ccc!important;}
+div.miniSliderContainerInner a:hover {color: #f90!important;}
+div.miniSliderContainerInner a:active {color: #f90!important;}
+div.miniSliderContainerInner a:focus {color: #f90!important;}
+
+
+/* OUTER FRAMES / design & layout */
+
+div.miniSliderContainer {
+text-align: center;
+padding: 0;
+margin: 0 auto;
+}
+
+/*
+div.miniSliderContainerInner {
+background: #101619;
+color: #999;
+border: 5px solid #fff;
+border-radius: 5px;
+box-shadow: 0 0 9px #666;
+}
+*/
+
+
+/* CONTROLS */
+
+div.miniSliderContainerInner div p.controls {
+max-width: 320px;
+padding: 0;
+margin: 0 auto;
+}
+
+div.miniSliderContainerInner div p.controls img {
+margin: 6px 5%;
+opacity: 0.85;
+}
+
+div.miniSliderContainerInner div p.controls img:hover {
+cursor: pointer;
+opacity: 1;
+}
+
+
+/* BACKGROUND */
+
+div.miniSliderContainerInner div p.background img {
+width: 100%;
+}
+
+div.miniSliderContainerInner div p.background span.spacer {
+display: block;
+font-size: 6px;
+line-height: 6px;
+padding: 0;
+margin: 0;
+}
+
+div.miniSliderContainerInner div p.background span.desc {
+display: block;
+font-size: 14px;
+line-height: 16px;
+padding: 0 12px 12px 12px;
+margin: 0;
+}
+
+div.miniSliderContainerInner div p.background span.count {
+display: block;
+font-size: 14px;
+line-height: 16px;
+padding: 0 12px 12px 12px;
+margin: 0;
+}
+
+
+/* SLIDESHOW IMAGES */
+
+div.miniSliderContainerInner div div img {
+width: 100%;
+float: left;
+}
+
+
+/* DESCRIPTION */
+
+div.miniSliderContainerInner div p.spacer {
+font-size: 10px;
+line-height: 1em;
+padding: 0;
+margin: 0;
+}
+
+div.miniSliderContainerInner div p.description {
+font-size: 14px;
+line-height: 16px;
+padding: 0 12px 12px 12px;
+margin: 0;
+}
